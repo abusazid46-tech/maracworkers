@@ -56,7 +56,7 @@ type ApiErrorBody = {
   };
 };
 
-const deployedApiUrl = "https://the-wings-group-lomk.onrender.com";
+const deployedApiUrl = "https://maracworkers.onrender.com";
 const localApiUrl = "http://localhost:4000";
 
 export class ApiClientError extends Error {
