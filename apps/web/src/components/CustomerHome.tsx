@@ -197,7 +197,7 @@ export function CustomerHome() {
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [serviceCatalog, setServiceCatalog] = useState<ServiceItem[]>(services);
   const [popularServiceCatalog, setPopularServiceCatalog] = useState<ServiceItem[]>(services.slice(0, 6));
-  const [offerBanners, setOfferBanners] = useState<OfferBanner[]>([]);
+  const [_offerBanners, setOfferBanners] = useState<OfferBanner[]>([]);
   const [form, setForm] = useState(initialForm);
   const [formErrors, setFormErrors] = useState<BookingFormErrors>({});
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>("idle");
@@ -206,7 +206,7 @@ export function CustomerHome() {
   const [paymentMessage, setPaymentMessage] = useState("");
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
-  const [confirmedPayload, setConfirmedPayload] = useState<BookingCreateInput | null>(null);
+  const [_confirmedPayload, setConfirmedPayload] = useState<BookingCreateInput | null>(null);
   const [bookingHistory, setBookingHistory] = useState<BookingHistoryItem[]>([]);
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [activeLang, setActiveLang] = useState<"en" | "as" | "hi">("en");
@@ -391,11 +391,6 @@ export function CustomerHome() {
     });
   }
 
-  function browseCategory(catId: ServiceCategoryId) {
-    setCategory(catId);
-    setCategoryModalOpen(true);
-  }
-
   function selectLocation(choice: LocationChoice) {
     setLocation(choice);
     setForm((prev) => ({
@@ -479,7 +474,9 @@ export function CustomerHome() {
       setBookingHistory(nextHistory);
       try {
         window.localStorage.setItem(bookingHistoryKey, JSON.stringify(nextHistory));
-      } catch {}
+      } catch {
+        // Ignore storage write errors
+      }
     } catch {
       // Fallback
       const localCode = createLocalBookingCode();
@@ -572,7 +569,9 @@ export function CustomerHome() {
   async function signOut() {
     try {
       await createApiClient().logout();
-    } catch {}
+    } catch {
+      // Ignore logout errors
+    }
     setAuthSession(null);
   }
 
@@ -1218,19 +1217,13 @@ export function CustomerHome() {
           paymentMessage={paymentMessage}
           bookingResult={bookingResult}
           bookingRef={bookingRef}
-          bookingHistory={bookingHistory}
-          authSession={authSession}
           onClose={() => {
             setBookingModalOpen(false);
             setSuccess(false);
           }}
-          onOpenAuth={() => setAuthModalOpen(true)}
           onSubmit={confirmBooking}
           onPayOnline={startOnlinePayment}
           onFormChange={updateForm}
-          onQuantityChange={updateCartQuantity}
-          onRemove={removeService}
-          onClearCart={() => setCart({})}
         />
       )}
     </>
@@ -1471,16 +1464,10 @@ function BookingModal({
   paymentMessage,
   bookingResult,
   bookingRef,
-  bookingHistory,
-  authSession,
   onClose,
-  onOpenAuth,
   onSubmit,
   onPayOnline,
-  onFormChange,
-  onQuantityChange,
-  onRemove,
-  onClearCart
+  onFormChange
 }: {
   cartItems: CartItem[];
   total: number;
@@ -1493,16 +1480,10 @@ function BookingModal({
   paymentMessage: string;
   bookingResult: BookingResult | null;
   bookingRef: string | null;
-  bookingHistory: BookingHistoryItem[];
-  authSession: AuthSession | null;
   onClose: () => void;
-  onOpenAuth: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>;
   onPayOnline: () => void | Promise<void>;
   onFormChange: (field: keyof BookingForm, value: string) => void;
-  onQuantityChange: (serviceId: ServiceItem["id"], quantity: number) => void;
-  onRemove: (serviceId: ServiceItem["id"]) => void;
-  onClearCart: () => void;
 }) {
   const today = getTodayInputValue();
   const isSubmitting = submitStatus === "submitting";
