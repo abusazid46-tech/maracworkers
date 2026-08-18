@@ -300,7 +300,7 @@ function normalizeServiceBody(body: unknown, options: { defaultDescription: bool
   if (input.description !== undefined || options.defaultDescription) {
     return {
       ...normalized,
-      description: description.length >= 10 ? description : name ? `${name} service by The Wings Group.` : description
+      description: description.length >= 10 ? description : name ? `${name} service by Marac Workers.` : description
     };
   }
 

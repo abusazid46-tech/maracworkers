@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "The Wings Group",
-    "slug": "the-wings-group",
-    "scheme": "thewingsgroup",
+    "name": "Marac Workers",
+    "slug": "marac-workers",
+    "scheme": "maracworkers",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/the-wings-icon.png",
     "userInterfaceStyle": "light",
     "android": {
-      "package": "com.thewingsgroup.app",
+      "package": "com.maracworkers.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/the-wings-icon.png",
-        "backgroundColor": "#071020"
+        "backgroundColor": "#0a1929"
       }
     },
     "extra": {

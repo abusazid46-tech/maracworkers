@@ -81,7 +81,7 @@ authRouter.post("/otp/request", rateLimit({ keyPrefix: "otp-request", windowMs: 
     });
 
     const message = [
-      `${otp} is your The Wings Group login OTP.`,
+      `${otp} is your Marac Workers login verification OTP.`,
       `It expires in ${otpTtlMinutes} minutes.`,
       "Do not share it with anyone."
     ].join(" ");

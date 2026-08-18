@@ -787,13 +787,9 @@ export function AdminCrmDashboard() {
   function exportReport(format: "csv" | "xls") {
     if (!report) return;
     const rows = buildReportExportRows(report.rows);
-    const filename = `the-wings-report-${report.filters.period}-${new Date().toISOString().slice(0, 10)}`;
-    if (format === "csv") {
-      downloadTextFile(`${filename}.csv`, toCsv(rows), "text/csv;charset=utf-8");
-      return;
-    }
-
-    downloadTextFile(`${filename}.xls`, toExcelTable(rows, "The Wings Group Report"), "application/vnd.ms-excel;charset=utf-8");
+    const filename = `marac-workers-report-${report.filters.period}-${new Date().toISOString().slice(0, 10)}`;
+    downloadTextFile(`${filename}.csv`, toCsv(rows), "text/csv;charset=utf-8");
+    downloadTextFile(`${filename}.xls`, toExcelTable(rows, "Marac Workers Report"), "application/vnd.ms-excel;charset=utf-8");
   }
 
   async function saveService(event: FormEvent<HTMLFormElement>) {
@@ -809,7 +805,7 @@ export function AdminCrmDashboard() {
       categoryId,
       name: serviceForm.name.trim(),
       slug: serviceForm.slug.trim() || slugify(serviceForm.name),
-      description: serviceForm.description.trim() || `${serviceForm.name.trim()} service by The Wings Group.`,
+      description: serviceForm.description.trim() || `${serviceForm.name.trim()} service by Marac Workers.`,
       icon: normalizeServiceIconKey(serviceForm.icon),
       imageUrl: serviceForm.imageUrl.trim() || undefined,
       basePrice,
@@ -1291,8 +1287,8 @@ export function AdminCrmDashboard() {
     <main className="admin-shell">
       <aside className="sidebar">
         <div className="brand">
-          <img src="/the-wings-logo.png" alt="The Wings Group logo" />
-          <strong>The Wings Group</strong>
+          <img src="/favicon.png" alt="Marac Workers logo" />
+          <strong>Marac Workers</strong>
         </div>
         <nav>
           {[
@@ -1499,7 +1495,7 @@ export function AdminCrmDashboard() {
                   const message =
                     "bookingCode" in item
                       ? `Hi ${name}, your booking ${item.bookingCode} is ${item.status}. Our team will update you shortly.`
-                      : `Hi ${name}, this is The Wings Group following up on your service enquiry.`;
+                      : `Hi ${name}, this is Marac Workers following up on your service enquiry.`;
 
                   return (
                     <button className="shortcut-row" type="button" key={`${phone}-${name}`} onClick={() => sendWhatsapp(phone, message)}>
@@ -1640,10 +1636,10 @@ function AdminLoginScreen({
 
   return (
     <main className="admin-login-shell">
-      <section className="admin-login-panel">
-        <div className="brand login-brand">
-          <img src="/the-wings-logo.png" alt="The Wings Group logo" />
-          <strong>The Wings Group</strong>
+      <div className="login-card">
+        <div className="brand">
+          <img src="/favicon.png" alt="Marac Workers logo" />
+          <strong>Marac Workers</strong>
         </div>
         <div className="eyebrow">Protected CRM</div>
         <h1>Sign in to manage bookings, services, customers, and leads.</h1>
@@ -2288,7 +2284,7 @@ function CustomerTable({ customers, onWhatsapp }: { customers: CustomerSummary[]
           <strong>{customer.bookingsCount}</strong>
           <strong>Rs. {customer.totalSpend.toLocaleString()}</strong>
           <span className={`status-pill ${customer.status.toLowerCase()}`}>{customer.status}</span>
-          <button type="button" onClick={() => onWhatsapp(customer.phone, `Hi ${customer.name}, thank you for choosing The Wings Group.`)}>
+          <button type="button" onClick={() => onWhatsapp(customer.phone, `Hi ${customer.name}, thank you for choosing Marac Workers.`)}>
             Message
           </button>
         </div>
@@ -2371,7 +2367,7 @@ function LeadList({
           </select>
           <div className="row-actions">
             <button type="button" onClick={() => onEdit(lead)}>Edit</button>
-            <button type="button" onClick={() => onWhatsapp(lead.phone, `Hi ${lead.name ?? "there"}, this is The Wings Group following up on your service enquiry.`)}>
+            <button type="button" onClick={() => onWhatsapp(lead.phone, `Hi ${lead.name ?? "there"}, this is Marac Workers following up on your service enquiry.`)}>
               WhatsApp
             </button>
             {onDelete && <button type="button" onClick={() => onDelete(lead)}>Delete</button>}

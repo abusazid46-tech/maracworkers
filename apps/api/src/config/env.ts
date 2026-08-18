@@ -26,6 +26,7 @@ export const env = envSchema.parse(process.env);
 const requiredCorsOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
+  "https://maracworkers.onrender.com",
   "https://www.thewingsgroup.online",
   "https://thewingsgroup.online",
   "https://the-wings-group1.vercel.app",

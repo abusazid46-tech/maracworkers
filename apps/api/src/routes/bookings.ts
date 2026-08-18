@@ -155,11 +155,11 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
       return createdBooking;
     });
     const customerMessage = [
-      `Hi ${booking.customerName}, your Wings Group booking ${booking.bookingCode} has been received.`,
+      `Hi ${booking.customerName}, your Marac Workers booking #${booking.bookingCode} has been received.`,
       `Service: ${booking.items.map((item) => item.serviceName).join(", ")}`,
-      `Date: ${input.preferredDate} ${booking.preferredTimeSlot}`,
+      `Date: ${input.preferredDate} (${booking.preferredTimeSlot})`,
       `Total: Rs. ${booking.totalAmount.toLocaleString()}`,
-      "Our team will contact you shortly."
+      "Our team / verified worker will contact you shortly."
     ].join("\n");
 
     sendWhatsAppText({ phone: booking.customerPhone, message: customerMessage }).catch((error) => {

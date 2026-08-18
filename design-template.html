@@ -1,0 +1,1175 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Marac Workers | Find Skilled Workers Near You</title>
+  <meta name="description" content="Marac Workers connects you with electricians, plumbers, carpenters, painters & construction workers. Find skilled professionals instantly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      background: #f8fafc;
+      color: #0a1929;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    /* Buttons – elevated */
+    .btn-primary {
+      background: #0a1929;
+      color: white;
+      border: none;
+      padding: 1rem 2.6rem;
+      border-radius: 80px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 8px 24px rgba(10, 25, 41, 0.20);
+      letter-spacing: -0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.10), transparent);
+      pointer-events: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 16px 40px rgba(10, 25, 41, 0.30);
+      background: #122b44;
+    }
+    .btn-secondary {
+      background: #f15a24;
+      color: white;
+      border: none;
+      padding: 1rem 2.6rem;
+      border-radius: 80px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 8px 28px rgba(241, 90, 36, 0.35);
+      letter-spacing: -0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-secondary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent);
+      pointer-events: none;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 16px 44px rgba(241, 90, 36, 0.45);
+      background: #d94a1a;
+    }
+    .btn-outline {
+      background: transparent;
+      color: #0a1929;
+      border: 2px solid #0a1929;
+      padding: 0.7rem 2rem;
+      border-radius: 80px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      backdrop-filter: blur(2px);
+    }
+    .btn-outline:hover {
+      background: #0a1929;
+      color: white;
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(10,25,41,0.12);
+    }
+    .btn-outline-orange {
+      background: transparent;
+      color: #f15a24;
+      border: 2px solid #f15a24;
+      padding: 0.7rem 2rem;
+      border-radius: 80px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-outline-orange:hover {
+      background: #f15a24;
+      color: white;
+      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(241,90,36,0.20);
+    }
+
+    /* Nav – ultra clean */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid rgba(10,25,41,0.04);
+      transition: box-shadow 0.3s ease;
+    }
+    .navbar.scrolled {
+      box-shadow: 0 12px 40px rgba(0,0,0,0.04);
+    }
+    .nav-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 0;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+      font-size: 1.7rem;
+      letter-spacing: -0.02em;
+    }
+    .logo .marac { color: #0a1929; }
+    .logo .workers { color: #f15a24; }
+    .logo i {
+      color: #f15a24;
+      font-size: 2rem;
+      filter: drop-shadow(0 2px 4px rgba(241,90,36,0.15));
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2.2rem;
+      list-style: none;
+    }
+    .nav-links li a {
+      text-decoration: none;
+      color: #1e2a44;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .nav-links li a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2.5px;
+      background: #f15a24;
+      border-radius: 4px;
+      transition: width 0.25s ease;
+    }
+    .nav-links li a:hover::after,
+    .nav-links li a.active::after {
+      width: 100%;
+    }
+    .nav-links li a.active { color: #f15a24; font-weight: 600; }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .hamburger {
+      display: none;
+      font-size: 1.9rem;
+      color: #0a1929;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0.2rem;
+    }
+    .lang-selector {
+      display: flex;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #4a5b72;
+      align-items: center;
+      margin-right: 0.8rem;
+    }
+    .lang-selector span { cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 20px; transition: 0.2s; }
+    .lang-selector span:hover, .lang-selector span.active { background: #f15a24; color: white; }
+
+    /* Hero – split premium + search */
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 4rem;
+      padding: 3rem 0 4rem;
+      position: relative;
+    }
+    .hero-left { flex: 1.1; }
+    .hero-right { flex: 1; display: flex; justify-content: center; }
+    .trust-badge {
+      background: rgba(241, 90, 36, 0.08);
+      border-radius: 60px;
+      padding: 0.3rem 1.4rem 0.3rem 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0a1929;
+      margin-bottom: 1.2rem;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(241,90,36,0.10);
+    }
+    .trust-badge i { color: #f15a24; font-size: 0.9rem; }
+    .hero h1 {
+      font-size: 3.6rem;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.8rem;
+    }
+    .hero h1 .highlight {
+      color: #f15a24;
+      background: linear-gradient(145deg, #f15a24, #e04a1a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: #3e4e66;
+      max-width: 520px;
+      margin-bottom: 1.8rem;
+      line-height: 1.6;
+    }
+    /* Search box */
+    .search-box {
+      background: white;
+      border-radius: 80px;
+      padding: 0.4rem 0.4rem 0.4rem 1.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.04);
+      border: 1px solid rgba(10,25,41,0.04);
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+    .search-box select, .search-box input {
+      border: none;
+      padding: 0.8rem 0.2rem;
+      font-size: 0.95rem;
+      background: transparent;
+      outline: none;
+      color: #0a1929;
+      font-weight: 500;
+      flex: 1;
+      min-width: 120px;
+    }
+    .search-box select { cursor: pointer; }
+    .search-box input::placeholder { color: #9aabbf; font-weight: 400; }
+    .search-box .btn-secondary {
+      padding: 0.8rem 1.8rem;
+      border-radius: 60px;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+    .hero-avatars {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+      margin-top: 0.5rem;
+    }
+    .avatar-group {
+      display: flex;
+    }
+    .avatar-group img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid white;
+      margin-right: -12px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .hero-stats strong {
+      font-size: 1.1rem;
+      display: block;
+      font-weight: 800;
+      color: #0a1929;
+    }
+    .hero-stats span { color: #4a5b72; font-size: 0.9rem; }
+
+    /* Hero visual – gallery */
+    .hero-visual {
+      width: 100%;
+      max-width: 500px;
+      background: linear-gradient(145deg, #eef2f8, #e2e9f2);
+      border-radius: 48px;
+      padding: 1.2rem;
+      position: relative;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.20);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      transition: all 0.3s;
+    }
+    .hero-visual img {
+      width: 100%;
+      height: auto;
+      border-radius: 28px;
+      object-fit: cover;
+      aspect-ratio: 1/1;
+      background: #c8d2df;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+      transition: transform 0.3s;
+    }
+    .hero-visual img:hover { transform: scale(1.02); }
+    .pin-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #f15a24;
+      color: white;
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      box-shadow: 0 12px 28px rgba(241,90,36,0.30);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      letter-spacing: 0.3px;
+    }
+    .bg-glow {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(241,90,36,0.04) 0%, transparent 70%);
+      top: -20%;
+      right: -10%;
+      z-index: -1;
+      border-radius: 50%;
+    }
+
+    /* Section titles */
+    .section {
+      padding: 5rem 0;
+    }
+    .section-alt {
+      background: #f2f6fc;
+      position: relative;
+    }
+    .section-alt::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 10% 20%, rgba(241,90,36,0.02), transparent 60%);
+      pointer-events: none;
+    }
+    .section-title {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .section-sub {
+      text-align: center;
+      color: #4a5b72;
+      max-width: 620px;
+      margin: 0 auto 3rem;
+      font-size: 1.1rem;
+    }
+
+    /* Service cards – premium */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+    .service-card {
+      background: white;
+      padding: 2.2rem 1.2rem;
+      border-radius: 32px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.02);
+      transition: all 0.35s cubic-bezier(0.15, 0.9, 0.2, 1);
+      text-align: center;
+      border: 1px solid rgba(10,25,41,0.02);
+      position: relative;
+      overflow: hidden;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, rgba(241,90,36,0.01), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .service-card:hover::before { opacity: 1; }
+    .service-card:hover {
+      transform: translateY(-12px) scale(1.01);
+      box-shadow: 0 30px 60px -20px rgba(10,25,41,0.14);
+      border-color: rgba(241,90,36,0.10);
+    }
+    .service-card i {
+      font-size: 3.2rem;
+      color: #f15a24;
+      margin-bottom: 0.8rem;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-block;
+      background: rgba(241,90,36,0.04);
+      padding: 0.6rem;
+      border-radius: 20px;
+    }
+    .service-card:hover i { transform: scale(1.12) rotate(-3deg); }
+    .service-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .service-card p { color: #4e5e76; font-size: 0.9rem; }
+
+    /* Popular near you */
+    .popular-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+    .popular-item {
+      background: white;
+      padding: 0.8rem 1.2rem;
+      border-radius: 60px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      border: 1px solid rgba(10,25,41,0.03);
+      transition: 0.2s;
+      cursor: default;
+    }
+    .popular-item:hover { background: #f15a24; color: white; border-color: #f15a24; transform: translateY(-2px); }
+
+    /* Booking options */
+    .booking-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+      gap: 2rem;
+      margin: 2rem 0 1rem;
+    }
+    .booking-card {
+      background: white;
+      padding: 2rem 1.8rem;
+      border-radius: 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.02);
+      text-align: center;
+      border: 1px solid rgba(10,25,41,0.02);
+      transition: 0.3s;
+    }
+    .booking-card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px -12px rgba(0,0,0,0.06); }
+    .booking-card i { font-size: 2.8rem; color: #f15a24; margin-bottom: 0.8rem; }
+    .booking-card h4 { font-size: 1.3rem; font-weight: 700; }
+    .booking-card p { color: #4a5b72; font-size: 0.95rem; }
+
+    /* Steps – elegant */
+    .steps-grid {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 45px;
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, #0a1929, #f15a24, #0a1929);
+      opacity: 0.08;
+      z-index: 0;
+    }
+    .step-item {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(4px);
+      padding: 2.2rem 1.8rem;
+      border-radius: 36px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.02);
+      text-align: center;
+      transition: 0.3s;
+      border: 1px solid rgba(10,25,41,0.02);
+      position: relative;
+      z-index: 1;
+    }
+    .step-item:hover { transform: translateY(-6px); box-shadow: 0 20px 40px -12px rgba(0,0,0,0.06); }
+    .step-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.2rem;
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.06);
+    }
+    .step-icon.blue { background: #0a1929; }
+    .step-icon.orange { background: #f15a24; }
+    .step-icon.green { background: #1d9e6b; }
+    .step-item h4 { font-size: 1.3rem; font-weight: 700; }
+    .step-item p { color: #4a5b72; font-size: 0.9rem; }
+
+    /* Why choose */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    .why-item {
+      background: white;
+      padding: 1.8rem 1.2rem;
+      border-radius: 28px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.01);
+      border: 1px solid rgba(10,25,41,0.02);
+    }
+    .why-item i { font-size: 2.2rem; color: #f15a24; margin-bottom: 0.6rem; }
+    .why-item h4 { font-weight: 700; font-size: 1.1rem; }
+    .why-item p { color: #4a5b72; font-size: 0.9rem; }
+
+    /* Role cards – elevated */
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2.5rem;
+      margin: 2rem 0;
+    }
+    .role-card {
+      background: white;
+      border-radius: 40px;
+      padding: 2.2rem 1.8rem;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.02);
+      transition: all 0.35s cubic-bezier(0.15, 0.9, 0.2, 1);
+      text-align: center;
+      border: 1px solid rgba(10,25,41,0.02);
+      cursor: pointer;
+    }
+    .role-card:hover {
+      transform: scale(1.02) translateY(-6px);
+      box-shadow: 0 40px 72px -20px rgba(10,25,41,0.12);
+      border-color: rgba(241,90,36,0.06);
+    }
+    .role-card .role-img {
+      width: 100%;
+      height: 160px;
+      border-radius: 28px;
+      margin-bottom: 0.5rem;
+      object-fit: cover;
+      background: #d9e2ed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6f7f94;
+      font-weight: 500;
+      overflow: hidden;
+    }
+    .role-card .role-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .role-card .circle-icon {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: -2.2rem auto 0.6rem;
+      font-size: 2.4rem;
+      border: 4px solid white;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    }
+    .role-card .circle-icon.orange { background: #f15a24; color: white; }
+    .role-card .circle-icon.blue { background: #0a1929; color: white; }
+    .role-card h3 { font-size: 1.5rem; font-weight: 800; }
+    .role-card .role-sub { color: #f15a24; font-weight: 600; letter-spacing: 0.5px; }
+    .role-card p { color: #4a5b72; margin: 0.6rem 0 1.6rem; }
+    .login-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+    .login-link a {
+      color: #f15a24;
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: 0.2s;
+    }
+    .login-link a:hover { border-bottom-color: #f15a24; }
+
+    /* Worker CTA */
+    .worker-cta {
+      background: linear-gradient(145deg, #0a1929, #122b44);
+      border-radius: 48px;
+      padding: 3.5rem 3rem;
+      color: white;
+      text-align: center;
+      box-shadow: 0 30px 60px -20px rgba(10,25,41,0.30);
+      margin: 2rem 0;
+    }
+    .worker-cta h2 { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; }
+    .worker-cta p { font-size: 1.1rem; color: #b6c7dd; max-width: 600px; margin: 0.8rem auto 1.8rem; }
+
+    /* Trust */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 2.2rem;
+      margin: 2rem 0;
+    }
+    .trust-item {
+      background: white;
+      padding: 2rem 1.2rem;
+      border-radius: 32px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.01);
+      border: 1px solid rgba(10,25,41,0.02);
+      transition: 0.25s;
+    }
+    .trust-item:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -8px rgba(0,0,0,0.04); }
+    .trust-item i {
+      font-size: 2.4rem;
+      color: #f15a24;
+      background: rgba(241,90,36,0.06);
+      padding: 0.8rem;
+      border-radius: 24px;
+      margin-bottom: 1rem;
+    }
+    .trust-item h4 { font-weight: 700; font-size: 1.1rem; }
+    .trust-item p { color: #4a5b72; font-size: 0.9rem; }
+
+    /* Footer – dark premium */
+    .footer {
+      background: #0a1929;
+      color: #eef2f7;
+      padding: 4rem 0 1.8rem;
+      position: relative;
+    }
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(241,90,36,0.15), transparent);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+    .footer-col h5 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.4rem;
+      color: white;
+      letter-spacing: -0.01em;
+    }
+    .footer-col p, .footer-col a {
+      color: #b6c7dd;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .footer-col a:hover { color: white; transform: translateX(4px); }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+    }
+    .footer-logo .marac { color: white; }
+    .footer-logo .workers { color: #f15a24; }
+    .footer-social {
+      display: flex;
+      gap: 1.2rem;
+      margin-top: 1.4rem;
+    }
+    .footer-social a {
+      color: #b6c7dd;
+      font-size: 1.4rem;
+      transition: 0.25s;
+      background: rgba(255,255,255,0.02);
+      padding: 0.3rem;
+      border-radius: 12px;
+    }
+    .footer-social a:hover { color: #f15a24; transform: translateY(-3px); }
+    .footer-bottom {
+      border-top: 1px solid #1a2b44;
+      padding-top: 1.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #8fa1ba;
+    }
+    .footer-bottom a { color: #8fa1ba; margin-left: 1.5rem; text-decoration: none; transition: 0.2s; }
+    .footer-bottom a:hover { color: white; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,25,41,0.5);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 48px;
+      max-width: 460px;
+      width: 90%;
+      padding: 2.5rem 2.2rem;
+      box-shadow: 0 60px 100px -30px rgba(0,0,0,0.3);
+      animation: modalUp 0.35s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+    @keyframes modalUp {
+      0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal h3 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .modal p { color: #4a5b72; margin-bottom: 1.8rem; }
+    .modal-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .modal-options button {
+      padding: 1rem;
+      border-radius: 60px;
+      border: 2px solid #eef2f7;
+      background: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .modal-options button:hover { border-color: #f15a24; background: rgba(241,90,36,0.03); transform: scale(1.01); }
+    .modal-close {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: #8fa1ba;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .modal-close:hover { color: #0a1929; }
+
+    /* reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .hero h1 { font-size: 3rem; }
+    }
+    @media (max-width: 992px) {
+      .hero { flex-direction: column; gap: 2rem; }
+      .hero h1 { font-size: 2.8rem; }
+      .hero-left { text-align: center; }
+      .hero p { margin: 0 auto 1.8rem; }
+      .search-box { margin: 0 auto 2rem; }
+      .hero-avatars { justify-content: center; }
+      .steps-grid::before { display: none; }
+      .worker-cta { padding: 2.5rem 1.5rem; }
+      .worker-cta h2 { font-size: 2rem; }
+    }
+    @media (max-width: 768px) {
+      .nav-links, .nav-actions { display: none; }
+      .hamburger { display: block; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        background: rgba(255,255,255,0.96);
+        backdrop-filter: blur(20px);
+        position: absolute;
+        top: 72px;
+        left: 0;
+        width: 100%;
+        padding: 2rem 2rem;
+        gap: 1.4rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.04);
+        border-bottom: 1px solid rgba(0,0,0,0.02);
+      }
+      .nav-links.open li a { font-size: 1.1rem; }
+      .nav-actions.open {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 0.5rem;
+        width: 100%;
+      }
+      .lang-selector { margin-right: 0.2rem; }
+      .hero h1 { font-size: 2.4rem; }
+      .section-title { font-size: 2.2rem; }
+      .service-grid { grid-template-columns: 1fr 1fr; }
+      .role-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .container { padding: 0 1.2rem; }
+      .search-box { border-radius: 30px; padding: 0.8rem 1rem; flex-direction: column; background: white; align-items: stretch; }
+      .search-box select, .search-box input { padding: 0.6rem 0; border-bottom: 1px solid #eee; }
+      .search-box .btn-secondary { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 2rem; }
+      .service-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .service-card { padding: 1.5rem 0.8rem; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .hero-visual { padding: 0.6rem; gap: 0.4rem; }
+      .pin-badge { font-size: 0.65rem; padding: 0.2rem 0.8rem; }
+      .btn-primary, .btn-secondary { padding: 0.8rem 1.6rem; font-size: 0.9rem; }
+      .worker-cta h2 { font-size: 1.6rem; }
+      .modal { padding: 2rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-flex">
+      <div class="logo">
+        <i class="fas fa-hard-hat"></i>
+        <span class="marac">MARAC</span><span class="workers">WORKERS</span>
+      </div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">Home</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#howitworks">How It Works</a></li>
+        <li><a href="#become">Become a Worker</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li class="nav-actions" id="navActions">
+          <div class="lang-selector">
+            <span class="active">En</span><span>অ</span><span>हि</span>
+          </div>
+          <button class="btn-outline" onclick="openModal()">Login</button>
+          <button class="btn-secondary" onclick="openModal()" style="padding:0.5rem 1.6rem; font-size:0.9rem;">Register</button>
+        </li>
+      </ul>
+      <button class="hamburger" id="hamburger" aria-label="menu"><i class="fas fa-bars"></i></button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="home" class="container hero reveal">
+    <div class="hero-left">
+      <div class="trust-badge"><i class="fas fa-map-pin"></i> Building Guwahati's Trusted Worker Network</div>
+      <h1>Find Skilled<br>Workers Near You,<br><span class="highlight">Instantly.</span></h1>
+      <p>From electricians and plumbers to carpenters, painters and daily workers — find the right professional for your job.</p>
+      <!-- Search box -->
+      <div class="search-box">
+        <select><option>Electrician</option><option>Plumber</option><option>Carpenter</option><option>Painter</option><option>Construction</option><option>AC Repair</option></select>
+        <input type="text" placeholder="Enter location" value="Guwahati">
+        <button class="btn-secondary" onclick="alert('Searching for workers near you...')"><i class="fas fa-search"></i> Find Workers</button>
+      </div>
+      <div class="hero-avatars">
+        <div class="avatar-group">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="worker">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="worker">
+          <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="worker">
+          <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="worker">
+        </div>
+        <div class="hero-stats"><strong>500+ Skilled Professionals</strong><span>ready to help you</span></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-visual">
+        <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=400&h=400&fit=crop&crop=face" alt="plumber">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85f8e3?w=400&h=400&fit=crop&crop=face" alt="construction">
+        <img src="https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=400&h=400&fit=crop&crop=face" alt="electrician">
+        <img src="https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400&h=400&fit=crop&crop=face" alt="painter">
+        <div class="pin-badge"><i class="fas fa-map-pin"></i> Guwahati</div>
+      </div>
+      <div class="bg-glow"></div>
+    </div>
+  </section>
+
+  <!-- BOOKING OPTIONS -->
+  <section class="section container reveal">
+    <h2 class="section-title" style="font-size:2.4rem;">Book the Way You Want</h2>
+    <p class="section-sub">Choose instant help or schedule for later — we've got you covered.</p>
+    <div class="booking-grid">
+      <div class="booking-card"><i class="fas fa-bolt"></i><h4>Need Help Now?</h4><p>Find the nearest available worker for urgent jobs.</p><button class="btn-secondary" style="margin-top:0.8rem; padding:0.6rem 1.8rem; font-size:0.9rem;" onclick="alert('Finding nearest workers...')">Find Now</button></div>
+      <div class="booking-card"><i class="fas fa-calendar-alt"></i><h4>Schedule for Later</h4><p>Book a worker for your preferred date and time.</p><button class="btn-primary" style="margin-top:0.8rem; padding:0.6rem 1.8rem; font-size:0.9rem;" onclick="alert('Schedule booking coming soon')">Schedule</button></div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="section section-alt reveal">
+    <div class="container">
+      <h2 class="section-title">What Service Do You Need?</h2>
+      <p class="section-sub">Choose from a wide range of skilled professionals ready to work.</p>
+      <div class="service-grid">
+        <div class="service-card"><i class="fas fa-bolt"></i><h3>Electrician</h3><p>Fix electrical issues and installations.</p></div>
+        <div class="service-card"><i class="fas fa-wrench"></i><h3>Plumber</h3><p>Repair leaks, pipes and fittings.</p></div>
+        <div class="service-card"><i class="fas fa-hammer"></i><h3>Carpenter</h3><p>Furniture, repairs and custom work.</p></div>
+        <div class="service-card"><i class="fas fa-paint-roller"></i><h3>Painter</h3><p>Professional home and office painting.</p></div>
+        <div class="service-card"><i class="fas fa-hard-hat"></i><h3>Construction</h3><p>Skilled workers for construction needs.</p></div>
+        <div class="service-card"><i class="fas fa-th-large"></i><h3>More Services</h3><p>Explore all available professionals.</p></div>
+        <div style="grid-column:1/-1; display:flex; justify-content:center; margin-top:0.8rem;">
+          <button class="btn-outline" onclick="alert('All services')">View All Services →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR NEAR YOU -->
+  <section class="section container reveal">
+    <h2 class="section-title" style="font-size:2.2rem;">Popular Services in Guwahati</h2>
+    <div class="popular-grid">
+      <div class="popular-item"><i class="fas fa-bolt" style="margin-right:0.4rem; color:#f15a24;"></i> Home Electrician</div>
+      <div class="popular-item"><i class="fas fa-wrench" style="margin-right:0.4rem; color:#f15a24;"></i> Emergency Plumber</div>
+      <div class="popular-item"><i class="fas fa-snowflake" style="margin-right:0.4rem; color:#f15a24;"></i> AC Repair</div>
+      <div class="popular-item"><i class="fas fa-hammer" style="margin-right:0.4rem; color:#f15a24;"></i> Carpenter</div>
+      <div class="popular-item"><i class="fas fa-paint-roller" style="margin-right:0.4rem; color:#f15a24;"></i> House Painting</div>
+      <div class="popular-item"><i class="fas fa-hard-hat" style="margin-right:0.4rem; color:#f15a24;"></i> Daily Labour</div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="howitworks" class="section section-alt reveal">
+    <div class="container">
+      <h2 class="section-title">Get the Right Worker in 3 Simple Steps</h2>
+      <div class="steps-grid">
+        <div class="step-item"><div class="step-icon blue">01</div><h4>Choose a Service</h4><p>Select the service or skilled worker you need.</p></div>
+        <div class="step-item"><div class="step-icon orange">02</div><h4>Book a Worker</h4><p>Choose instant or scheduled booking.</p></div>
+        <div class="step-item"><div class="step-icon green">03</div><h4>Get the Job Done</h4><p>Track, get work completed, share feedback.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE -->
+  <section class="section container reveal">
+    <h2 class="section-title">Why Marac Workers?</h2>
+    <p class="section-sub">Built for trust, transparency, and convenience.</p>
+    <div class="why-grid">
+      <div class="why-item"><i class="fas fa-check-circle"></i><h4>Verified Professionals</h4><p>Profiles and documents reviewed.</p></div>
+      <div class="why-item"><i class="fas fa-tag"></i><h4>Transparent Pricing</h4><p>Clear costs, no surprises.</p></div>
+      <div class="why-item"><i class="fas fa-clock"></i><h4>Instant & Scheduled</h4><p>Book on your terms.</p></div>
+      <div class="why-item"><i class="fas fa-map-pin"></i><h4>Local Workers</h4><p>Professionals near you.</p></div>
+      <div class="why-item"><i class="fas fa-star"></i><h4>Ratings & Reviews</h4><p>Real feedback from customers.</p></div>
+      <div class="why-item"><i class="fas fa-wallet"></i><h4>Easy Payment</h4><p>Online & cash options.</p></div>
+    </div>
+  </section>
+
+  <!-- WORKER CTA -->
+  <section id="become" class="container reveal">
+    <div class="worker-cta">
+      <h2>Your Skills Can Earn More.</h2>
+      <p>Join Marac Workers, get job opportunities, manage your availability and grow your income.</p>
+      <button class="btn-secondary" style="background:#f15a24; box-shadow:0 8px 28px rgba(241,90,36,0.4);" onclick="alert('Worker registration coming soon')"><i class="fas fa-user-plus"></i> Become a Worker →</button>
+    </div>
+  </section>
+
+  <!-- ROLE LOGIN -->
+  <section id="about" class="section container reveal">
+    <h2 class="section-title">Welcome to Marac Workers</h2>
+    <p class="section-sub">How would you like to continue?</p>
+    <div class="role-grid">
+      <div class="role-card" onclick="openModal()">
+        <div class="role-img"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=300&fit=crop&crop=face" alt="customer"></div>
+        <div class="circle-icon blue"><i class="fas fa-user"></i></div>
+        <h3>I Need a Worker</h3>
+        <div class="role-sub">Customer</div>
+        <p>Find and book skilled professionals for your work.</p>
+        <button class="btn-primary" style="width:100%;" onclick="event.stopPropagation(); openModal();">Continue as Customer →</button>
+      </div>
+      <div class="role-card" onclick="openModal()">
+        <div class="role-img"><img src="https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400&h=300&fit=crop&crop=face" alt="worker"></div>
+        <div class="circle-icon orange"><i class="fas fa-hard-hat"></i></div>
+        <h3>I Am a Skilled Worker</h3>
+        <div class="role-sub">Worker / Partner</div>
+        <p>Join Marac Workers and receive job opportunities.</p>
+        <button class="btn-secondary" style="width:100%;" onclick="event.stopPropagation(); openModal();">Continue as Worker →</button>
+      </div>
+    </div>
+    <div class="login-link">Already have an account? <a onclick="openModal()">Login</a></div>
+  </section>
+
+  <!-- TRUST -->
+  <section class="section section-alt reveal">
+    <div class="container">
+      <div class="trust-grid">
+        <div class="trust-item"><i class="fas fa-shield-alt"></i><h4>Verified Workers</h4><p>Profiles and documents are reviewed.</p></div>
+        <div class="trust-item"><i class="fas fa-star"></i><h4>Ratings & Reviews</h4><p>Real feedback after service.</p></div>
+        <div class="trust-item"><i class="fas fa-check-circle"></i><h4>Safe & Transparent</h4><p>Clear service and booking info.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="contact" class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-logo"><i class="fas fa-hard-hat" style="color:#f15a24;"></i><span class="marac">MARAC</span><span class="workers">WORKERS</span></div>
+          <p>Find Skilled Workers. Get the Job Done.</p>
+          <div style="display:flex; gap:0.6rem; margin-top:1.2rem; flex-wrap:wrap;">
+            <span style="background:#1a2b44; padding:0.4rem 1rem; border-radius:40px; font-size:0.7rem; color:white; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fab fa-google-play"></i> Google Play</span>
+            <span style="background:#1a2b44; padding:0.4rem 1rem; border-radius:40px; font-size:0.7rem; color:white; display:inline-flex; align-items:center; gap:0.4rem;"><i class="fab fa-apple"></i> App Store</span>
+          </div>
+        </div>
+        <div class="footer-col"><h5>Quick Links</h5><a href="#home">Home</a><a href="#services">Services</a><a href="#howitworks">How It Works</a><a href="#become">Become a Worker</a><a href="#about">About Us</a><a href="#contact">Contact</a></div>
+        <div class="footer-col"><h5>For Customers</h5><a onclick="openModal()">Customer Login</a><a onclick="openModal()">Register</a><a onclick="alert('How to Book')">How to Book</a><a onclick="alert('Pricing')">Pricing</a><a onclick="alert('Help')">Help & Support</a></div>
+        <div class="footer-col"><h5>For Workers</h5><a onclick="openModal()">Worker Login</a><a onclick="openModal()">Register</a><a onclick="alert('How It Works')">How It Works</a><a onclick="alert('Earnings')">Earnings</a><a onclick="alert('Safety')">Safety Guidelines</a></div>
+        <div class="footer-col"><h5>Contact Us</h5><p><i class="fas fa-phone-alt" style="width:1.4rem;"></i> +91 93651 23456</p><p><i class="fas fa-envelope" style="width:1.4rem;"></i> support@maracworkers.com</p><p><i class="fas fa-map-marker-alt" style="width:1.4rem;"></i> Guwahati, Assam, India</p><div class="footer-social"><a href="#"><i class="fab fa-facebook"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-youtube"></i></a><a href="#"><i class="fab fa-linkedin-in"></i></a></div></div>
+      </div>
+      <div class="footer-bottom"><span>© 2026 Marac Workers. All Rights Reserved.</span><span><a href="#">Privacy Policy</a> <a href="#">Terms & Conditions</a></span></div>
+    </div>
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <h3>Welcome Back</h3>
+      <p>Continue as a customer or worker.</p>
+      <div class="modal-options">
+        <button onclick="alert('Customer login portal coming soon')"><i class="fas fa-user" style="color:#0a1929;"></i> Continue as Customer</button>
+        <button onclick="alert('Worker login portal coming soon')"><i class="fas fa-hard-hat" style="color:#f15a24;"></i> Continue as Worker</button>
+      </div>
+      <div class="modal-close" onclick="closeModal()">Close</div>
+    </div>
+  </div>
+
+  <script>
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+      const actions = document.getElementById('navActions');
+      if (actions) actions.classList.toggle('open');
+    });
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        const actions = document.getElementById('navActions');
+        if (actions) actions.classList.remove('open');
+      });
+    });
+
+    // Navbar shadow
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) navbar.classList.add('scrolled');
+      else navbar.classList.remove('scrolled');
+    });
+
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+    reveals.forEach(el => observer.observe(el));
+
+    // Active nav link
+    const sections = document.querySelectorAll('section[id]');
+    window.addEventListener('scroll', () => {
+      let current = 'home';
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 140;
+        if (window.scrollY >= top) current = sec.id;
+      });
+      document.querySelectorAll('.nav-links a').forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+      });
+    });
+
+    // Modal
+    const modal = document.getElementById('loginModal');
+    function openModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function closeModal() { modal.classList.remove('active'); document.body.style.overflow = ''; }
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    // Language selector
+    document.querySelectorAll('.lang-selector span').forEach(el => {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.lang-selector span').forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+        alert('Language switched to ' + this.textContent);
+      });
+    });
+  </script>
+</body>
+</html>

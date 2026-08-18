@@ -1,27 +1,27 @@
-export const siteUrl = "https://www.thewingsgroup.online";
-export const businessName = "The Wings Group";
-export const businessPhone = "+919774887803";
-export const whatsappUrl = "https://wa.me/919774887803";
+export const siteUrl = "https://maracworkers.onrender.com";
+export const businessName = "Marac Workers";
+export const businessPhone = "+919365123456";
+export const whatsappUrl = "https://wa.me/919365123456";
 export const businessAddress = {
-  streetAddress: "Post Office Chowmuhani, Opp. Sarkar Nursing Home",
-  addressLocality: "Agartala",
-  addressRegion: "Tripura",
-  postalCode: "799001",
+  streetAddress: "GS Road, Christian Basti",
+  addressLocality: "Guwahati",
+  addressRegion: "Assam",
+  postalCode: "781005",
   addressCountry: "IN"
 };
 
 export const serviceAreas = [
-  "Agartala",
-  "Banamalipur",
-  "Krishnanagar",
-  "Ramnagar",
-  "Battala",
-  "Badharghat",
-  "Airport Road Agartala",
-  "Pratapgarh",
-  "Jogendranagar",
-  "Amtali",
-  "Arundhutinagar"
+  "Guwahati",
+  "Dispur",
+  "Paltan Bazaar",
+  "Beltola",
+  "Six Mile",
+  "Zoo Road",
+  "Chandmari",
+  "Ganeshguri",
+  "Jalukbari",
+  "Ulubari",
+  "Hatigaon"
 ];
 
 export const seoServices = [
@@ -112,19 +112,19 @@ export function findSeoService(slug: string) {
 
 export const faqItems = [
   {
-    question: "Which city does The Wings Group currently serve?",
-    answer: "The Wings Group currently serves Agartala and nearby localities in Tripura."
+    question: "Which locations does Marac Workers currently serve?",
+    answer: "Marac Workers currently serves Guwahati, Assam, and surrounding regions with verified skilled professionals."
   },
   {
-    question: "Can I book bathroom cleaning, AC service, and tank cleaning online?",
-    answer: "Yes. You can browse services, add them to cart, choose your preferred schedule, and submit the booking from the website."
+    question: "Can I book electricians, plumbers, and home cleaning online?",
+    answer: "Yes. You can browse skilled trade categories and services, add them to your request, pick an instant or scheduled time, and submit your booking."
   },
   {
     question: "Do I need to pay in advance?",
-    answer: "Cash on delivery is available, and online payment can be used where enabled. Online bookings confirm after successful payment."
+    answer: "Cash on delivery / pay after service is supported, along with secure online payments through Razorpay."
   },
   {
-    question: "How do I contact The Wings Group quickly?",
-    answer: "You can call or WhatsApp The Wings Group at 9774887803 for service enquiries in Agartala."
+    question: "How do I contact Marac Workers quickly?",
+    answer: "You can call or WhatsApp Marac Workers support at +91 93651 23456 or email support@maracworkers.com."
   }
 ] as const;

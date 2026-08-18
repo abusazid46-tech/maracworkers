@@ -2,8 +2,8 @@ import "./styles.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "The Wings Group Admin",
-  description: "Admin CRM and booking operations dashboard for The Wings Group.",
+  title: "Marac Workers Admin CRM",
+  description: "Admin CRM, bookings, and worker operations dashboard for Marac Workers.",
   robots: {
     index: false,
     follow: false
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
-    apple: "/the-wings-logo.png"
+    apple: "/favicon.png"
   }
 };
 

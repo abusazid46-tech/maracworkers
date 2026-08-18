@@ -1,15 +1,15 @@
 {
-  "name": "The Wings Group",
-  "short_name": "Wings Group",
-  "description": "Home services in Agartala for cleaning, AC repair, tank wash, sofa cleaning, pest control, maid, plumber, and security.",
+  "name": "Marac Workers",
+  "short_name": "Marac Workers",
+  "description": "Find skilled electricians, plumbers, carpenters, painters, and trade workers near you instantly.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#071020",
+  "background_color": "#f8fafc",
+  "theme_color": "#0a1929",
   "icons": [
     {
-      "src": "/the-wings-logo.png",
-      "sizes": "357x227",
+      "src": "/favicon.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }

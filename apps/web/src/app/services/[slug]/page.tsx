@@ -100,13 +100,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: `${service.title} | ${businessName}`,
       description: service.description,
       url: `${siteUrl}/services/${service.slug}/`,
-      images: ["/the-wings-logo.png"]
+      images: ["/favicon.png"]
     },
     twitter: {
       card: "summary_large_image",
       title: `${service.title} | ${businessName}`,
       description: service.description,
-      images: ["/the-wings-logo.png"]
+      images: ["/favicon.png"]
     }
   };
 }
@@ -158,8 +158,8 @@ export default async function ServiceSeoPage({ params }: PageProps) {
           <h1>{service.title}</h1>
           <p>{service.description}</p>
           <div className="seo-actions">
-            <Link className="btn-cta-primary" href="/#services">Book this service</Link>
-            <a className="btn-cta-outline" href="tel:+919774887803">Call 9774887803</a>
+            <Link className="btn-secondary" href="/#services" style={{ padding: "0.8rem 2rem" }}>Book this service</Link>
+            <a className="btn-outline" href="tel:+919365123456" style={{ padding: "0.8rem 2rem" }}>Call +91 93651 23456</a>
           </div>
         </div>
       </section>
@@ -168,16 +168,16 @@ export default async function ServiceSeoPage({ params }: PageProps) {
         <div className="container">
           <div className="seo-content-grid">
             <article>
-              <h2>{service.name} by The Wings Group</h2>
+              <h2>{service.name} by Marac Workers</h2>
               <p>
-                The Wings Group provides {service.name.toLowerCase()} for customers in Agartala with trained professionals,
+                Marac Workers provides verified {service.name.toLowerCase()} for customers in Guwahati and nearby areas with background-checked professionals,
                 clear booking flow, local support, and flexible payment options.
               </p>
               <p>
-                Service availability is focused on Agartala and nearby areas including {serviceAreas.slice(1, 6).join(", ")}.
+                Service availability is focused on Guwahati and nearby localities including {serviceAreas.slice(1, 6).join(", ")}.
                 For the fastest confirmation, book online or call the team directly.
               </p>
-              <h3>Why choose The Wings Group for {service.name}?</h3>
+              <h3>Why choose Marac Workers for {service.name}?</h3>
               <ul>
                 {highlights.map((highlight) => (
                   <li key={highlight}>{highlight}</li>
@@ -185,10 +185,10 @@ export default async function ServiceSeoPage({ params }: PageProps) {
               </ul>
             </article>
             <aside className="seo-contact-card">
-              <h2>Book in Agartala</h2>
+              <h2>Book in Guwahati</h2>
               <p>{businessAddress.streetAddress}, {businessAddress.addressLocality}, {businessAddress.addressRegion}</p>
-              <a href="tel:+919774887803">Call 9774887803</a>
-              <a href="https://wa.me/919774887803">WhatsApp The Wings Group</a>
+              <a href="tel:+919365123456">Call +91 93651 23456</a>
+              <a href="https://wa.me/919365123456" target="_blank" rel="noreferrer">WhatsApp Marac Workers</a>
             </aside>
           </div>
         </div>

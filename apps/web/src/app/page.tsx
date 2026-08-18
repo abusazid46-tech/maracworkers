@@ -12,14 +12,14 @@ import {
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cleaning, AC Repair, Tank Wash & Home Services in Agartala",
-  description: "Book The Wings Group for bathroom cleaning, AC repair, tank wash, sofa cleaning, pest control, maid, plumber, and security services in Agartala.",
+  title: "Marac Workers | Find Skilled Electricians, Plumbers, Painters & Workers Near You",
+  description: "Book verified electricians, plumbers, carpenters, painters, AC technicians, cleaning staff, and skilled trade professionals instantly with Marac Workers.",
   alternates: {
     canonical: "/"
   },
   openGraph: {
-    title: "The Wings Group | Home Services in Agartala",
-    description: "Professional cleaning, AC service, tank wash, sofa cleaning, pest control, maid, plumber, and security services in Agartala.",
+    title: "Marac Workers | Find Skilled Workers Near You",
+    description: "Book verified electricians, plumbers, carpenters, painters, AC technicians, cleaning staff, and skilled trade professionals instantly.",
     url: siteUrl
   }
 };
@@ -50,19 +50,19 @@ const localBusinessSchema = {
   "@id": `${siteUrl}/#local-business`,
   name: businessName,
   url: siteUrl,
-  logo: `${siteUrl}/the-wings-logo.png`,
-  image: `${siteUrl}/the-wings-logo.png`,
+  logo: `${siteUrl}/favicon.png`,
+  image: `${siteUrl}/favicon.png`,
   telephone: businessPhone,
-  priceRange: "Rs",
-  description: "Home services company in Agartala for cleaning, AC repair, tank wash, sofa cleaning, pest control, maid, plumber, and security services.",
+  priceRange: "₹₹",
+  description: "Skilled workers and home services platform for electricians, plumbers, carpenters, painters, AC repair, cleaning, and maintenance.",
   address: {
     "@type": "PostalAddress",
     ...businessAddress
   },
   geo: {
     "@type": "GeoCoordinates",
-    latitude: 23.8315,
-    longitude: 91.2868
+    latitude: 26.1445,
+    longitude: 91.7362
   },
   areaServed: serviceAreas.map((area) => ({
     "@type": "Place",
@@ -73,8 +73,8 @@ const localBusinessSchema = {
       "@type": "ContactPoint",
       telephone: businessPhone,
       contactType: "customer service",
-      areaServed: "Agartala",
-      availableLanguage: ["English", "Hindi", "Bengali"]
+      areaServed: "Guwahati",
+      availableLanguage: ["English", "Hindi", "Assamese", "Bengali"]
     }
   ],
   sameAs: [whatsappUrl],
@@ -92,7 +92,7 @@ const servicesSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   "@id": `${siteUrl}/#services`,
-  name: "Home services in Agartala",
+  name: "Skilled Worker Services in Guwahati",
   itemListElement: seoServices.map((service, index) => ({
     "@type": "ListItem",
     position: index + 1,
@@ -105,7 +105,7 @@ const servicesSchema = {
       },
       areaServed: {
         "@type": "City",
-        name: "Agartala"
+        name: "Guwahati"
       },
       url: `${siteUrl}/services/${service.slug}/`
     }

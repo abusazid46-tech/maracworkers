@@ -49,7 +49,7 @@ type Service = {
 type CartItem = Service & { quantity: number };
 
 const brandLogo = require("./assets/the-wings-logo.png");
-const supportPhone = "9774887803";
+const supportPhone = "9365123456";
 
 const categories: Category[] = [
   { id: "toilet-bath", name: "Toilet & Bath", icon: "TB", badge: "Same day" },
@@ -342,7 +342,7 @@ export default function App() {
                 <Text style={styles.iconButtonText}>Back</Text>
               </Pressable>
               <View>
-                <Text style={styles.modalEyebrow}>The Wings Group</Text>
+                <Text style={styles.modalEyebrow}>Marac Workers</Text>
                 <Text style={styles.modalTitle}>{selectedCategory?.name}</Text>
               </View>
               <Pressable style={styles.cartButtonSmall} onPress={() => setCartOpen(true)}>
@@ -442,7 +442,7 @@ function Header({ cartCount, onCart }: { cartCount: number; onCart: () => void }
         <View style={styles.logoWrap}>
           <Image source={brandLogo} style={styles.logo} />
           <View>
-            <Text style={styles.brandName}>The Wings Group</Text>
+            <Text style={styles.brandName}>Marac Workers</Text>
             <Text style={styles.brandSub}>Agartala home services</Text>
           </View>
         </View>
@@ -592,7 +592,7 @@ function AccountScreen() {
       </View>
       <View style={styles.accountCard}>
         <Text style={styles.accountTitle}>Need help?</Text>
-        <Text style={styles.accountText}>Call or WhatsApp The Wings Group support team.</Text>
+        <Text style={styles.accountText}>Call or WhatsApp Marac Workers support team.</Text>
         <View style={styles.helpButtons}>
           <Pressable style={styles.helpButton} onPress={() => Linking.openURL(`tel:+91${supportPhone}`)}>
             <Text style={styles.helpButtonText}>Call</Text>

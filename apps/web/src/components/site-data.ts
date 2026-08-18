@@ -184,12 +184,14 @@ export const services: ServiceItem[] = [
 ];
 
 export const searchTerms = [
-  "Bathroom Cleaning",
-  "Sofa Cleaning",
-  "AC Repairing",
-  "Tank Cleaning",
+  "Electrician",
+  "Plumber",
+  "Carpenter",
+  "House Painter",
+  "AC Repair & Servicing",
   "Deep Home Cleaning",
-  "Kitchen and Appliances"
+  "Bathroom Cleaning",
+  "Sofa Cleaning"
 ];
 
 export const quickServices: Array<{ label: string; iconKey: ServiceIconKey; badge?: string; category: ServiceCategoryId }> = [
