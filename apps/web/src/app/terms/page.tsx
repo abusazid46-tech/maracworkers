@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { businessName, businessPhone, siteUrl } from "@/components/seo-data";
+import { businessPhone } from "@/components/seo-data";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",

@@ -7,7 +7,6 @@ import type {
   BookingCreateInput,
   OfferBanner,
   PaymentMode,
-  RazorpayOrderResponse,
   Service as ApiService,
   ServiceCategory as ApiServiceCategory
 } from "@the-wings/types";
@@ -19,12 +18,10 @@ import {
   businessName,
   businessPhone,
   faqItems,
-  seoServices,
   serviceAreas,
-  siteUrl,
-  whatsappUrl
+  siteUrl
 } from "./seo-data";
-import { categoryLabels, quickServices, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
+import { categoryLabels, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
 
 type CartItem = ServiceItem & { quantity: number };
 type LocationChoice = { label: string; address: string; coords?: string };
@@ -75,7 +72,6 @@ declare global {
   }
 }
 
-const fallbackOfferImage = "/images/offer-cleaning.png";
 const categories: Array<{ id: "all" | ServiceCategoryId; label: string; iconKey: ServiceIconKey }> = [
   { id: "all", label: "All Services", iconKey: "all" },
   { id: "toilet", label: "Toilet & Bath", iconKey: "bathroom" },
@@ -126,9 +122,7 @@ type BookingHistoryItem = {
 
 const bookingHistoryKey = "marac_customer_bookings";
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-const serviceCity = "Guwahati";
 const guwahatiCenter = { lat: 26.1445, lng: 91.7362 };
-const serviceRadiusKm = 35;
 
 const categorySlugMap: Record<string, ServiceCategoryId> = {
   "toilet-bath": "toilet",
@@ -178,9 +172,9 @@ const categorySlugMap: Record<string, ServiceCategoryId> = {
 };
 
 export function CustomerHome() {
-  const [placeholder, setPlaceholder] = useState("Search for 'Electrician'");
+  const [_placeholder, setPlaceholder] = useState("Search for 'Electrician'");
   const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [_categoryModalOpen, _setCategoryModalOpen] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -196,7 +190,7 @@ export function CustomerHome() {
   const [category, setCategory] = useState<"all" | ServiceCategoryId>("all");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [serviceCatalog, setServiceCatalog] = useState<ServiceItem[]>(services);
-  const [popularServiceCatalog, setPopularServiceCatalog] = useState<ServiceItem[]>(services.slice(0, 6));
+  const [_popularServiceCatalog, setPopularServiceCatalog] = useState<ServiceItem[]>(services.slice(0, 6));
   const [_offerBanners, setOfferBanners] = useState<OfferBanner[]>([]);
   const [form, setForm] = useState(initialForm);
   const [formErrors, setFormErrors] = useState<BookingFormErrors>({});
@@ -315,7 +309,12 @@ export function CustomerHome() {
     createApiClient()
       .getMe()
       .then((response) => {
-        if (active) setAuthSession(response.data);
+        if (active) {
+          setAuthSession((prev) => ({
+            token: prev?.token,
+            user: response.data
+          }));
+        }
       })
       .catch(() => {
         if (active) setAuthSession(null);
@@ -513,6 +512,12 @@ export function CustomerHome() {
 
       const orderResponse = await createApiClient().createRazorpayOrder({ bookingCode: bookingResult.bookingCode });
       const order = orderResponse.data;
+
+      if (!order.keyId) {
+        setPaymentStatus("failed");
+        setPaymentMessage("Payment gateway key is not configured.");
+        return;
+      }
 
       const options: RazorpayCheckoutOptions = {
         key: order.keyId,
@@ -995,77 +1000,7 @@ export function CustomerHome() {
       </section>
 
       {/* FOOTER */}
-      <footer id="contact" className="footer">
-        <div className="container">
-          <div className="footer-grid">
-            <div className="footer-col">
-              <div className="footer-logo">
-                <i className="fas fa-hard-hat" style={{ color: "var(--orange)" }} />
-                <span className="marac">MARAC</span>
-                <span className="workers">WORKERS</span>
-              </div>
-              <p>Find Skilled Workers. Get the Job Done.</p>
-              <div style={{ display: "flex", gap: "0.6rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
-                <span style={{ background: "#1a2b44", padding: "0.4rem 1rem", borderRadius: "40px", fontSize: "0.75rem", color: "white", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-                  <i className="fab fa-google-play" /> Google Play
-                </span>
-                <span style={{ background: "#1a2b44", padding: "0.4rem 1rem", borderRadius: "40px", fontSize: "0.75rem", color: "white", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
-                  <i className="fab fa-apple" /> App Store
-                </span>
-              </div>
-            </div>
-
-            <div className="footer-col">
-              <h5>Quick Links</h5>
-              <a href="#home">Home</a>
-              <a href="#services">Services</a>
-              <a href="#howitworks">How It Works</a>
-              <a href="#become">Become a Worker</a>
-              <a href="#about">About Us</a>
-              <a href="#contact">Contact</a>
-            </div>
-
-            <div className="footer-col">
-              <h5>For Customers</h5>
-              <a onClick={() => setAuthModalOpen(true)}>Customer Login</a>
-              <a onClick={() => setRoleModalOpen(true)}>Register</a>
-              <a href="#howitworks">How to Book</a>
-              <a href="#services">Service Rates</a>
-              <a href="https://wa.me/919365123456" target="_blank" rel="noreferrer">Help & Support</a>
-            </div>
-
-            <div className="footer-col">
-              <h5>For Workers</h5>
-              <a onClick={() => setAuthModalOpen(true)}>Worker Login</a>
-              <a href="https://wa.me/919365123456?text=Worker%20Registration" target="_blank" rel="noreferrer">Join as Worker</a>
-              <a href="#howitworks">How It Works</a>
-              <a href="#become">Earnings Guide</a>
-              <Link href="/terms">Safety Guidelines</Link>
-            </div>
-
-            <div className="footer-col">
-              <h5>Contact Us</h5>
-              <p><i className="fas fa-phone-alt" style={{ width: "1.4rem" }} /> +91 93651 23456</p>
-              <p><i className="fas fa-envelope" style={{ width: "1.4rem" }} /> support@maracworkers.com</p>
-              <p><i className="fas fa-map-marker-alt" style={{ width: "1.4rem" }} /> GS Road, Guwahati, Assam</p>
-              <div className="footer-social">
-                <a href="#"><i className="fab fa-facebook-f" /></a>
-                <a href="#"><i className="fab fa-instagram" /></a>
-                <a href="#"><i className="fab fa-youtube" /></a>
-                <a href="#"><i className="fab fa-linkedin-in" /></a>
-              </div>
-            </div>
-          </div>
-
-          <div className="footer-bottom">
-            <span>© 2026 Marac Workers. All Rights Reserved.</span>
-            <span>
-              <Link href="/terms">Privacy Policy</Link>
-              <Link href="/terms">Terms & Conditions</Link>
-            </span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter onOpenAuth={() => setAuthModalOpen(true)} onOpenRole={() => setRoleModalOpen(true)} />
 
       {/* FLOATING MOBILE ACTIONS */}
       <nav className="floating-contact-actions" aria-label="Quick contact">
@@ -1698,14 +1633,14 @@ function mapApiServiceToServiceItem(service: ApiService, categoryMap: Map<string
     serviceId: service.id,
     category: mappedCategory,
     categoryLabel: categoryObject?.name ?? categoryLabels[mappedCategory],
-    iconKey: resolveServiceIconKey(service.iconKey ?? categoryObject?.iconKey, mappedCategory),
+    iconKey: resolveServiceIconKey(service.icon, [service.name, service.description, mappedCategory].filter(Boolean).join(" ")),
     name: service.name,
     description: service.description ?? "",
-    price: service.price,
-    priceLabel: String(service.price),
+    price: service.basePrice,
+    priceLabel: service.priceLabel ?? String(service.basePrice),
     imageUrl: service.imageUrl ?? undefined,
-    durationLabel: service.durationMinutes ? `${service.durationMinutes} mins` : undefined,
-    bookedQuantity: service.bookingCount ?? 0
+    durationLabel: service.durationMin ? `${service.durationMin} mins` : undefined,
+    bookedQuantity: service.bookedQuantity ?? service.bookingCount ?? 0
   };
 }
 
@@ -1833,4 +1768,86 @@ function createHistoryItem(booking: Booking, payload: BookingCreateInput, source
     source,
     createdAt: booking.createdAt
   };
+}
+
+export function SiteFooter({
+  onOpenAuth,
+  onOpenRole
+}: {
+  onOpenAuth?: () => void;
+  onOpenRole?: () => void;
+} = {}) {
+  return (
+    <footer id="contact" className="footer">
+      <div className="container">
+        <div className="footer-grid">
+          <div className="footer-col">
+            <div className="footer-logo">
+              <i className="fas fa-hard-hat" style={{ color: "var(--orange)" }} />
+              <span className="marac">MARAC</span>
+              <span className="workers">WORKERS</span>
+            </div>
+            <p>Find Skilled Workers. Get the Job Done.</p>
+            <div style={{ display: "flex", gap: "0.6rem", marginTop: "1.2rem", flexWrap: "wrap" }}>
+              <span style={{ background: "#1a2b44", padding: "0.4rem 1rem", borderRadius: "40px", fontSize: "0.75rem", color: "white", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                <i className="fab fa-google-play" /> Google Play
+              </span>
+              <span style={{ background: "#1a2b44", padding: "0.4rem 1rem", borderRadius: "40px", fontSize: "0.75rem", color: "white", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                <i className="fab fa-apple" /> App Store
+              </span>
+            </div>
+          </div>
+
+          <div className="footer-col">
+            <h5>Quick Links</h5>
+            <Link href="/#home">Home</Link>
+            <Link href="/#services">Services</Link>
+            <Link href="/#howitworks">How It Works</Link>
+            <Link href="/#become">Become a Worker</Link>
+            <Link href="/about">About Us</Link>
+            <Link href="/#contact">Contact</Link>
+          </div>
+
+          <div className="footer-col">
+            <h5>For Customers</h5>
+            <a onClick={() => onOpenAuth?.()} style={{ cursor: onOpenAuth ? "pointer" : "default" }}>Customer Login</a>
+            <a onClick={() => onOpenRole?.()} style={{ cursor: onOpenRole ? "pointer" : "default" }}>Register</a>
+            <Link href="/#howitworks">How to Book</Link>
+            <Link href="/#services">Service Rates</Link>
+            <a href="https://wa.me/919365123456" target="_blank" rel="noreferrer">Help & Support</a>
+          </div>
+
+          <div className="footer-col">
+            <h5>For Workers</h5>
+            <a onClick={() => onOpenAuth?.()} style={{ cursor: onOpenAuth ? "pointer" : "default" }}>Worker Login</a>
+            <a href="https://wa.me/919365123456?text=Worker%20Registration" target="_blank" rel="noreferrer">Join as Worker</a>
+            <Link href="/#howitworks">How It Works</Link>
+            <Link href="/#become">Earnings Guide</Link>
+            <Link href="/terms">Safety Guidelines</Link>
+          </div>
+
+          <div className="footer-col">
+            <h5>Contact Us</h5>
+            <p><i className="fas fa-phone-alt" style={{ width: "1.4rem" }} /> +91 93651 23456</p>
+            <p><i className="fas fa-envelope" style={{ width: "1.4rem" }} /> support@maracworkers.com</p>
+            <p><i className="fas fa-map-marker-alt" style={{ width: "1.4rem" }} /> GS Road, Guwahati, Assam</p>
+            <div className="footer-social">
+              <a href="#"><i className="fab fa-facebook-f" /></a>
+              <a href="#"><i className="fab fa-instagram" /></a>
+              <a href="#"><i className="fab fa-youtube" /></a>
+              <a href="#"><i className="fab fa-linkedin-in" /></a>
+            </div>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span>© 2026 Marac Workers. All Rights Reserved.</span>
+          <span>
+            <Link href="/terms">Privacy Policy</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
 }

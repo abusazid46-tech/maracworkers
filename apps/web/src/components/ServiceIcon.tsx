@@ -101,10 +101,10 @@ function normalizeIconToken(value?: string | null) {
   return value?.trim().toLowerCase().replace(/^bi\s+/, "").replace(/^bi-/, "").replace(/[^a-z0-9]+/g, "-") ?? "";
 }
 
-export function ServiceIcon({ name, className, title }: { name?: string | null; className?: string; title?: string }) {
+export function ServiceIcon({ name, className, title, style }: { name?: string | null; className?: string; title?: string; style?: React.CSSProperties }) {
   const key = normalizeServiceIconKey(name);
   return (
-    <svg className={className} viewBox="0 0 24 24" role="img" aria-label={title ?? key} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} style={style} viewBox="0 0 24 24" role="img" aria-label={title ?? key} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       {icons[key]}
     </svg>
   );
