@@ -13,14 +13,6 @@ import type {
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveServiceIconKey, ServiceIcon, type ServiceIconKey } from "./ServiceIcon";
-import {
-  businessAddress,
-  businessName,
-  businessPhone,
-  faqItems,
-  serviceAreas,
-  siteUrl
-} from "./seo-data";
 import { categoryLabels, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
 
 type CartItem = ServiceItem & { quantity: number };
@@ -122,7 +114,7 @@ type BookingHistoryItem = {
 
 const bookingHistoryKey = "marac_customer_bookings";
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-const guwahatiCenter = { lat: 26.1445, lng: 91.7362 };
+
 
 const categorySlugMap: Record<string, ServiceCategoryId> = {
   "toilet-bath": "toilet",
@@ -171,10 +163,73 @@ const categorySlugMap: Record<string, ServiceCategoryId> = {
   "cat_security": "security"
 };
 
+const liveBookings = [
+  { name: "Sunil B.", trade: "Electrician", location: "Beltola, Guwahati", time: "2m ago" },
+  { name: "Priya S.", trade: "AC Deep Service", location: "Zoo Road, Guwahati", time: "4m ago" },
+  { name: "Arun D.", trade: "Master Plumber", location: "GS Road, Guwahati", time: "7m ago" },
+  { name: "Meera K.", trade: "Home Deep Cleaning", location: "Christian Basti, Guwahati", time: "11m ago" },
+  { name: "Bikash N.", trade: "House Painter", location: "Chandmari, Guwahati", time: "15m ago" }
+];
+
+const topWorkers = [
+  {
+    id: "w1",
+    name: "Biswajit Saikia",
+    trade: "Licensed Electrician",
+    rating: 4.9,
+    reviews: 142,
+    jobsDone: 210,
+    rate: "₹299",
+    rateUnit: "visit",
+    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=200&h=200&fit=crop&crop=face",
+    skills: ["Wiring", "MCB Trip", "Inverter Setup", "Short Circuit"],
+    categoryLink: "ac"
+  },
+  {
+    id: "w2",
+    name: "Manoj Kalita",
+    trade: "Master Plumber",
+    rating: 4.9,
+    reviews: 118,
+    jobsDone: 185,
+    rate: "₹249",
+    rateUnit: "visit",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
+    skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Tank Wash"],
+    categoryLink: "tank"
+  },
+  {
+    id: "w3",
+    name: "Deepak Sharma",
+    trade: "AC & HVAC Specialist",
+    rating: 4.8,
+    reviews: 96,
+    jobsDone: 140,
+    rate: "₹499",
+    rateUnit: "service",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
+    skills: ["Gas Refill", "Jet Pump Wash", "Cooling Coil", "PCB Repair"],
+    categoryLink: "ac"
+  },
+  {
+    id: "w4",
+    name: "Bhaben Das",
+    trade: "Wall & House Painter",
+    rating: 4.8,
+    reviews: 84,
+    jobsDone: 112,
+    rate: "₹399",
+    rateUnit: "day/visit",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
+    skills: ["Texture Wall", "Waterproofing", "Exterior Emulsion", "Putty"],
+    categoryLink: "painter"
+  }
+];
+
 export function CustomerHome() {
-  const [_placeholder, setPlaceholder] = useState("Search for 'Electrician'");
+  const [activeBookingIndex, setActiveBookingIndex] = useState(0);
+  const [placeholder, setPlaceholder] = useState("Search for 'Electrician'");
   const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [_categoryModalOpen, _setCategoryModalOpen] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -190,7 +245,6 @@ export function CustomerHome() {
   const [category, setCategory] = useState<"all" | ServiceCategoryId>("all");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [serviceCatalog, setServiceCatalog] = useState<ServiceItem[]>(services);
-  const [_popularServiceCatalog, setPopularServiceCatalog] = useState<ServiceItem[]>(services.slice(0, 6));
   const [_offerBanners, setOfferBanners] = useState<OfferBanner[]>([]);
   const [form, setForm] = useState(initialForm);
   const [formErrors, setFormErrors] = useState<BookingFormErrors>({});
@@ -200,7 +254,6 @@ export function CustomerHome() {
   const [paymentMessage, setPaymentMessage] = useState("");
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
-  const [_confirmedPayload, setConfirmedPayload] = useState<BookingCreateInput | null>(null);
   const [bookingHistory, setBookingHistory] = useState<BookingHistoryItem[]>([]);
   const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [activeLang, setActiveLang] = useState<"en" | "as" | "hi">("en");
@@ -218,6 +271,13 @@ export function CustomerHome() {
     }
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBookingIndex((prev) => (prev + 1) % liveBookings.length);
+    }, 4000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -266,10 +326,9 @@ export function CustomerHome() {
 
     try {
       const api = createApiClient();
-      const [categoriesResponse, servicesResponse, popularResponse, offersResponse] = await Promise.allSettled([
+      const [categoriesResponse, servicesResponse, offersResponse] = await Promise.allSettled([
         api.getServiceCategories(),
         api.getServices(),
-        api.getPopularServices(),
         api.getOfferBanners()
       ]);
 
@@ -277,7 +336,6 @@ export function CustomerHome() {
 
       const remoteCategories = categoriesResponse.status === "fulfilled" ? categoriesResponse.value.data : [];
       const remoteServices = servicesResponse.status === "fulfilled" ? servicesResponse.value.data : [];
-      const remotePopularServices = popularResponse.status === "fulfilled" ? popularResponse.value.data : [];
 
       if (offersResponse.status === "fulfilled") {
         setOfferBanners(offersResponse.value.data);
@@ -287,13 +345,6 @@ export function CustomerHome() {
         const categoryMap = new Map(remoteCategories.map((cat: ApiServiceCategory) => [cat.id, cat]));
         const mapped = remoteServices.map((service: ApiService) => mapApiServiceToServiceItem(service, categoryMap));
         setServiceCatalog(mapped);
-
-        if (remotePopularServices.length > 0) {
-          const mappedPopular = remotePopularServices.map((service: ApiService) => mapApiServiceToServiceItem(service, categoryMap));
-          setPopularServiceCatalog(mappedPopular);
-        } else {
-          setPopularServiceCatalog(mapped.slice(0, 6));
-        }
       }
     } catch {
       // Fallback stays in place
@@ -463,7 +514,6 @@ export function CustomerHome() {
 
       setBookingResult(result);
       setBookingRef(bookingData.bookingCode);
-      setConfirmedPayload(payload);
       setSuccess(true);
       setSubmitStatus("success");
       setSubmitMessage("Booking created successfully!");
@@ -489,7 +539,6 @@ export function CustomerHome() {
 
       setBookingResult(result);
       setBookingRef(localCode);
-      setConfirmedPayload(payload);
       setSuccess(true);
       setSubmitStatus("offline");
       setSubmitMessage("Saved offline. Please share details with our team on WhatsApp.");
@@ -600,8 +649,6 @@ export function CustomerHome() {
 
   return (
     <>
-      <HomepageStructuredData />
-
       {/* STICKY FROSTED NAVBAR */}
       <nav className={`navbar ${scrolled ? "scrolled" : ""}`} id="navbar">
         <div className="container nav-flex">
@@ -657,16 +704,24 @@ export function CustomerHome() {
       {/* HERO SECTION */}
       <section id="home" className="container hero">
         <div className="hero-left">
-          <div className="trust-badge">
-            <i className="fas fa-map-pin" /> Building Guwahati&apos;s Trusted Worker Network
+          {/* Dynamic Live Booking Notification Pill */}
+          <div className="live-booking-pill">
+            <span className="live-booking-dot" />
+            <span>
+              <strong>Live Booking:</strong> {liveBookings[activeBookingIndex]?.name} booked{" "}
+              <strong style={{ color: "var(--orange)" }}>{liveBookings[activeBookingIndex]?.trade}</strong> in{" "}
+              {liveBookings[activeBookingIndex]?.location}
+            </span>
+            <span className="time-tag">{liveBookings[activeBookingIndex]?.time}</span>
           </div>
+
           <h1>
             Find Skilled<br />
             Workers Near You,<br />
             <span className="highlight">Instantly.</span>
           </h1>
           <p>
-            From electricians and plumbers to carpenters, painters and daily workers — find the right verified professional for your job.
+            From electricians and plumbers to carpenters, painters and daily workers — find the right verified professional for your job across Guwahati.
           </p>
 
           {/* Search Box */}
@@ -682,6 +737,12 @@ export function CustomerHome() {
             </select>
             <input
               type="text"
+              placeholder={placeholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <input
+              type="text"
               placeholder="Enter location"
               value={location.label}
               onClick={() => setLocationModalOpen(true)}
@@ -693,12 +754,18 @@ export function CustomerHome() {
             </button>
           </div>
 
+          <div className="hero-trust-row" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+            <span className="hero-trust-pill"><i className="fas fa-shield-alt" /> 100% Verified Workers</span>
+            <span className="hero-trust-pill fast"><i className="fas fa-bolt" /> 30-Sec Fast Match</span>
+            <span className="hero-trust-pill star"><i className="fas fa-star" /> 4.9/5 Rating (8,500+ Reviews)</span>
+          </div>
+
           <div className="hero-avatars">
             <div className="avatar-group">
-              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="worker" />
-              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="worker" />
-              <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="worker" />
-              <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="worker" />
+              <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=100&h=100&fit=crop&crop=face" alt="worker" />
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="worker" />
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" alt="worker" />
+              <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" alt="worker" />
             </div>
             <div className="hero-stats">
               <strong>500+ Skilled Professionals</strong>
@@ -798,12 +865,18 @@ export function CustomerHome() {
                   <h3>{service.name}</h3>
                   <p>{service.description}</p>
                   <div className="service-card-price-row">
-                    <div className="service-card-price">₹{service.price.toLocaleString()}</div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
+                        <span className="service-price-old">₹{Math.round(service.price * 1.2).toLocaleString()}</span>
+                        <span className="service-card-price">₹{service.price.toLocaleString()}</span>
+                      </div>
+                      <span className="service-save-badge">Save ~20%</span>
+                    </div>
                     <button
                       className="service-card-btn"
                       type="button"
                       onClick={() => addService(service)}
-                      style={{ background: isAdded ? "#1d9e6b" : undefined }}
+                      style={{ background: isAdded ? "#10b981" : undefined }}
                     >
                       {isAdded ? "✓ Added" : "+ Add"}
                     </button>
@@ -812,6 +885,88 @@ export function CustomerHome() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* TOP VERIFIED TRADE WORKERS SHOWCASE */}
+      <section className="section container">
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "0.8rem" }}>
+          <div>
+            <h2 className="section-title" style={{ textAlign: "left", marginBottom: "0.3rem", fontSize: "2.3rem" }}>
+              Meet Our Top Verified Trade Workers
+            </h2>
+            <p className="section-sub" style={{ textAlign: "left", margin: 0 }}>
+              Certified specialists with police verification, background check & 4.8+ ratings.
+            </p>
+          </div>
+          <button
+            className="btn-outline"
+            type="button"
+            style={{ padding: "0.5rem 1.4rem", fontSize: "0.88rem" }}
+            onClick={() => {
+              const el = document.getElementById("services");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            Explore All Categories →
+          </button>
+        </div>
+
+        <div className="verified-workers-grid">
+          {topWorkers.map((worker) => (
+            <div className="worker-card" key={worker.id}>
+              <div className="worker-card-header">
+                <div className="worker-avatar-wrap">
+                  <img src={worker.image} alt={worker.name} />
+                  <span className="worker-verified-badge" title="Verified Trade Professional">
+                    <i className="fas fa-check" />
+                  </span>
+                </div>
+                <div className="worker-info">
+                  <h4>{worker.name}</h4>
+                  <div className="worker-trade">{worker.trade}</div>
+                </div>
+              </div>
+
+              <div className="worker-stats-row">
+                <span className="rating-stars">
+                  <i className="fas fa-star" /> {worker.rating} ({worker.reviews})
+                </span>
+                <span>
+                  <i className="fas fa-briefcase" style={{ color: "var(--orange)", marginRight: "4px" }} />
+                  {worker.jobsDone}+ jobs done
+                </span>
+              </div>
+
+              <div className="worker-skills-chips">
+                {worker.skills.map((skill, i) => (
+                  <span className="worker-skill-tag" key={i}>
+                    {skill}
+                  </span>
+                ))}
+              </div>
+
+              <div className="worker-card-footer">
+                <div>
+                  <span className="worker-rate-label">Starting at</span>
+                  <div className="worker-rate-value">
+                    {worker.rate} <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--text-muted)" }}>/ {worker.rateUnit}</span>
+                  </div>
+                </div>
+                <button
+                  className="worker-book-btn"
+                  type="button"
+                  onClick={() => {
+                    setCategory(worker.categoryLink as any);
+                    const el = document.getElementById("services");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Book {worker.name.split(" ")[0]}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -1165,69 +1320,6 @@ export function CustomerHome() {
   );
 }
 
-function HomepageStructuredData() {
-  const localBusinessSchema = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": `${siteUrl}/#localbusiness`,
-    name: businessName,
-    url: siteUrl,
-    telephone: businessPhone,
-    image: `${siteUrl}/favicon.png`,
-    priceRange: "₹₹",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: businessAddress.streetAddress,
-      addressLocality: businessAddress.addressLocality,
-      addressRegion: businessAddress.addressRegion,
-      postalCode: businessAddress.postalCode,
-      addressCountry: businessAddress.addressCountry
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: guwahatiCenter.lat,
-      longitude: guwahatiCenter.lng
-    },
-    areaServed: serviceAreas.map((area) => ({
-      "@type": "AdministrativeArea",
-      name: area
-    }))
-  };
-
-  const websiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: businessName,
-    url: siteUrl,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${siteUrl}/?q={search_term_string}`,
-      "query-input": "required name=search_term_string"
-    }
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((item) => ({
-      "@type": "Question",
-      name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer
-      }
-    }))
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify([localBusinessSchema, websiteSchema, faqSchema]).replace(/</g, "\\u003c")
-      }}
-    />
-  );
-}
 
 function LocationModal({
   status,

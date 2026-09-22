@@ -18,18 +18,18 @@ type PageProps = {
 const serviceSeoHighlights: Record<SeoServiceSlug, string[]> = {
   "toilet-bath": [
     "Attached bathroom, toilet, tile, and fixture cleaning packages.",
-    "Stain, odour, and hygiene-focused cleaning for Agartala homes.",
+    "Stain, odour, and hygiene-focused cleaning for Guwahati homes.",
     "Single, double, and multi-bathroom options for families and rentals."
   ],
   "tank-wash": [
     "Overhead and underground tank cleaning support.",
     "Sludge removal, scrubbing, and bleaching treatment options.",
-    "Useful for homes, apartments, shops, and small facilities in Agartala."
+    "Useful for homes, apartments, shops, and small facilities in Guwahati."
   ],
   "ac-repair": [
     "Foam jet AC service, installation, gas filling, and repair enquiries.",
     "Indoor and outdoor unit cleaning options for better cooling.",
-    "Support for seasonal servicing before Agartala summer demand."
+    "Support for seasonal servicing before Guwahati summer demand."
   ],
   "sofa-clean": [
     "Sofa, carpet, upholstery, and dining chair cleaning enquiries.",
@@ -48,7 +48,7 @@ const serviceSeoHighlights: Record<SeoServiceSlug, string[]> = {
   ],
   "aya-housemaid": [
     "Instant maid, one-time maid enquiry, baby care, and patient-care support.",
-    "Best for households that need care or domestic help in Agartala.",
+    "Best for households that need care or domestic help in Guwahati.",
     "Duty timing and scope can be confirmed before assigning staff."
   ],
   "pest-control": [
@@ -63,7 +63,7 @@ const serviceSeoHighlights: Record<SeoServiceSlug, string[]> = {
   ],
   "saloon-spa": [
     "At-home salon, grooming, spa, and beauty service enquiries.",
-    "Convenient booking support for customers in Agartala.",
+    "Convenient booking support for customers in Guwahati.",
     "Service availability can be confirmed by preferred date and treatment."
   ],
   security: [
@@ -84,8 +84,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const service = findSeoService(slug);
   if (!service) {
     return {
-      title: "Home Services in Agartala",
-      description: "Book The Wings Group for trusted home services in Agartala."
+      title: "Home Services in Guwahati",
+      description: "Book Marac Workers for trusted home services in Guwahati."
     };
   }
 
@@ -151,10 +151,10 @@ export default async function ServiceSeoPage({ params }: PageProps) {
       <section className="seo-hero">
         <div className="container">
           <Link className="seo-logo-link" href="/">
-            <img src="/the-wings-logo.png" alt={`${businessName} logo`} />
-            <span>{businessName}</span>
+            <i className="fas fa-hard-hat" style={{ color: "var(--orange)", fontSize: "1.6rem" }} />
+            <span style={{ fontWeight: 900, letterSpacing: "-0.02em" }}>{businessName}</span>
           </Link>
-          <div className="section-label">Agartala Home Services</div>
+          <div className="section-label">Guwahati Home Services</div>
           <h1>{service.title}</h1>
           <p>{service.description}</p>
           <div className="seo-actions">
@@ -196,7 +196,7 @@ export default async function ServiceSeoPage({ params }: PageProps) {
 
       <section className="seo-related-section">
         <div className="container">
-          <h2>More services in Agartala</h2>
+          <h2>More services in Guwahati</h2>
           <div className="seo-related-grid">
             {relatedServices.map((item) => (
               <Link href={`/services/${item.slug}/`} key={item.slug}>

@@ -28,79 +28,79 @@ export const seoServices = [
   {
     slug: "toilet-bath",
     name: "Toilet & Bath Cleaning",
-    title: "Toilet & Bathroom Cleaning in Agartala",
-    description: "Book attached bathroom cleaning, toilet cleaning, tile scrubbing, stain removal, and sanitisation services in Agartala.",
-    keywords: ["bathroom cleaning Agartala", "toilet cleaning Agartala", "washroom cleaning service Agartala"]
+    title: "Toilet & Bathroom Cleaning in Guwahati",
+    description: "Book attached bathroom cleaning, toilet cleaning, tile scrubbing, stain removal, and sanitisation services in Guwahati.",
+    keywords: ["bathroom cleaning Guwahati", "toilet cleaning Guwahati", "washroom cleaning service Guwahati"]
   },
   {
     slug: "tank-wash",
     name: "Water Tank Cleaning",
-    title: "Water Tank Cleaning in Agartala",
-    description: "Professional overhead and underground water tank cleaning in Agartala with sludge removal, scrubbing, and bleaching treatment.",
-    keywords: ["water tank cleaning Agartala", "overhead tank wash Agartala", "underground tank cleaning Agartala"]
+    title: "Water Tank Cleaning in Guwahati",
+    description: "Professional overhead and underground water tank cleaning in Guwahati with sludge removal, scrubbing, and bleaching treatment.",
+    keywords: ["water tank cleaning Guwahati", "overhead tank wash Guwahati", "underground tank cleaning Guwahati"]
   },
   {
     slug: "ac-repair",
     name: "AC Service & Repair",
-    title: "AC Service and Repair in Agartala",
-    description: "Book AC foam jet servicing, AC installation, AC gas filling, dismantling, and appliance repair support in Agartala.",
-    keywords: ["AC service Agartala", "AC repair Agartala", "AC gas filling Agartala"]
+    title: "AC Service and Repair in Guwahati",
+    description: "Book AC foam jet servicing, AC installation, AC gas filling, dismantling, and appliance repair support in Guwahati.",
+    keywords: ["AC service Guwahati", "AC repair Guwahati", "AC gas filling Guwahati"]
   },
   {
     slug: "sofa-clean",
     name: "Sofa Cleaning",
-    title: "Sofa and Carpet Cleaning in Agartala",
-    description: "Professional sofa cleaning, carpet dry wash, upholstery cleaning, and dining chair deep cleaning services in Agartala.",
-    keywords: ["sofa cleaning Agartala", "carpet cleaning Agartala", "upholstery cleaning Agartala"]
+    title: "Sofa and Carpet Cleaning in Guwahati",
+    description: "Professional sofa cleaning, carpet dry wash, upholstery cleaning, and dining chair deep cleaning services in Guwahati.",
+    keywords: ["sofa cleaning Guwahati", "carpet cleaning Guwahati", "upholstery cleaning Guwahati"]
   },
   {
     slug: "deep-clean",
     name: "Deep Home Cleaning",
-    title: "Deep Home Cleaning in Agartala",
-    description: "Book 2 BHK, 3 BHK, house deep cleaning, room cleaning, and move-in cleaning services across Agartala.",
-    keywords: ["deep cleaning Agartala", "home cleaning Agartala", "house cleaning service Agartala"]
+    title: "Deep Home Cleaning in Guwahati",
+    description: "Book 2 BHK, 3 BHK, house deep cleaning, room cleaning, and move-in cleaning services across Guwahati.",
+    keywords: ["deep cleaning Guwahati", "home cleaning Guwahati", "house cleaning service Guwahati"]
   },
   {
     slug: "kitchen-appliances",
     name: "Kitchen & Appliance Cleaning",
-    title: "Kitchen and Appliance Cleaning in Agartala",
-    description: "Kitchen chimney cleaning, fridge cleaning, gas stove cleaning, microwave cleaning, fan cleaning, and window cleaning in Agartala.",
-    keywords: ["kitchen cleaning Agartala", "chimney cleaning Agartala", "fridge cleaning Agartala"]
+    title: "Kitchen and Appliance Cleaning in Guwahati",
+    description: "Kitchen chimney cleaning, fridge cleaning, gas stove cleaning, microwave cleaning, fan cleaning, and window cleaning in Guwahati.",
+    keywords: ["kitchen cleaning Guwahati", "chimney cleaning Guwahati", "fridge cleaning Guwahati"]
   },
   {
     slug: "aya-housemaid",
     name: "Aya and Housemaid",
-    title: "Aya and Housemaid Services in Agartala",
-    description: "Hire instant maid, housemaid, baby care, and patient care support in Agartala with The Wings Group.",
-    keywords: ["maid service Agartala", "aya service Agartala", "housemaid Agartala"]
+    title: "Aya and Housemaid Services in Guwahati",
+    description: "Hire instant maid, housemaid, baby care, and patient care support in Guwahati with Marac Workers.",
+    keywords: ["maid service Guwahati", "aya service Guwahati", "housemaid Guwahati"]
   },
   {
     slug: "pest-control",
     name: "Pest Control",
-    title: "Pest Control in Agartala",
-    description: "Book pest control services in Agartala for homes, apartments, kitchens, and commercial spaces.",
-    keywords: ["pest control Agartala", "cockroach control Agartala", "termite control Agartala"]
+    title: "Pest Control in Guwahati",
+    description: "Book pest control services in Guwahati for homes, apartments, kitchens, and commercial spaces.",
+    keywords: ["pest control Guwahati", "cockroach control Guwahati", "termite control Guwahati"]
   },
   {
     slug: "painter-plumber",
     name: "Painter & Plumber",
-    title: "Painter and Plumber in Agartala",
-    description: "Find painting, plumbing, carpenter, and home repair support in Agartala with site verification and clear estimates.",
-    keywords: ["painter Agartala", "plumber Agartala", "home repair Agartala"]
+    title: "Painter and Plumber in Guwahati",
+    description: "Find painting, plumbing, carpenter, and home repair support in Guwahati with site verification and clear estimates.",
+    keywords: ["painter Guwahati", "plumber Guwahati", "home repair Guwahati"]
   },
   {
     slug: "saloon-spa",
     name: "Saloon & Spa",
-    title: "Salon and Spa Services in Agartala",
-    description: "At-home salon, spa, grooming, and beauty service enquiries in Agartala through The Wings Group.",
-    keywords: ["salon at home Agartala", "spa service Agartala", "beauty service Agartala"]
+    title: "Salon and Spa Services in Guwahati",
+    description: "At-home salon, spa, grooming, and beauty service enquiries in Guwahati through Marac Workers.",
+    keywords: ["salon at home Guwahati", "spa service Guwahati", "beauty service Guwahati"]
   },
   {
     slug: "security",
     name: "Security Services",
-    title: "Security Guard Services in Agartala",
-    description: "Domestic security, private security guard, corporate security, and facility manpower services in Agartala.",
-    keywords: ["security guard Agartala", "private security Agartala", "corporate security Agartala"]
+    title: "Security Guard Services in Guwahati",
+    description: "Domestic security, private security guard, corporate security, and facility manpower services in Guwahati.",
+    keywords: ["security guard Guwahati", "private security Guwahati", "corporate security Guwahati"]
   }
 ] as const;
 
