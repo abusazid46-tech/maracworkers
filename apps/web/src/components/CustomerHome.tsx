@@ -668,6 +668,17 @@ export function CustomerHome() {
           </ul>
 
           <div className="nav-actions">
+            <button
+              className="nav-location-btn"
+              type="button"
+              onClick={() => setLocationModalOpen(true)}
+              title="Change area in Guwahati"
+            >
+              <i className="fas fa-map-marker-alt" />
+              <span>{location.label.split(",")[0] || "Guwahati"}</span>
+              <i className="fas fa-chevron-down" style={{ fontSize: "0.65rem", opacity: 0.7 }} />
+            </button>
+
             <div className="lang-selector">
               <span className={activeLang === "en" ? "active" : ""} onClick={() => setActiveLang("en")}>En</span>
               <span className={activeLang === "as" ? "active" : ""} onClick={() => setActiveLang("as")}>অ</span>
@@ -701,90 +712,188 @@ export function CustomerHome() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <section id="home" className="container hero">
-        <div className="hero-left">
-          {/* Dynamic Live Booking Notification Pill */}
-          <div className="live-booking-pill">
-            <span className="live-booking-dot" />
-            <span>
-              <strong>Live Booking:</strong> {liveBookings[activeBookingIndex]?.name} booked{" "}
-              <strong style={{ color: "var(--orange)" }}>{liveBookings[activeBookingIndex]?.trade}</strong> in{" "}
-              {liveBookings[activeBookingIndex]?.location}
-            </span>
-            <span className="time-tag">{liveBookings[activeBookingIndex]?.time}</span>
-          </div>
-
-          <h1>
-            Find Skilled<br />
-            Workers Near You,<br />
-            <span className="highlight">Instantly.</span>
-          </h1>
-          <p>
-            From electricians and plumbers to carpenters, painters and daily workers — find the right verified professional for your job across Guwahati.
-          </p>
-
-          {/* Search Box */}
-          <div className="search-box">
-            <select value={selectedHeroCategory} onChange={(e) => setSelectedHeroCategory(e.target.value)}>
-              <option value="Electrician">Electrician</option>
-              <option value="Plumber">Plumber</option>
-              <option value="Carpenter">Carpenter</option>
-              <option value="Painter">Painter</option>
-              <option value="Construction">Construction</option>
-              <option value="AC Repair">AC Repair</option>
-              <option value="Cleaning">Deep Cleaning</option>
-            </select>
-            <input
-              type="text"
-              placeholder={placeholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <input
-              type="text"
-              placeholder="Enter location"
-              value={location.label}
-              onClick={() => setLocationModalOpen(true)}
-              readOnly
-              style={{ cursor: "pointer" }}
-            />
-            <button className="btn-secondary" type="button" onClick={handleFindWorkers}>
-              <i className="fas fa-search" /> Find Workers
-            </button>
-          </div>
-
-          <div className="hero-trust-row" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
-            <span className="hero-trust-pill"><i className="fas fa-shield-alt" /> 100% Verified Workers</span>
-            <span className="hero-trust-pill fast"><i className="fas fa-bolt" /> 30-Sec Fast Match</span>
-            <span className="hero-trust-pill star"><i className="fas fa-star" /> 4.9/5 Rating (8,500+ Reviews)</span>
-          </div>
-
-          <div className="hero-avatars">
-            <div className="avatar-group">
-              <img src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=100&h=100&fit=crop&crop=face" alt="worker" />
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="worker" />
-              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" alt="worker" />
-              <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" alt="worker" />
+      {/* HERO SECTION — Urban Company / Marketplace Style */}
+      <section id="home" className="hero-section">
+        <div className="container hero-container">
+          <div className="hero-content">
+            {/* Dynamic Live Booking Notification Pill */}
+            <div className="live-booking-pill">
+              <span className="live-booking-dot" />
+              <span>
+                <strong>Live Booking:</strong> {liveBookings[activeBookingIndex]?.name} booked{" "}
+                <strong style={{ color: "var(--orange)" }}>{liveBookings[activeBookingIndex]?.trade}</strong> in{" "}
+                {liveBookings[activeBookingIndex]?.location}
+              </span>
+              <span className="time-tag">{liveBookings[activeBookingIndex]?.time}</span>
             </div>
-            <div className="hero-stats">
-              <strong>500+ Skilled Professionals</strong>
-              <span>ready to help you across Guwahati</span>
-            </div>
-          </div>
-        </div>
 
-        <div className="hero-right">
-          <div className="hero-visual">
-            <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=400&h=400&fit=crop&crop=face" alt="plumber" />
-            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85f8e3?w=400&h=400&fit=crop&crop=face" alt="construction" />
-            <img src="https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=400&h=400&fit=crop&crop=face" alt="electrician" />
-            <img src="https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=400&h=400&fit=crop&crop=face" alt="painter" />
-            <div className="pin-badge">
-              <i className="fas fa-map-pin" /> Guwahati
+            <h1 className="hero-headline">
+              Guwahati&apos;s Most Trusted<br />
+              <span className="highlight">Skilled Workers &amp; Home Services</span>
+            </h1>
+            <p className="hero-subtitle">
+              Book verified electricians, plumbers, carpenters, painters &amp; cleaning specialists in 60 seconds. Transparent upfront rates with 100% satisfaction guarantee.
+            </p>
+
+            {/* Unified Floating Search Bar */}
+            <div className="marketplace-search-box">
+              <div className="search-category-select">
+                <i className="fas fa-th-large" />
+                <select value={selectedHeroCategory} onChange={(e) => setSelectedHeroCategory(e.target.value)}>
+                  <option value="Electrician">Electrician</option>
+                  <option value="Plumber">Plumber</option>
+                  <option value="Carpenter">Carpenter</option>
+                  <option value="Painter">Painter</option>
+                  <option value="AC Repair">AC Repair</option>
+                  <option value="Cleaning">Deep Cleaning</option>
+                  <option value="Tank Wash">Tank Wash</option>
+                </select>
+              </div>
+
+              <div className="search-input-field">
+                <i className="fas fa-search" />
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleFindWorkers();
+                  }}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="search-location-btn"
+                onClick={() => setLocationModalOpen(true)}
+                title="Select locality in Guwahati"
+              >
+                <i className="fas fa-map-marker-alt" />
+                <span>{location.label.split(",")[0] || "Guwahati"}</span>
+                <i className="fas fa-chevron-down" style={{ fontSize: "0.7rem", opacity: 0.7 }} />
+              </button>
+
+              <button className="btn-secondary search-action-btn" type="button" onClick={handleFindWorkers}>
+                <i className="fas fa-search" />
+                <span>Find Workers</span>
+              </button>
+            </div>
+
+            {/* Quick Category Chips for 1-Click Access */}
+            <div className="hero-quick-chips">
+              <span className="chips-title">Popular in Guwahati:</span>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Electrician")}>
+                <i className="fas fa-bolt" /> Electrician
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Plumber")}>
+                <i className="fas fa-wrench" /> Plumber
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("AC")}>
+                <i className="fas fa-snowflake" /> AC Repair
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Cleaning")}>
+                <i className="fas fa-spray-can" /> Deep Clean
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Painter")}>
+                <i className="fas fa-paint-roller" /> Painting
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Tank")}>
+                <i className="fas fa-water" /> Tank Wash
+              </button>
+            </div>
+
+            {/* Trust Assurance Strip */}
+            <div className="hero-trust-strip">
+              <div className="trust-strip-item">
+                <i className="fas fa-shield-alt" />
+                <span>100% Verified Workers</span>
+              </div>
+              <div className="trust-strip-item">
+                <i className="fas fa-bolt" />
+                <span>30-Min Fast Response</span>
+              </div>
+              <div className="trust-strip-item star">
+                <i className="fas fa-star" />
+                <span>4.9/5 Rating (8,500+ Reviews)</span>
+              </div>
+              <div className="trust-strip-item">
+                <i className="fas fa-wallet" />
+                <span>Pay After Service</span>
+              </div>
             </div>
           </div>
-          <div className="bg-glow" />
+
+          {/* Hero Visual Card — Live Marketplace Preview */}
+          <div className="hero-card-side">
+            <div className="marketplace-preview-card">
+              <div className="preview-card-header">
+                <div className="live-status-pill">
+                  <span className="live-status-dot" />
+                  <span>24 Verified Technicians Online</span>
+                </div>
+                <span className="preview-city-tag">Guwahati, Assam</span>
+              </div>
+
+              <div className="preview-featured-pro">
+                <div className="pro-avatar-box">
+                  <img
+                    src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=160&h=160&fit=crop&crop=face"
+                    alt="Biswajit Saikia - Licensed Electrician"
+                  />
+                  <span className="pro-check-badge" title="Police & Background Verified">
+                    <i className="fas fa-check" />
+                  </span>
+                </div>
+                <div className="pro-info-box">
+                  <div className="pro-tag-row">
+                    <span className="trade-pill">Licensed Electrician</span>
+                    <span className="rating-pill"><i className="fas fa-star" /> 4.9 (142)</span>
+                  </div>
+                  <h3 className="pro-name">Biswajit Saikia</h3>
+                  <p className="pro-location"><i className="fas fa-map-marker-alt" /> Zoo Road, Guwahati • 210+ jobs done</p>
+                  <div className="pro-skills-strip">
+                    <span>Wiring</span>
+                    <span>Inverter</span>
+                    <span>MCB Fix</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="preview-stats-row">
+                <div className="preview-stat-cell">
+                  <strong>500+</strong>
+                  <span>Active Pros</span>
+                </div>
+                <div className="preview-stat-cell">
+                  <strong>12.4k+</strong>
+                  <span>Homes Served</span>
+                </div>
+                <div className="preview-stat-cell">
+                  <strong>100%</strong>
+                  <span>Verified</span>
+                </div>
+              </div>
+
+              <div className="preview-instant-cta">
+                <div className="instant-cta-text">
+                  <strong>Need urgent repair right now?</strong>
+                  <span>Guaranteed technician arrival in 30 mins</span>
+                </div>
+                <button
+                  className="btn-secondary"
+                  type="button"
+                  style={{ padding: "0.6rem 1.4rem", fontSize: "0.88rem", whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    const el = document.getElementById("services");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Book Pro
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -853,33 +962,82 @@ export function CustomerHome() {
             ))}
           </div>
 
-          {/* Service Cards Grid */}
+          {/* Service Cards Grid — Urban Company Marketplace Style */}
           <div className="service-grid">
             {visibleHomeServices.map((service) => {
-              const isAdded = Boolean(cart[String(service.id)]);
+              const key = String(service.id);
+              const cartItem = cart[key];
+              const quantity = cartItem?.quantity ?? 0;
+              const isAdded = quantity > 0;
+              const categoryLabel = categoryLabels[service.category] ?? "Service";
+              const originalPrice = service.originalPrice ?? Math.round(service.price * 1.25);
+              const savePercent = Math.round(((originalPrice - service.price) / originalPrice) * 100);
+
               return (
-                <div className="service-card" key={service.id}>
-                  <div className="service-icon-wrap">
-                    <ServiceIcon name={service.iconKey} title={service.name} style={{ width: 36, height: 36 }} />
+                <div className={`service-card ${isAdded ? "service-card-selected" : ""}`} key={service.id}>
+                  <div className="service-card-header">
+                    <span className="service-card-category-tag">{categoryLabel}</span>
+                    <span className="service-card-rating">
+                      <i className="fas fa-star" /> 4.8 <span className="reviews-cnt">(850+)</span>
+                    </span>
                   </div>
-                  <h3>{service.name}</h3>
-                  <p>{service.description}</p>
-                  <div className="service-card-price-row">
-                    <div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "0.3rem" }}>
-                        <span className="service-price-old">₹{Math.round(service.price * 1.2).toLocaleString()}</span>
-                        <span className="service-card-price">₹{service.price.toLocaleString()}</span>
-                      </div>
-                      <span className="service-save-badge">Save ~20%</span>
+
+                  <div className="service-card-body">
+                    <div className="service-card-icon-box">
+                      <ServiceIcon name={service.iconKey} title={service.name} style={{ width: 32, height: 32 }} />
                     </div>
-                    <button
-                      className="service-card-btn"
-                      type="button"
-                      onClick={() => addService(service)}
-                      style={{ background: isAdded ? "#10b981" : undefined }}
-                    >
-                      {isAdded ? "✓ Added" : "+ Add"}
-                    </button>
+                    <h3 className="service-card-name">{service.name}</h3>
+                    <p className="service-card-description">{service.description}</p>
+                    <div className="service-card-meta">
+                      <span><i className="fas fa-clock" /> {service.durationLabel || "45-60 mins"}</span>
+                      <span><i className="fas fa-shield-alt" /> Verified Pro</span>
+                    </div>
+                  </div>
+
+                  <div className="service-card-footer">
+                    <div className="service-price-block">
+                      <div className="service-price-main">
+                        <span className="price-curr">₹</span>
+                        <span className="price-val">{service.price.toLocaleString()}</span>
+                        {originalPrice > service.price && (
+                          <span className="price-strike">₹{originalPrice.toLocaleString()}</span>
+                        )}
+                      </div>
+                      {savePercent > 0 && <span className="service-save-tag">{savePercent}% OFF</span>}
+                    </div>
+
+                    <div className="service-action-slot">
+                      {!isAdded ? (
+                        <button
+                          className="service-add-btn"
+                          type="button"
+                          onClick={() => addService(service)}
+                          aria-label={`Add ${service.name}`}
+                        >
+                          <i className="fas fa-plus" /> Add
+                        </button>
+                      ) : (
+                        <div className="service-stepper">
+                          <button
+                            type="button"
+                            className="stepper-action"
+                            onClick={() => updateCartQuantity(service.id, quantity - 1)}
+                            aria-label="Decrease quantity"
+                          >
+                            −
+                          </button>
+                          <span className="stepper-value">{quantity}</span>
+                          <button
+                            type="button"
+                            className="stepper-action"
+                            onClick={() => updateCartQuantity(service.id, quantity + 1)}
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -1172,15 +1330,24 @@ export function CustomerHome() {
 
       {/* FLOATING CHECKOUT BAR */}
       {cartItems.length > 0 && !bookingModalOpen && !cartDrawerOpen && (
-        <div className="checkout-bar" role="status">
-          <div>
-            <strong>{cartCount} service{cartCount === 1 ? "" : "s"} in cart</strong>
-            <span>Total: ₹{total.toLocaleString()} · Pay after work</span>
+        <aside className="sticky-cart-bar" role="status" aria-label="Cart summary">
+          <div className="sticky-cart-inner">
+            <div className="sticky-cart-info">
+              <div className="sticky-cart-icon-wrap">
+                <i className="fas fa-shopping-bag" />
+                <span className="sticky-cart-badge">{cartCount}</span>
+              </div>
+              <div className="sticky-cart-text">
+                <div className="sticky-cart-count">{cartCount} {cartCount === 1 ? "service" : "services"} in cart</div>
+                <div className="sticky-cart-total">Total: ₹{total.toLocaleString()} <span className="cart-note">· Pay after service</span></div>
+              </div>
+            </div>
+            <button className="sticky-cart-cta" type="button" onClick={openCart}>
+              <span>View Cart &amp; Book</span>
+              <i className="fas fa-arrow-right" />
+            </button>
           </div>
-          <button type="button" onClick={openCart}>
-            Review Cart (₹{total.toLocaleString()}) →
-          </button>
-        </div>
+        </aside>
       )}
 
       {/* CART DRAWER */}
