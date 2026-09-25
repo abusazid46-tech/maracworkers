@@ -8,7 +8,7 @@ const app = createApp();
 const keepAlive = startKeepAlive();
 
 const server = app.listen(env.PORT, () => {
-  logger.info("The Wings API started", {
+  logger.info("Marac Workers API started", {
     port: env.PORT,
     nodeEnv: env.NODE_ENV
   });

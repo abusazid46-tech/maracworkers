@@ -1686,7 +1686,7 @@ function AdminLoginScreen({
             </div>
           </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }

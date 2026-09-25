@@ -1,21 +1,21 @@
-# Hostinger Node.js Backend Deployment
+# Marac Workers - Hostinger Node.js Backend Deployment
 
-Use this guide to migrate only the backend API from Render to Hostinger Node.js.
+Use this guide to deploy or migrate the backend API to Hostinger Node.js (e.g. from Render).
 
-## Hostinger Build Settings
+## Hostinger Git & Build Settings
 
-Keep the GitHub import pointed at the repository root:
+Connect your GitHub repository to Hostinger Node.js web app:
 
 ```txt
-Repository: abusazid46-tech/The_Wings_Group
+Repository: abusazid46-tech/maracworkers
 Branch: main
 Framework preset: Other
 Root directory: ./
-Node version: 22.x
+Node version: 20.x or 22.x
 Package manager: pnpm
 ```
 
-Use these build/output fields:
+Use these build and entry settings in the Hostinger dashboard:
 
 ```txt
 Build command:
@@ -28,22 +28,20 @@ Entry file:
 server.js
 ```
 
-If Hostinger expects the entry file from the repository root instead of the output directory, use:
-
-```txt
-Entry file:
-apps/api/dist/server.js
-```
+> **Note on Entry file**: If Hostinger resolves the entry file path relative to the repository root rather than the output directory, set:
+> ```txt
+> apps/api/dist/server.js
+> ```
 
 ## Environment Variables
 
-Add these in Hostinger before deploying:
+Configure these environment variables in your Hostinger Node.js control panel before starting the application:
 
 ```env
 NODE_ENV=production
-DATABASE_URL=your_supabase_postgres_url
+DATABASE_URL=your_postgresql_connection_string
 JWT_SECRET=your_long_random_secret_at_least_24_characters
-CORS_ORIGIN=https://www.thewingsgroup.online,https://thewingsgroup.online,https://the-wings-group1.vercel.app,https://the-wings-group-admin.vercel.app
+CORS_ORIGIN=https://maracworkers.onrender.com,https://the-wings-group1.vercel.app,https://the-wings-group-admin.vercel.app
 LOG_LEVEL=info
 GOOGLE_CLIENT_ID=your_google_client_id
 RAZORPAY_KEY_ID=your_razorpay_key_id
@@ -54,42 +52,43 @@ WHATSAPP_GRAPH_VERSION=v20.0
 WHATSAPP_ADMIN_PHONE=9774887803
 ```
 
-Do not set `PORT` unless Hostinger asks for it. The API reads `process.env.PORT`, and most Node hosts inject the correct port automatically.
+> Do not manually set `PORT` unless specifically required by Hostinger; the application automatically reads `process.env.PORT` provided by the hosting environment.
 
-## After Deploy
+## Database Migrations
 
-Test the API health endpoint:
+Before or right after the initial deployment, apply database schema migrations:
 
-```txt
-https://your-hostinger-app-domain/health
+```bash
+# From local or Hostinger SSH terminal:
+pnpm --filter @the-wings/api db:deploy
 ```
 
-Then update Vercel environment variables for both frontend and admin:
+## After Deployment Verification
 
-```env
-NEXT_PUBLIC_API_URL=https://your-hostinger-app-domain
-```
+1. Test the API health check:
+   ```bash
+   curl -i https://your-hostinger-domain/health
+   ```
+   Expected response:
+   ```json
+   {"status":"ok","timestamp":"...","uptime":...}
+   ```
 
-Redeploy both Vercel projects after changing `NEXT_PUBLIC_API_URL`.
+2. Update the frontend and admin environment variable on Vercel:
+   ```env
+   NEXT_PUBLIC_API_URL=https://your-hostinger-domain
+   ```
+   Then trigger a redeploy for both `apps/web` and `apps/admin`.
 
-## Custom API Domain
+## Custom Domain Setup (Optional)
 
-After the Hostinger app works, point:
+Point your custom subdomain (e.g., `api.maracworkers.com` or `api.thewingsgroup.online`) to your Hostinger application via CNAME/A records as provided in Hostinger DNS settings. Once SSL is active, update `NEXT_PUBLIC_API_URL` to point to your custom domain.
 
-```txt
-api.thewingsgroup.online
-```
+## Local Build Verification
 
-to the Hostinger Node.js app using the DNS target Hostinger gives you. Then change Vercel to:
-
-```env
-NEXT_PUBLIC_API_URL=https://api.thewingsgroup.online
-```
-
-## Useful Local Verification
-
-Run this locally before pushing deployment changes:
+To verify that the Hostinger build bundle generates without issues before pushing:
 
 ```bash
 pnpm run hostinger:build
 ```
+This builds Prisma client definitions and compiles `apps/api/src` into `apps/api/dist`.

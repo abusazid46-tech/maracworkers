@@ -509,7 +509,7 @@ describe("auth, authorization, booking, and payment API", () => {
       .expect(201);
 
     expect(response.body.data.categoryId).toBe(state.serviceCategories[0]?.id);
-    expect(response.body.data.description).toBe("Glass Cleaning service by The Wings Group.");
+    expect(response.body.data.description).toBe("Glass Cleaning service by Marac Workers.");
     expect(state.services).toHaveLength(1);
   });
 
@@ -534,7 +534,7 @@ describe("auth, authorization, booking, and payment API", () => {
       categoryId: state.serviceCategories[0]?.id,
       name: "Sofa Shampoo",
       slug: "sofa-shampoo",
-      description: "Sofa Shampoo service by The Wings Group.",
+      description: "Sofa Shampoo service by Marac Workers.",
       basePrice: 799,
       durationMin: 120,
       isActive: true
@@ -577,7 +577,7 @@ describe("auth, authorization, booking, and payment API", () => {
       id: created.body.data.id,
       name: "Sofa Shampoo Premium",
       slug: "sofa-shampoo-premium",
-      description: "Sofa Shampoo Premium service by The Wings Group.",
+      description: "Sofa Shampoo Premium service by Marac Workers.",
       basePrice: 899,
       durationMin: 150
     });
