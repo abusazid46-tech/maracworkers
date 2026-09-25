@@ -13,7 +13,7 @@ function createBookingCode() {
   const date = new Date();
   const day = date.toISOString().slice(2, 10).replace(/-/g, "");
   const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `TWG-${day}-${random}`;
+  return `MW-${day}-${random}`;
 }
 
 bookingsRouter.get("/", ...requireRoles("ADMIN", "MANAGER", "STAFF"), async (_req, res, next) => {
@@ -87,10 +87,10 @@ bookingsRouter.patch("/:bookingCode/status", ...requireRoles("ADMIN", "MANAGER",
 bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 * 60 * 1000, max: 20 }), requireAuth, async (req, res, next) => {
   try {
     const input = bookingCreateSchema.parse(req.body);
-    if (!isAgartalaServiceArea(input.city)) {
+    if (!isSupportedServiceArea(input.city)) {
       return res.status(422).json({
-        error: "Service is currently available only in Agartala.",
-        detail: "Please choose an Agartala address before booking."
+        error: "Service is currently available in Guwahati, Agartala, and select Northeast hubs.",
+        detail: "Please choose an address in Guwahati, Agartala, or surrounding regions before booking."
       });
     }
 
@@ -186,8 +186,39 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
   }
 });
 
-function isAgartalaServiceArea(city: string) {
-  return normalizeLocationText(city).includes("agartala");
+const DEFAULT_SERVICE_AREAS = [
+  "guwahati",
+  "agartala",
+  "kamrup",
+  "dispur",
+  "beltola",
+  "zoo road",
+  "paltan bazaar",
+  "chandmari",
+  "jalukbari",
+  "ganeshguri",
+  "ulubari",
+  "khanapara",
+  "six mile",
+  "pan bazaar",
+  "hatigaon",
+  "kahilipara",
+  "maligaon",
+  "silchar",
+  "dibrugarh",
+  "jorhat",
+  "tezpur",
+  "nagaon",
+  "tinsukia",
+  "bongaigaon",
+  "dhubri",
+  "assam",
+  "tripura"
+];
+
+function isSupportedServiceArea(city: string) {
+  const normalized = normalizeLocationText(city);
+  return DEFAULT_SERVICE_AREAS.some((area) => normalized.includes(area));
 }
 
 function normalizeLocationText(value: string) {

@@ -439,19 +439,38 @@ describe("auth, authorization, booking, and payment API", () => {
     await request(app).get(`/bookings/${created.body.data.bookingCode}`).set("Cookie", cookieFor(customer)).expect(200);
   });
 
-  it("rejects customer bookings outside the Agartala service area", async () => {
+  it("rejects customer bookings outside the supported service area", async () => {
     const customer = createFakeUser("CUSTOMER", { phone: "9876543210", name: "Test Customer" });
     await request(app)
       .post("/bookings")
       .set("Cookie", cookieFor(customer))
       .send({
         ...bookingPayload,
-        addressLine: "GS Road, Guwahati",
-        city: "Guwahati"
+        addressLine: "10 Downing St, London",
+        city: "London"
       })
       .expect(422);
 
     expect(state.bookings).toHaveLength(0);
+  });
+
+  it("accepts customer bookings in the Guwahati service area", async () => {
+    const customer = createFakeUser("CUSTOMER", { phone: "9876543210", name: "Guwahati Customer" });
+    const response = await request(app)
+      .post("/bookings")
+      .set("Cookie", cookieFor(customer))
+      .send({
+        ...bookingPayload,
+        addressLine: "GS Road, Christian Basti, Guwahati",
+        city: "Guwahati"
+      })
+      .expect(201);
+
+    expect(response.body.data.city).toBe("Guwahati");
+    expect(state.bookings).toHaveLength(1);
+    state.bookings = [];
+    state.bookingItems = [];
+    state.leads = [];
   });
 
   it("repairs missing CRM leads for customers who already have booking history", async () => {
@@ -647,6 +666,24 @@ describe("auth, authorization, booking, and payment API", () => {
     expect(state.leads).toHaveLength(1);
     expect(second.body.data.notes).toContain("Asked for sofa cleaning");
     expect(second.body.data.notes).toContain("Called back for Saturday slot");
+  });
+
+  it("allows public submission of worker registration and customer inquiry leads", async () => {
+    state.leads = [];
+    const publicLead = await request(app)
+      .post("/leads")
+      .send({
+        name: "Biren Kalita",
+        phone: "9876543219",
+        source: "worker_registration",
+        status: "NEW",
+        notes: "Trade: Electrician | Area: Zoo Road | Exp: 4 years | Rate: Rs. 800/day"
+      })
+      .expect(201);
+
+    expect(publicLead.body.data.name).toBe("Biren Kalita");
+    expect(publicLead.body.data.source).toBe("worker_registration");
+    expect(state.leads).toHaveLength(1);
   });
 
   it("requires booking ownership for Razorpay order creation", async () => {

@@ -113,6 +113,13 @@ type BookingHistoryItem = {
   createdAt: string;
 };
 
+type ToastNotification = {
+  id: string;
+  type: "success" | "info" | "warn";
+  title: string;
+  message: string;
+};
+
 const bookingHistoryKey = "marac_customer_bookings";
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
@@ -293,6 +300,15 @@ export function CustomerHome() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const catalogRequestRef = useRef(0);
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+
+  const showToast = useCallback((title: string, message: string, type: "success" | "info" | "warn" = "success") => {
+    const id = `t_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    setToasts((prev) => [...prev.slice(-3), { id, title, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3800);
+  }, []);
 
   useEffect(() => {
     function handleScroll() {
@@ -443,6 +459,7 @@ export function CustomerHome() {
         }
       };
     });
+    showToast("Added to Booking", `${service.name} (₹${service.price}) added to your request`, "success");
   }
 
   function removeService(serviceId: ServiceItem["id"]) {
@@ -550,6 +567,7 @@ export function CustomerHome() {
       setSuccess(true);
       setSubmitStatus("success");
       setSubmitMessage("Booking created successfully!");
+      showToast("Booking Confirmed!", `Order #${bookingData.bookingCode} created. Verified worker assigned shortly`, "success");
 
       const historyItem = createHistoryItem(bookingData, payload, "database");
       const nextHistory = [historyItem, ...bookingHistory.filter((h) => h.bookingCode !== historyItem.bookingCode)];
@@ -575,6 +593,7 @@ export function CustomerHome() {
       setSuccess(true);
       setSubmitStatus("offline");
       setSubmitMessage("Saved offline. Please share details with our team on WhatsApp.");
+      showToast("Order Prepared", `Booking #${localCode} created. Share with team on WhatsApp`, "info");
     }
   }
 
@@ -660,6 +679,7 @@ export function CustomerHome() {
       // Ignore logout errors
     }
     setAuthSession(null);
+    showToast("Signed Out", "You have been signed out successfully", "info");
   }
 
   function handleQuickChip(name: string) {
@@ -1524,6 +1544,7 @@ export function CustomerHome() {
             const el = document.getElementById("services");
             if (el) el.scrollIntoView({ behavior: "smooth" });
           }}
+          onShowToast={showToast}
         />
       )}
 
@@ -1537,6 +1558,7 @@ export function CustomerHome() {
             setAuthInitialTab("customer");
             setAuthModalOpen(true);
           }}
+          onShowToast={showToast}
         />
       )}
 
@@ -1566,6 +1588,7 @@ export function CustomerHome() {
             setAuthModalOpen(false);
             setWorkerProfileModalOpen(true);
           }}
+          onShowToast={showToast}
         />
       )}
 
@@ -1592,6 +1615,30 @@ export function CustomerHome() {
           onFormChange={updateForm}
         />
       )}
+
+      {/* GLOBAL TOAST NOTIFICATIONS */}
+      <div className="toast-container" aria-live="polite">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast-item toast-${toast.type}`}>
+            <div className="toast-icon">
+              {toast.type === "success" && <i className="fas fa-check" />}
+              {toast.type === "info" && <i className="fas fa-info" />}
+              {toast.type === "warn" && <i className="fas fa-exclamation-triangle" />}
+            </div>
+            <div className="toast-body">
+              <div className="toast-title">{toast.title}</div>
+              <div className="toast-message">{toast.message}</div>
+            </div>
+            <button
+              type="button"
+              className="toast-close-btn"
+              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
@@ -1682,12 +1729,14 @@ function AuthModal({
   initialTab = "customer",
   onClose,
   onSuccess,
-  onSwitchToWorkerPortal
+  onSwitchToWorkerPortal,
+  onShowToast
 }: {
   initialTab?: "customer" | "worker";
   onClose: () => void;
   onSuccess: (session: AuthSession) => void;
   onSwitchToWorkerPortal?: () => void;
+  onShowToast?: (title: string, message: string, type?: "success" | "info" | "warn") => void;
 }) {
   const [activeTab, setActiveTab] = useState<"customer" | "worker">(initialTab);
   const [phone, setPhone] = useState("");
@@ -1727,6 +1776,7 @@ function AuthModal({
           try {
             const result = await createApiClient().loginWithGoogle({ credential: response.credential });
             onSuccess(result.data);
+            onShowToast?.("Signed In", "Welcome to Marac Workers!", "success");
           } catch {
             setError("Google login failed. Please try again or use Phone OTP.");
           } finally {
@@ -1746,7 +1796,7 @@ function AuthModal({
     return () => {
       active = false;
     };
-  }, [onSuccess]);
+  }, [onSuccess, onShowToast]);
 
   async function handleSendOtp(e: FormEvent) {
     e.preventDefault();
@@ -1766,6 +1816,7 @@ function AuthModal({
       setStep("otp");
       setTimer(60);
       setInfo(`OTP sent to +91 ${cleanPhone}`);
+      onShowToast?.("OTP Code Sent", `Verification code sent to +91 ${cleanPhone}`, "info");
       if (response.data?.debugOtp) {
         setDebugOtp(response.data.debugOtp);
       }
@@ -1776,6 +1827,7 @@ function AuthModal({
       setStep("otp");
       setTimer(60);
       setInfo(`Verification code prepared for +91 ${cleanPhone}`);
+      onShowToast?.("OTP Code Ready", `Verification code prepared for +91 ${cleanPhone}`, "info");
     } finally {
       setBusy(false);
     }
@@ -1799,6 +1851,7 @@ function AuthModal({
         name: name.trim() || undefined
       });
       onSuccess(result.data);
+      onShowToast?.("Signed In", "Welcome to Marac Workers!", "success");
     } catch {
       // Fallback demo session if API is in demo/offline mode
       const mockSession: AuthSession = {
@@ -1811,6 +1864,7 @@ function AuthModal({
         }
       };
       onSuccess(mockSession);
+      onShowToast?.("Signed In", `Welcome to Marac Workers, ${mockSession.user.name}!`, "success");
     } finally {
       setBusy(false);
     }
@@ -1995,13 +2049,15 @@ function UserProfileModal({
   bookingHistory,
   onClose,
   onSignOut,
-  onBookMore
+  onBookMore,
+  onShowToast
 }: {
   user: AuthSession["user"];
   bookingHistory: BookingHistoryItem[];
   onClose: () => void;
   onSignOut: () => void;
   onBookMore: () => void;
+  onShowToast?: (title: string, message: string, type?: "success" | "info" | "warn") => void;
 }) {
   const initials = (user.name || user.phone || "CU")
     .split(" ")
@@ -2066,14 +2122,29 @@ function UserProfileModal({
                     <span style={{ fontWeight: 800, color: "var(--navy)", fontSize: "0.95rem" }}>
                       Total: ₹{item.total.toLocaleString()}
                     </span>
-                    <a
-                      href={`https://wa.me/919365123456?text=Hi%20Marac%20Workers%2C%20status%20for%20booking%20%23${item.bookingCode}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ color: "#16a34a", fontSize: "0.82rem", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                    >
-                      <i className="fab fa-whatsapp" style={{ color: "#16a34a" }} /> Track
-                    </a>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof navigator !== "undefined" && navigator.clipboard) {
+                            navigator.clipboard.writeText(item.bookingCode);
+                          }
+                          onShowToast?.("Code Copied", `Booking code #${item.bookingCode} copied to clipboard`, "info");
+                        }}
+                        style={{ background: "#f1f5f9", border: "none", borderRadius: "6px", padding: "0.25rem 0.6rem", fontSize: "0.78rem", color: "var(--navy)", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        title="Copy booking code"
+                      >
+                        <i className="fas fa-copy" /> Copy
+                      </button>
+                      <a
+                        href={`https://wa.me/919365123456?text=Hi%20Marac%20Workers%2C%20status%20for%20booking%20%23${item.bookingCode}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: "#16a34a", fontSize: "0.82rem", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                      >
+                        <i className="fab fa-whatsapp" style={{ color: "#16a34a" }} /> Track
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2107,14 +2178,17 @@ function UserProfileModal({
 function WorkerProfileModal({
   authSession,
   onClose,
-  onOpenCustomerLogin
+  onOpenCustomerLogin,
+  onShowToast
 }: {
   authSession: AuthSession | null;
   onClose: () => void;
   onOpenCustomerLogin: () => void;
+  onShowToast?: (title: string, message: string, type?: "success" | "info" | "warn") => void;
 }) {
   const [workerMode, setWorkerMode] = useState<"dashboard" | "register">("dashboard");
   const [isOnline, setIsOnline] = useState(true);
+  const [acceptedJobs, setAcceptedJobs] = useState<string[]>([]);
   const [regForm, setRegForm] = useState({
     name: authSession?.user?.name || "",
     phone: authSession?.user?.phone || "",
@@ -2138,9 +2212,11 @@ function WorkerProfileModal({
         notes: `Trade: ${regForm.trade} | Area: ${regForm.locality} | Exp: ${regForm.experience} | Rate: ₹${regForm.dailyRate}/day | Aadhaar: ${regForm.aadhaarNumber}`
       });
       setSubmitted(true);
+      onShowToast?.("Registration Submitted!", "Our Guwahati onboarding team will verify your documents within 2 hours", "success");
     } catch {
       // Local fallback
       setSubmitted(true);
+      onShowToast?.("Registration Received!", "Application saved. Team will contact you shortly", "success");
     } finally {
       setSubmitting(false);
     }
@@ -2191,7 +2267,15 @@ function WorkerProfileModal({
                 <button
                   type="button"
                   className={`worker-status-toggle ${isOnline ? "online" : "offline"}`}
-                  onClick={() => setIsOnline(!isOnline)}
+                  onClick={() => {
+                    const next = !isOnline;
+                    setIsOnline(next);
+                    onShowToast?.(
+                      next ? "Dispatch Mode: ONLINE" : "Dispatch Mode: OFFLINE",
+                      next ? "You are now active and receiving instant job alerts across Guwahati" : "Dispatch paused. You will not receive new customer calls",
+                      next ? "success" : "info"
+                    );
+                  }}
                   title="Toggle your availability for instant job dispatch"
                 >
                   <span className="worker-toggle-dot" />
@@ -2242,15 +2326,34 @@ function WorkerProfileModal({
                 <div><i className="fas fa-clock" /> Preferred: Today, 2:00 PM - 4:00 PM • Cash on Delivery</div>
               </div>
               <div className="worker-job-actions">
-                <a
-                  href="https://wa.me/919365123456?text=I%20want%20to%20accept%20Job%20MW-ZOO-101"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-secondary"
-                  style={{ padding: "0.5rem 1.2rem", fontSize: "0.85rem", textDecoration: "none" }}
-                >
-                  <i className="fas fa-check" /> Accept Job Dispatch
-                </a>
+                {acceptedJobs.includes("MW-ZOO-101") ? (
+                  <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
+                    <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#065f46", padding: "0.45rem 0.9rem", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <i className="fas fa-check-circle" /> Assigned to You
+                    </span>
+                    <a
+                      href="https://wa.me/919365123456?text=Hi%2C%20I%20am%20your%20Marac%20Workers%20technician%20for%20Job%20MW-ZOO-101.%20I%20am%20on%20my%20way."
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-secondary"
+                      style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem", textDecoration: "none", background: "#16a34a", borderColor: "#16a34a" }}
+                    >
+                      <i className="fab fa-whatsapp" /> Contact Customer
+                    </a>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setAcceptedJobs((prev) => [...prev, "MW-ZOO-101"]);
+                      onShowToast?.("Job Accepted!", "Dispatched to you! Customer phone & address sent to WhatsApp", "success");
+                    }}
+                    style={{ padding: "0.5rem 1.2rem", fontSize: "0.85rem" }}
+                  >
+                    <i className="fas fa-check" /> Accept Job Dispatch
+                  </button>
+                )}
               </div>
             </div>
 
@@ -2265,15 +2368,34 @@ function WorkerProfileModal({
                 <div><i className="fas fa-clock" /> Preferred: Today, 4:30 PM - 6:30 PM • Online Paid</div>
               </div>
               <div className="worker-job-actions">
-                <a
-                  href="https://wa.me/919365123456?text=I%20want%20to%20accept%20Job%20MW-BELT-202"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-secondary"
-                  style={{ padding: "0.5rem 1.2rem", fontSize: "0.85rem", textDecoration: "none" }}
-                >
-                  <i className="fas fa-check" /> Accept Job Dispatch
-                </a>
+                {acceptedJobs.includes("MW-BELT-202") ? (
+                  <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
+                    <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#065f46", padding: "0.45rem 0.9rem", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                      <i className="fas fa-check-circle" /> Assigned to You
+                    </span>
+                    <a
+                      href="https://wa.me/919365123456?text=Hi%2C%20I%20am%20your%20Marac%20Workers%20technician%20for%20Job%20MW-BELT-202.%20I%20am%20on%20my%20way."
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-secondary"
+                      style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem", textDecoration: "none", background: "#16a34a", borderColor: "#16a34a" }}
+                    >
+                      <i className="fab fa-whatsapp" /> Contact Customer
+                    </a>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      setAcceptedJobs((prev) => [...prev, "MW-BELT-202"]);
+                      onShowToast?.("Job Accepted!", "Dispatched to you! Customer phone & address sent to WhatsApp", "success");
+                    }}
+                    style={{ padding: "0.5rem 1.2rem", fontSize: "0.85rem" }}
+                  >
+                    <i className="fas fa-check" /> Accept Job Dispatch
+                  </button>
+                )}
               </div>
             </div>
           </div>

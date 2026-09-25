@@ -3,11 +3,11 @@ import { Prisma } from "@prisma/client";
 import { leadCreateSchema, leadUpdateSchema } from "@the-wings/validation";
 import { prisma } from "../db/prisma.js";
 import { requireRoles } from "../middleware/auth.js";
+import { rateLimit } from "../middleware/rate-limit.js";
 
 export const leadsRouter = Router();
-leadsRouter.use(...requireRoles("ADMIN", "MANAGER"));
 
-leadsRouter.get("/", async (_req, res, next) => {
+leadsRouter.get("/", ...requireRoles("ADMIN", "MANAGER"), async (_req, res, next) => {
   try {
     await syncBookingLeadsFromBookings();
     const leads = await prisma.lead.findMany({
@@ -19,7 +19,7 @@ leadsRouter.get("/", async (_req, res, next) => {
   }
 });
 
-leadsRouter.post("/", async (req, res, next) => {
+leadsRouter.post("/", rateLimit({ keyPrefix: "lead-create", windowMs: 15 * 60 * 1000, max: 20 }), async (req, res, next) => {
   try {
     const input = leadCreateSchema.parse(req.body);
     const existingLead = await prisma.lead.findFirst({
@@ -46,11 +46,11 @@ leadsRouter.post("/", async (req, res, next) => {
   }
 });
 
-leadsRouter.patch("/:id", async (req, res, next) => {
+leadsRouter.patch("/:id", ...requireRoles("ADMIN", "MANAGER"), async (req, res, next) => {
   try {
     const input = leadUpdateSchema.parse(req.body);
     const lead = await prisma.lead.update({
-      where: { id: req.params.id },
+      where: { id: String(req.params.id) },
       data: input
     });
     res.json({ data: lead });
@@ -59,10 +59,10 @@ leadsRouter.patch("/:id", async (req, res, next) => {
   }
 });
 
-leadsRouter.delete("/:id", async (req, res, next) => {
+leadsRouter.delete("/:id", ...requireRoles("ADMIN", "MANAGER"), async (req, res, next) => {
   try {
     const lead = await prisma.lead.delete({
-      where: { id: req.params.id }
+      where: { id: String(req.params.id) }
     });
     res.json({ data: lead });
   } catch (error) {
