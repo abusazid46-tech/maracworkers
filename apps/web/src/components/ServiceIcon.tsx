@@ -13,6 +13,9 @@ export type ServiceIconKey =
   | "electrician"
   | "plumber"
   | "carpenter"
+  | "mason"
+  | "construction"
+  | "daily_worker"
   | "pest"
   | "painting"
   | "salon"
@@ -31,6 +34,9 @@ const iconKeys: ServiceIconKey[] = [
   "electrician",
   "plumber",
   "carpenter",
+  "mason",
+  "construction",
+  "daily_worker",
   "pest",
   "painting",
   "salon",
@@ -63,7 +69,17 @@ const aliases: Record<string, ServiceIconKey> = {
   saloon: "salon",
   spa: "salon",
   guard: "security",
-  shield: "security"
+  shield: "security",
+  mason: "mason",
+  rajmistri: "mason",
+  brick: "mason",
+  construction: "construction",
+  builder: "construction",
+  daily_worker: "daily_worker",
+  daily: "daily_worker",
+  helper: "daily_worker",
+  labor: "daily_worker",
+  labour: "daily_worker"
 };
 
 export function normalizeServiceIconKey(value?: string | null, fallback: ServiceIconKey = "cleaning"): ServiceIconKey {
@@ -89,6 +105,9 @@ export function inferServiceIconKey(value: string, fallback: ServiceIconKey = "c
   if (/\b(electric|electrician|wiring|light|fan)/.test(text)) return "electrician";
   if (/\b(plumber|plumbing|leak|tap|basin)/.test(text)) return "plumber";
   if (/\b(carpenter|wood|door|furniture)/.test(text)) return "carpenter";
+  if (/\b(mason|rajmistri|brick|mortar|plaster|tiler|tile)/.test(text)) return "mason";
+  if (/\b(construction|builder|civil|contractor|shuttering)/.test(text)) return "construction";
+  if (/\b(daily|helper|labor|labour|unloading|loading|shifting)/.test(text)) return "daily_worker";
   if (/\b(pest|cockroach|ant|bug)/.test(text)) return "pest";
   if (/\b(paint|painting|waterproof)/.test(text)) return "painting";
   if (/\b(salon|saloon|spa|massage|facial|beauty)/.test(text)) return "salon";
@@ -203,6 +222,30 @@ const icons: Record<ServiceIconKey, React.ReactNode> = {
       <path d="m13 6 5-2 2 2-2 5" />
       <path d="m12 8 4 4" />
       <path d="M6 18l-2 2" />
+    </>
+  ),
+  mason: (
+    <>
+      <rect x="3" y="14" width="8" height="4" rx="0.5" />
+      <rect x="13" y="14" width="8" height="4" rx="0.5" />
+      <rect x="7" y="8" width="10" height="4" rx="0.5" />
+      <path d="M3 20h18" />
+    </>
+  ),
+  construction: (
+    <>
+      <path d="M2 18h20" />
+      <path d="M5 18V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10" />
+      <path d="M9 18V9h6v9" />
+      <path d="M12 3v3" />
+    </>
+  ),
+  daily_worker: (
+    <>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </>
   ),
   pest: (

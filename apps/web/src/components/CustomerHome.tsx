@@ -65,18 +65,19 @@ declare global {
 }
 
 const categories: Array<{ id: "all" | ServiceCategoryId; label: string; iconKey: ServiceIconKey }> = [
-  { id: "all", label: "All Services", iconKey: "all" },
-  { id: "toilet", label: "Toilet & Bath", iconKey: "bathroom" },
+  { id: "all", label: "All Trade Workers", iconKey: "all" },
+  { id: "electrician", label: "Electrician", iconKey: "electrician" },
+  { id: "plumber", label: "Plumber", iconKey: "plumber" },
+  { id: "daily_worker", label: "Daily Workers & Helpers", iconKey: "daily_worker" },
+  { id: "construction", label: "Construction Worker", iconKey: "construction" },
+  { id: "carpenter", label: "Carpenter", iconKey: "carpenter" },
+  { id: "mason", label: "Mason (Rajmistri)", iconKey: "mason" },
+  { id: "painter", label: "Painter", iconKey: "painting" },
+  { id: "ac", label: "AC & Appliances", iconKey: "ac" },
   { id: "tank", label: "Tank Wash", iconKey: "tank" },
-  { id: "ac", label: "AC & Repair", iconKey: "ac" },
-  { id: "sofa", label: "Sofa Clean", iconKey: "sofa" },
-  { id: "kitchen", label: "Kitchen & Appliances", iconKey: "kitchen" },
   { id: "deep", label: "Deep Clean", iconKey: "home" },
-  { id: "pest", label: "Pest Control", iconKey: "pest" },
-  { id: "painter", label: "Painter & Plumber", iconKey: "painting" },
-  { id: "salon", label: "Saloon & Spa", iconKey: "salon" },
-  { id: "maid", label: "Aya & Housemaid", iconKey: "home" },
-  { id: "security", label: "Security", iconKey: "security" }
+  { id: "toilet", label: "Toilet & Bath", iconKey: "bathroom" },
+  { id: "security", label: "Security Guard", iconKey: "security" }
 ];
 
 const initialForm = {
@@ -115,60 +116,63 @@ type BookingHistoryItem = {
 const bookingHistoryKey = "marac_customer_bookings";
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
-
 const categorySlugMap: Record<string, ServiceCategoryId> = {
+  "electrician": "electrician",
+  "electric": "electrician",
+  "cat_electrician": "electrician",
+  "plumber": "plumber",
+  "plumbing": "plumber",
+  "cat_plumber": "plumber",
+  "daily_worker": "daily_worker",
+  "daily-worker": "daily_worker",
+  "daily-workers": "daily_worker",
+  "helper": "daily_worker",
+  "labor": "daily_worker",
+  "labour": "daily_worker",
+  "construction": "construction",
+  "construction-worker": "construction",
+  "builder": "construction",
+  "carpenter": "carpenter",
+  "woodwork": "carpenter",
+  "mason": "mason",
+  "rajmistri": "mason",
+  "brickwork": "mason",
+  "painter": "painter",
+  "painter-plumber": "painter",
+  "painting": "painter",
   "toilet-bath": "toilet",
   "toilet-and-bath": "toilet",
   "toilet": "toilet",
   "bath": "toilet",
   "bathroom": "toilet",
-  "cat_toilet_bath": "toilet",
   "tank-wash": "tank",
   "tankwash": "tank",
   "tank": "tank",
-  "cat_tank_wash": "tank",
   "ac-repair": "ac",
   "ac-and-repair": "ac",
-  "ac-and-electric": "ac",
-  "ac-electric": "ac",
   "ac": "ac",
-  "cat_ac_repair": "ac",
   "sofa-clean": "sofa",
   "sofa": "sofa",
-  "cat_sofa_clean": "sofa",
   "deep-clean": "deep",
   "deep": "deep",
-  "cat_deep_clean": "deep",
   "kitchen-appliances": "kitchen",
-  "kitchen-and-appliances": "kitchen",
   "kitchen": "kitchen",
-  "cat_kitchen_appliances": "kitchen",
   "aya-housemaid": "maid",
-  "aya-and-housemaid": "maid",
   "maid": "maid",
-  "cat_aya_housemaid": "maid",
   "pest-control": "pest",
   "pest": "pest",
-  "cat_pest_control": "pest",
-  "painter-plumber": "painter",
-  "painter-and-plumber": "painter",
-  "painter": "painter",
-  "cat_painter_plumber": "painter",
   "saloon-spa": "salon",
-  "saloon-and-spa": "salon",
-  "salon-spa": "salon",
   "salon": "salon",
-  "cat_saloon_spa": "salon",
-  "security": "security",
-  "cat_security": "security"
+  "security": "security"
 };
 
 const liveBookings = [
-  { name: "Sunil B.", trade: "Electrician", location: "Beltola, Guwahati", time: "2m ago" },
-  { name: "Priya S.", trade: "AC Deep Service", location: "Zoo Road, Guwahati", time: "4m ago" },
-  { name: "Arun D.", trade: "Master Plumber", location: "GS Road, Guwahati", time: "7m ago" },
-  { name: "Meera K.", trade: "Home Deep Cleaning", location: "Christian Basti, Guwahati", time: "11m ago" },
-  { name: "Bikash N.", trade: "House Painter", location: "Chandmari, Guwahati", time: "15m ago" }
+  { name: "Sunil B.", trade: "Licensed Electrician", location: "Beltola, Guwahati", time: "2m ago" },
+  { name: "Manoj D.", trade: "Master Plumber", location: "GS Road, Guwahati", time: "4m ago" },
+  { name: "Deben G.", trade: "Daily Shifting Helper", location: "Paltan Bazaar, Guwahati", time: "6m ago" },
+  { name: "Pranab B.", trade: "Master Carpenter", location: "Zoo Road, Guwahati", time: "8m ago" },
+  { name: "Ramen N.", trade: "Head Mason (Rajmistri)", location: "Six Mile, Guwahati", time: "11m ago" },
+  { name: "Bikash S.", trade: "Construction Site Labor", location: "Dispur, Guwahati", time: "14m ago" }
 ];
 
 const topWorkers = [
@@ -179,11 +183,11 @@ const topWorkers = [
     rating: 4.9,
     reviews: 142,
     jobsDone: 210,
-    rate: "₹299",
+    rate: "₹199",
     rateUnit: "visit",
-    image: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=200&h=200&fit=crop&crop=face",
+    image: "/images/workers/electrician.jpg",
     skills: ["Wiring", "MCB Trip", "Inverter Setup", "Short Circuit"],
-    categoryLink: "ac"
+    categoryLink: "electrician"
   },
   {
     id: "w2",
@@ -192,37 +196,63 @@ const topWorkers = [
     rating: 4.9,
     reviews: 118,
     jobsDone: 185,
-    rate: "₹249",
+    rate: "₹199",
     rateUnit: "visit",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
-    skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Tank Wash"],
-    categoryLink: "tank"
+    image: "/images/workers/plumber.jpg",
+    skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Drain Clear"],
+    categoryLink: "plumber"
   },
   {
     id: "w3",
-    name: "Deepak Sharma",
-    trade: "AC & HVAC Specialist",
+    name: "Dhananjay Ali",
+    trade: "Daily Wage Helper & Shifting",
     rating: 4.8,
-    reviews: 96,
-    jobsDone: 140,
-    rate: "₹499",
-    rateUnit: "service",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face",
-    skills: ["Gas Refill", "Jet Pump Wash", "Cooling Coil", "PCB Repair"],
-    categoryLink: "ac"
+    reviews: 130,
+    jobsDone: 220,
+    rate: "₹450",
+    rateUnit: "half-day",
+    image: "/images/workers/daily_workers.jpg",
+    skills: ["Heavy Lifting", "House Shifting", "Digging", "Yard Work"],
+    categoryLink: "daily_worker"
   },
   {
     id: "w4",
-    name: "Bhaben Das",
-    trade: "Wall & House Painter",
+    name: "Pranab Barman",
+    trade: "Master Carpenter",
+    rating: 4.9,
+    reviews: 95,
+    jobsDone: 160,
+    rate: "₹299",
+    rateUnit: "visit",
+    image: "/images/workers/carpenter.jpg",
+    skills: ["Door Locks", "Wood Repair", "Wardrobes", "Chairs"],
+    categoryLink: "carpenter"
+  },
+  {
+    id: "w5",
+    name: "Ramen Nath",
+    trade: "Head Mason / Rajmistri",
+    rating: 4.9,
+    reviews: 88,
+    jobsDone: 145,
+    rate: "₹1,100",
+    rateUnit: "day",
+    image: "/images/workers/mason.jpg",
+    skills: ["Brick Wall", "Plastering", "Tile Fixing", "Concrete"],
+    categoryLink: "mason"
+  },
+  {
+    id: "w6",
+    name: "Suresh Rai",
+    trade: "Construction Site Labor",
     rating: 4.8,
-    reviews: 84,
-    jobsDone: 112,
-    rate: "₹399",
-    rateUnit: "day/visit",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-    skills: ["Texture Wall", "Waterproofing", "Exterior Emulsion", "Putty"],
-    categoryLink: "painter"
+    reviews: 104,
+    jobsDone: 190,
+    rate: "₹800",
+    rateUnit: "day",
+    image: "/images/workers/construction.jpg",
+    skills: ["Site Helper", "Shuttering", "Iron Rebar", "Cement Mix"],
+    categoryLink: "construction"
   }
 ];
 
@@ -728,11 +758,11 @@ export function CustomerHome() {
             </div>
 
             <h1 className="hero-headline">
-              Guwahati&apos;s Most Trusted<br />
-              <span className="highlight">Skilled Workers &amp; Home Services</span>
+              Guwahati&apos;s Trusted Skilled Workers<br />
+              <span className="highlight">Electricians, Plumbers, Daily Labor &amp; Masons</span>
             </h1>
             <p className="hero-subtitle">
-              Book verified electricians, plumbers, carpenters, painters &amp; cleaning specialists in 60 seconds. Transparent upfront rates with 100% satisfaction guarantee.
+              Book verified trade professionals and manual laborers in 60 seconds. Transparent daily &amp; visit rates with 100% satisfaction guarantee.
             </p>
 
             {/* Unified Floating Search Bar */}
@@ -742,11 +772,12 @@ export function CustomerHome() {
                 <select value={selectedHeroCategory} onChange={(e) => setSelectedHeroCategory(e.target.value)}>
                   <option value="Electrician">Electrician</option>
                   <option value="Plumber">Plumber</option>
+                  <option value="Daily Worker">Daily Worker / Helper</option>
+                  <option value="Construction">Construction Worker</option>
                   <option value="Carpenter">Carpenter</option>
+                  <option value="Mason">Mason (Rajmistri)</option>
                   <option value="Painter">Painter</option>
-                  <option value="AC Repair">AC Repair</option>
-                  <option value="Cleaning">Deep Cleaning</option>
-                  <option value="Tank Wash">Tank Wash</option>
+                  <option value="AC Repair">AC &amp; Appliances</option>
                 </select>
               </div>
 
@@ -782,24 +813,27 @@ export function CustomerHome() {
 
             {/* Quick Category Chips for 1-Click Access */}
             <div className="hero-quick-chips">
-              <span className="chips-title">Popular in Guwahati:</span>
+              <span className="chips-title">Popular Trades:</span>
               <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Electrician")}>
                 <i className="fas fa-bolt" /> Electrician
               </button>
               <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Plumber")}>
                 <i className="fas fa-wrench" /> Plumber
               </button>
-              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("AC")}>
-                <i className="fas fa-snowflake" /> AC Repair
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Daily Worker")}>
+                <i className="fas fa-users" /> Daily Helpers
               </button>
-              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Cleaning")}>
-                <i className="fas fa-spray-can" /> Deep Clean
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Construction")}>
+                <i className="fas fa-hard-hat" /> Construction
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Carpenter")}>
+                <i className="fas fa-hammer" /> Carpenter
+              </button>
+              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Mason")}>
+                <i className="fas fa-th-large" /> Mason (Rajmistri)
               </button>
               <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Painter")}>
-                <i className="fas fa-paint-roller" /> Painting
-              </button>
-              <button type="button" className="quick-chip-btn" onClick={() => handleQuickChip("Tank")}>
-                <i className="fas fa-water" /> Tank Wash
+                <i className="fas fa-paint-roller" /> Painter
               </button>
             </div>
 
@@ -838,7 +872,7 @@ export function CustomerHome() {
               <div className="preview-featured-pro">
                 <div className="pro-avatar-box">
                   <img
-                    src="https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=160&h=160&fit=crop&crop=face"
+                    src="/images/workers/electrician.jpg"
                     alt="Biswajit Saikia - Licensed Electrician"
                   />
                   <span className="pro-check-badge" title="Police & Background Verified">
@@ -975,24 +1009,36 @@ export function CustomerHome() {
 
               return (
                 <div className={`service-card ${isAdded ? "service-card-selected" : ""}`} key={service.id}>
-                  <div className="service-card-header">
-                    <span className="service-card-category-tag">{categoryLabel}</span>
-                    <span className="service-card-rating">
-                      <i className="fas fa-star" /> 4.8 <span className="reviews-cnt">(850+)</span>
-                    </span>
-                  </div>
+                  {service.imageUrl && (
+                    <div className="service-card-media">
+                      <img src={service.imageUrl} alt={service.name} className="service-card-img" loading="lazy" />
+                      <span className="service-card-img-badge">
+                        <i className="fas fa-check-circle" /> Verified Pro
+                      </span>
+                    </div>
+                  )}
 
-                  <div className="service-card-body">
-                    <div className="service-card-icon-box">
-                      <ServiceIcon name={service.iconKey} title={service.name} style={{ width: 32, height: 32 }} />
+                  <div className="service-card-content">
+                    <div className="service-card-header">
+                      <span className="service-card-category-tag">{categoryLabel}</span>
+                      <span className="service-card-rating">
+                        <i className="fas fa-star" /> 4.9 <span className="reviews-cnt">(850+)</span>
+                      </span>
                     </div>
-                    <h3 className="service-card-name">{service.name}</h3>
-                    <p className="service-card-description">{service.description}</p>
-                    <div className="service-card-meta">
-                      <span><i className="fas fa-clock" /> {service.durationLabel || "45-60 mins"}</span>
-                      <span><i className="fas fa-shield-alt" /> Verified Pro</span>
+
+                    <div className="service-card-body">
+                      {!service.imageUrl && (
+                        <div className="service-card-icon-box">
+                          <ServiceIcon name={service.iconKey} title={service.name} style={{ width: 32, height: 32 }} />
+                        </div>
+                      )}
+                      <h3 className="service-card-name">{service.name}</h3>
+                      <p className="service-card-description">{service.description}</p>
+                      <div className="service-card-meta">
+                        <span><i className="fas fa-clock" /> {service.durationLabel || "45-60 mins"}</span>
+                        <span><i className="fas fa-shield-alt" /> Verified Pro</span>
+                      </div>
                     </div>
-                  </div>
 
                   <div className="service-card-footer">
                     <div className="service-price-block">
@@ -1038,6 +1084,7 @@ export function CustomerHome() {
                         </div>
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               );
@@ -1130,8 +1177,8 @@ export function CustomerHome() {
 
       {/* POPULAR NEAR YOU CHIPS */}
       <section className="section container">
-        <h2 className="section-title" style={{ fontSize: "2.2rem" }}>Popular Services in Guwahati</h2>
-        <p className="section-sub">Frequently requested services and skilled worker bookings.</p>
+        <h2 className="section-title" style={{ fontSize: "2.2rem" }}>Popular Trades in Guwahati</h2>
+        <p className="section-sub">Frequently requested skilled trade professionals and daily workers.</p>
         <div className="popular-grid">
           <div className="popular-item" onClick={() => handleQuickChip("Electrician")}>
             <i className="fas fa-bolt" /> Home Electrician
@@ -1139,17 +1186,17 @@ export function CustomerHome() {
           <div className="popular-item" onClick={() => handleQuickChip("Plumber")}>
             <i className="fas fa-wrench" /> Emergency Plumber
           </div>
-          <div className="popular-item" onClick={() => handleQuickChip("AC")}>
-            <i className="fas fa-snowflake" /> AC Repair
+          <div className="popular-item" onClick={() => handleQuickChip("Daily Worker")}>
+            <i className="fas fa-users" /> Daily Helpers &amp; Shifting
+          </div>
+          <div className="popular-item" onClick={() => handleQuickChip("Construction")}>
+            <i className="fas fa-hard-hat" /> Construction Labor
           </div>
           <div className="popular-item" onClick={() => handleQuickChip("Carpenter")}>
-            <i className="fas fa-hammer" /> Carpenter
+            <i className="fas fa-hammer" /> Carpenter &amp; Woodwork
           </div>
-          <div className="popular-item" onClick={() => handleQuickChip("Painter")}>
-            <i className="fas fa-paint-roller" /> House Painting
-          </div>
-          <div className="popular-item" onClick={() => handleQuickChip("Labour")}>
-            <i className="fas fa-hard-hat" /> Daily Labour
+          <div className="popular-item" onClick={() => handleQuickChip("Mason")}>
+            <i className="fas fa-th-large" /> Mason (Rajmistri)
           </div>
         </div>
       </section>
