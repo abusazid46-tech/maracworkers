@@ -1558,6 +1558,11 @@ export function CustomerHome() {
             setAuthInitialTab("customer");
             setAuthModalOpen(true);
           }}
+          onOpenWorkerLogin={() => {
+            setWorkerProfileModalOpen(false);
+            setAuthInitialTab("worker");
+            setAuthModalOpen(true);
+          }}
           onShowToast={showToast}
         />
       )}
@@ -1739,6 +1744,9 @@ function AuthModal({
   onShowToast?: (title: string, message: string, type?: "success" | "info" | "warn") => void;
 }) {
   const [activeTab, setActiveTab] = useState<"customer" | "worker">(initialTab);
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -1774,9 +1782,19 @@ function AuthModal({
           setBusy(true);
           setError("");
           try {
-            const result = await createApiClient().loginWithGoogle({ credential: response.credential });
+            const currentRole = activeTabRef.current === "worker" ? "STAFF" : "CUSTOMER";
+            const result = await createApiClient().loginWithGoogle({
+              credential: response.credential,
+              role: currentRole
+            });
             onSuccess(result.data);
-            onShowToast?.("Signed In", "Welcome to Marac Workers!", "success");
+            onShowToast?.(
+              "Signed In",
+              currentRole === "STAFF"
+                ? `Welcome, ${result.data.user.name || "Worker Partner"}! (Trade Pro Mode)`
+                : "Welcome to Marac Workers!",
+              "success"
+            );
           } catch {
             setError("Google login failed. Please try again or use Phone OTP.");
           } finally {
@@ -2028,17 +2046,23 @@ function AuthModal({
           </form>
         )}
 
-        {/* Alternative Google Sign In for Customers */}
-        {activeTab === "customer" && (
-          <>
-            <div className="auth-divider">
-              <span>Or sign in with</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div ref={googleButtonRef} />
-            </div>
-          </>
-        )}
+        {/* Alternative Google Sign In for Customers & Workers */}
+        <div className="auth-divider">
+          <span>{activeTab === "worker" ? "Or sign in as Trade Worker with" : "Or sign in with"}</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
+          <div ref={googleButtonRef} />
+          {activeTab === "worker" ? (
+            <p style={{ fontSize: "0.78rem", color: "#059669", fontWeight: 600, marginTop: "0.4rem", textAlign: "center" }}>
+              <i className="fas fa-check-circle" style={{ marginRight: "4px" }} />
+              Fast Google Sign-in for Plumbers, Electricians, Carpenters &amp; Masons
+            </p>
+          ) : (
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.4rem", textAlign: "center" }}>
+              Quick, secure login for booking home &amp; repair services
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2179,11 +2203,13 @@ function WorkerProfileModal({
   authSession,
   onClose,
   onOpenCustomerLogin,
+  onOpenWorkerLogin,
   onShowToast
 }: {
   authSession: AuthSession | null;
   onClose: () => void;
   onOpenCustomerLogin: () => void;
+  onOpenWorkerLogin?: () => void;
   onShowToast?: (title: string, message: string, type?: "success" | "info" | "warn") => void;
 }) {
   const [workerMode, setWorkerMode] = useState<"dashboard" | "register">("dashboard");
@@ -2543,8 +2569,16 @@ function WorkerProfileModal({
           </form>
         )}
 
-        <div style={{ marginTop: "1.2rem", paddingTop: "0.8rem", borderTop: "1px solid var(--border)", textAlign: "center", fontSize: "0.85rem", color: "var(--text-light)" }}>
-          Need to hire skilled workers instead?{" "}
+        <div style={{ marginTop: "1.2rem", paddingTop: "0.8rem", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", color: "var(--text-light)" }}>
+          {onOpenWorkerLogin && (
+            <button
+              type="button"
+              onClick={onOpenWorkerLogin}
+              style={{ background: "none", border: "none", color: "#059669", fontWeight: 700, cursor: "pointer", textDecoration: "underline", padding: 0 }}
+            >
+              <i className="fab fa-google" style={{ marginRight: "4px" }} /> Worker Google Sign-In
+            </button>
+          )}
           <button
             type="button"
             onClick={onOpenCustomerLogin}

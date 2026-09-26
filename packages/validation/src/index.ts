@@ -76,7 +76,8 @@ export const otpVerifySchema = z.object({
 });
 
 export const googleLoginSchema = z.object({
-  credential: z.string().min(20, "Google credential is required")
+  credential: z.string().min(20, "Google credential is required"),
+  role: z.enum(["CUSTOMER", "STAFF", "ADMIN", "MANAGER"]).optional().default("CUSTOMER")
 });
 
 export const bookingStatusUpdateSchema = z.object({

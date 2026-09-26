@@ -208,6 +208,8 @@ authRouter.post("/google", rateLimit({ keyPrefix: "google-login", windowMs: 15 *
       });
     }
 
+    const targetRole = input.role || "CUSTOMER";
+
     const user = existingUser
       ? await prisma.user.update({
           where: { id: existingUser.id },
@@ -216,12 +218,13 @@ authRouter.post("/google", rateLimit({ keyPrefix: "google-login", windowMs: 15 *
             email: existingUser.email ?? email,
             name: existingUser.name ?? tokenInfo.name,
             avatarUrl: tokenInfo.picture ?? existingUser.avatarUrl,
+            role: targetRole === "STAFF" && existingUser.role === "CUSTOMER" ? "STAFF" : existingUser.role,
             isActive: true
           }
         })
       : await prisma.user.create({
           data: {
-            role: "CUSTOMER",
+            role: targetRole,
             googleId: tokenInfo.sub,
             email,
             name: tokenInfo.name,
@@ -229,6 +232,25 @@ authRouter.post("/google", rateLimit({ keyPrefix: "google-login", windowMs: 15 *
             isActive: true
           }
         });
+
+    if (user.role === "STAFF") {
+      const staffPhone = user.phone || `g_${tokenInfo.sub.slice(-8)}`;
+      await prisma.staff.upsert({
+        where: { phone: staffPhone },
+        update: {
+          name: user.name || "Worker Partner",
+          isActive: true
+        },
+        create: {
+          name: user.name || "Worker Partner",
+          phone: staffPhone,
+          role: "Field Technician",
+          isActive: true
+        }
+      }).catch((err) => {
+        logger.warn("Could not sync staff record for google worker", { error: String(err) });
+      });
+    }
 
     const session = sessionForUser(user);
     setSessionCookie(res, session.token);

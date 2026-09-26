@@ -145,6 +145,7 @@ export type OtpVerifyInput = {
 
 export type GoogleLoginInput = {
   credential: string;
+  role?: UserRole;
 };
 
 export type Payment = {
