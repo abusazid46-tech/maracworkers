@@ -50,6 +50,15 @@ authRouter.get("/me", async (req, res, next) => {
   }
 });
 
+authRouter.get("/config", (_req, res) => {
+  return res.json({
+    data: {
+      googleClientId: env.GOOGLE_CLIENT_ID || null,
+      otpDebugEnabled: env.OTP_DEBUG_ENABLED
+    }
+  });
+});
+
 authRouter.post("/logout", (_req, res) => {
   clearSessionCookie(res);
   return res.json({ data: { ok: true } });

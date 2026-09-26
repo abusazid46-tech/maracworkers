@@ -140,6 +140,10 @@ export class ApiClient {
     });
   }
 
+  async getAuthConfig() {
+    return this.request<{ data: { googleClientId: string | null; otpDebugEnabled: boolean } }>("/auth/config");
+  }
+
   async getMe() {
     return this.request<{ data: AuthSession["user"] }>("/auth/me");
   }
