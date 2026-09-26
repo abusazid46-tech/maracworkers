@@ -6,30 +6,65 @@ import { prisma } from "../db/prisma.js";
 import { isStaffRole, optionalAuth, requireRoles } from "../middleware/auth.js";
 import { logger } from "../services/logger.js";
 
+import { defaultCategories, defaultServices } from "../data/catalog.js";
+
 export const servicesRouter = Router();
 
-const defaultCategories = [
-  { name: "Toilet & Bath", slug: "toilet-bath", description: "Toilet, bathroom, and attached washroom cleaning packages.", sortOrder: 1 },
-  { name: "Tank Wash", slug: "tank-wash", description: "Overhead and underground water tank wash packages.", sortOrder: 2 },
-  { name: "AC & Repair", slug: "ac-repair", description: "AC servicing, repair, and electrical support.", sortOrder: 3 },
-  { name: "Sofa Clean", slug: "sofa-clean", description: "Sofa, couch, upholstery, and fabric cleaning.", sortOrder: 4 },
-  { name: "Deep Clean", slug: "deep-clean", description: "Complete home and room deep cleaning packages.", sortOrder: 5 },
-  { name: "Kitchen & Appliances", slug: "kitchen-appliances", description: "Kitchen, chimney, and appliance cleaning services.", sortOrder: 6 },
-  { name: "Aya and Housemaid", slug: "aya-housemaid", description: "Maid, aya, baby care, and patient care services.", sortOrder: 7 },
-  { name: "Pest Control", slug: "pest-control", description: "Pest control packages for homes and commercial spaces.", sortOrder: 8 },
-  { name: "Painter & Plumber", slug: "painter-plumber", description: "Painting, plumbing, carpenter, and repair services.", sortOrder: 9 },
-  { name: "Saloon & Spa", slug: "saloon-spa", description: "Salon, spa, beauty, and massage services.", sortOrder: 10 },
-  { name: "Security", slug: "security", description: "Security and facility management services.", sortOrder: 11 }
-];
-
 async function ensureDefaultCategories() {
-  const count = await prisma.serviceCategory.count();
-  if (count > 0) return;
+  for (const cat of defaultCategories) {
+    await prisma.serviceCategory.upsert({
+      where: { slug: cat.slug },
+      update: { name: cat.name, description: cat.description, sortOrder: cat.sortOrder },
+      create: cat
+    }).catch(() => {});
+  }
+}
 
-  await prisma.serviceCategory.createMany({
-    data: defaultCategories,
-    skipDuplicates: true
-  });
+async function ensureDefaultServices() {
+  const serviceCount = await prisma.service.count();
+  if (serviceCount > 0) return;
+
+  const categories = await prisma.serviceCategory.findMany();
+  const categoryMap = new Map(categories.map((c) => [c.slug, c.id]));
+
+  for (const svc of defaultServices) {
+    const categoryId = categoryMap.get(svc.categorySlug);
+    if (!categoryId) continue;
+
+    await prisma.service.upsert({
+      where: { slug: svc.slug },
+      update: {
+        categoryId,
+        name: svc.name,
+        description: svc.description,
+        icon: svc.icon,
+        basePrice: svc.basePrice,
+        originalPrice: svc.originalPrice,
+        durationMin: svc.durationMin,
+        sortOrder: svc.sortOrder,
+        groupLabel: svc.groupLabel,
+        priceLabel: svc.priceLabel,
+        originalPriceLabel: svc.originalPriceLabel,
+        discountLabel: svc.discountLabel
+      },
+      create: {
+        categoryId,
+        name: svc.name,
+        slug: svc.slug,
+        description: svc.description,
+        icon: svc.icon,
+        basePrice: svc.basePrice,
+        originalPrice: svc.originalPrice,
+        durationMin: svc.durationMin,
+        sortOrder: svc.sortOrder,
+        groupLabel: svc.groupLabel,
+        priceLabel: svc.priceLabel,
+        originalPriceLabel: svc.originalPriceLabel,
+        discountLabel: svc.discountLabel,
+        isActive: true
+      }
+    }).catch(() => {});
+  }
 }
 
 servicesRouter.get("/categories", async (_req, res, next) => {
@@ -180,6 +215,8 @@ servicesRouter.get("/popular", async (req, res, next) => {
 
 servicesRouter.get("/", optionalAuth, async (req, res, next) => {
   try {
+    await ensureDefaultCategories();
+    await ensureDefaultServices();
     const user = (req as typeof req & { authUser?: { role: "ADMIN" | "MANAGER" | "STAFF" | "CUSTOMER" } }).authUser;
     const canSeeInactive = Boolean(user && isStaffRole(user.role));
     if (req.query.includeInactive === "true" && !canSeeInactive) {

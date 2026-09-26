@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 export type ServiceIconKey =
   | "all"
   | "bathroom"
@@ -13,28 +15,55 @@ export type ServiceIconKey =
   | "electrician"
   | "plumber"
   | "carpenter"
+  | "mason"
+  | "construction"
+  | "daily_worker"
   | "pest"
   | "painting"
+  | "salon"
   | "security";
 
 export const serviceIconOptions: Array<{ key: ServiceIconKey; label: string }> = [
-  { key: "bathroom", label: "Bathroom" },
-  { key: "cleaning", label: "Cleaning" },
-  { key: "tank", label: "Water Tank" },
-  { key: "ac", label: "AC" },
-  { key: "sofa", label: "Sofa" },
-  { key: "home", label: "Home" },
-  { key: "kitchen", label: "Kitchen" },
-  { key: "appliance", label: "Appliance" },
   { key: "electrician", label: "Electrician" },
   { key: "plumber", label: "Plumber" },
+  { key: "daily_worker", label: "Daily Worker" },
+  { key: "construction", label: "Construction" },
   { key: "carpenter", label: "Carpenter" },
-  { key: "pest", label: "Pest" },
+  { key: "mason", label: "Mason (Rajmistri)" },
   { key: "painting", label: "Painting" },
-  { key: "security", label: "Security" }
+  { key: "ac", label: "AC & Appliance" },
+  { key: "tank", label: "Water Tank" },
+  { key: "bathroom", label: "Bathroom" },
+  { key: "home", label: "Deep Clean" },
+  { key: "sofa", label: "Sofa" },
+  { key: "kitchen", label: "Kitchen" },
+  { key: "pest", label: "Pest" },
+  { key: "salon", label: "Salon & Spa" },
+  { key: "security", label: "Security" },
+  { key: "cleaning", label: "Cleaning" }
 ];
 
-const iconKeys: ServiceIconKey[] = ["all", ...serviceIconOptions.map((option) => option.key)];
+const iconKeys: ServiceIconKey[] = [
+  "all",
+  "bathroom",
+  "cleaning",
+  "tank",
+  "ac",
+  "sofa",
+  "home",
+  "kitchen",
+  "appliance",
+  "electrician",
+  "plumber",
+  "carpenter",
+  "mason",
+  "construction",
+  "daily_worker",
+  "pest",
+  "painting",
+  "salon",
+  "security"
+];
 
 const aliases: Record<string, ServiceIconKey> = {
   sparkle: "cleaning",
@@ -59,7 +88,18 @@ const aliases: Record<string, ServiceIconKey> = {
   paint: "painting",
   waterproofing: "painting",
   guard: "security",
-  shield: "security"
+  shield: "security",
+  spa: "salon",
+  beauty: "salon",
+  barber: "salon",
+  helper: "daily_worker",
+  labor: "daily_worker",
+  worker: "daily_worker",
+  site: "construction",
+  demolition: "construction",
+  rajmistri: "mason",
+  brick: "mason",
+  tile: "mason"
 };
 
 export function normalizeServiceIconKey(value?: string | null, fallback: ServiceIconKey = "cleaning"): ServiceIconKey {
@@ -82,18 +122,22 @@ export function inferServiceIconKey(value: string, fallback: ServiceIconKey = "c
   if (/\b(sofa|couch|mattress|carpet)/.test(text)) return "sofa";
   if (/\b(kitchen|chimney)/.test(text)) return "kitchen";
   if (/\b(fridge|refrigerator|washing machine|appliance)/.test(text)) return "appliance";
-  if (/\b(electric|electrician|wiring|light|fan)/.test(text)) return "electrician";
-  if (/\b(plumber|plumbing|leak|tap|basin)/.test(text)) return "plumber";
-  if (/\b(carpenter|wood|door|furniture)/.test(text)) return "carpenter";
-  if (/\b(pest|cockroach|ant|bug)/.test(text)) return "pest";
-  if (/\b(paint|painting|waterproof)/.test(text)) return "painting";
-  if (/\b(security|guard|facility)/.test(text)) return "security";
+  if (/\b(electric|electrician|wiring|light|fan|mcb|switchboard)/.test(text)) return "electrician";
+  if (/\b(plumber|plumbing|leak|tap|basin|drain|pipe|commode|cistern)/.test(text)) return "plumber";
+  if (/\b(carpenter|wood|door|furniture|lock|wardrobe|bed)/.test(text)) return "carpenter";
+  if (/\b(mason|rajmistri|brick|plaster|cement|mortar)/.test(text)) return "mason";
+  if (/\b(construction|shuttering|demolition|rebar|debris)/.test(text)) return "construction";
+  if (/\b(daily|helper|loader|shifting|digging|labor)/.test(text)) return "daily_worker";
+  if (/\b(pest|cockroach|ant|bug|termite)/.test(text)) return "pest";
+  if (/\b(paint|painting|waterproof|putty)/.test(text)) return "painting";
+  if (/\b(salon|spa|grooming|haircut|massage)/.test(text)) return "salon";
+  if (/\b(security|guard|facility|bouncer)/.test(text)) return "security";
   if (/\b(home|deep|room|bhk)/.test(text)) return "home";
   return normalizeServiceIconKey(value, fallback);
 }
 
 function normalizeIconToken(value?: string | null) {
-  return value?.trim().toLowerCase().replace(/^bi\s+/, "").replace(/^bi-/, "").replace(/[^a-z0-9]+/g, "-") ?? "";
+  return value?.trim().toLowerCase().replace(/^bi\s+/, "").replace(/^bi-/, "").replace(/[^a-z0-9_]+/g, "-") ?? "";
 }
 
 export function ServiceIcon({ name, className, title }: { name?: string | null; className?: string; title?: string }) {
@@ -200,6 +244,30 @@ const icons: Record<ServiceIconKey, React.ReactNode> = {
       <path d="M6 18l-2 2" />
     </>
   ),
+  mason: (
+    <>
+      <rect x="3" y="14" width="8" height="4" rx="0.5" />
+      <rect x="13" y="14" width="8" height="4" rx="0.5" />
+      <rect x="7" y="8" width="10" height="4" rx="0.5" />
+      <path d="M3 20h18" />
+    </>
+  ),
+  construction: (
+    <>
+      <path d="M2 18h20" />
+      <path d="M5 18V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10" />
+      <path d="M9 18V9h6v9" />
+      <path d="M12 3v3" />
+    </>
+  ),
+  daily_worker: (
+    <>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
   pest: (
     <>
       <ellipse cx="12" cy="13" rx="4" ry="6" />
@@ -216,6 +284,15 @@ const icons: Record<ServiceIconKey, React.ReactNode> = {
       <path d="M4 5h11a3 3 0 0 1 0 6H8v3" />
       <rect x="6" y="14" width="4" height="7" rx="1" />
       <path d="M17 5v6" />
+    </>
+  ),
+  salon: (
+    <>
+      <circle cx="12" cy="8" r="3" />
+      <path d="M7 21a5 5 0 0 1 10 0" />
+      <path d="M5 5l3 3" />
+      <path d="M19 5l-3 3" />
+      <path d="M7 13c1.3 1 3 1.5 5 1.5s3.7-.5 5-1.5" />
     </>
   ),
   security: (

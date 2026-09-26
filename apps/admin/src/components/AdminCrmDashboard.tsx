@@ -26,6 +26,7 @@ import type {
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalizeServiceIconKey, resolveServiceIconKey, ServiceIcon, serviceIconOptions } from "./ServiceIcon";
 import { signInWithFirebaseGoogle } from "../lib/firebaseAuth";
+import { initialCategories as fallbackCategories, initialServices as fallbackServices } from "../data/catalog";
 
 type TabId = "dashboard" | "bookings" | "reports" | "services" | "offers" | "customers" | "leads" | "whatsapp";
 type DataMode = "loading" | "live" | "demo";
@@ -169,58 +170,7 @@ const initialReportFilters: AdminReportFilters = {
   search: ""
 };
 
-const fallbackCategories: ServiceCategory[] = [
-  { id: "toilet-bath", name: "Toilet & Bath", slug: "toilet-bath", sortOrder: 1, isActive: true },
-  { id: "tank-wash", name: "Tank Wash", slug: "tank-wash", sortOrder: 2, isActive: true },
-  { id: "ac-repair", name: "AC & Repair", slug: "ac-repair", sortOrder: 3, isActive: true },
-  { id: "sofa-clean", name: "Sofa Clean", slug: "sofa-clean", sortOrder: 4, isActive: true },
-  { id: "deep-clean", name: "Deep Clean", slug: "deep-clean", sortOrder: 5, isActive: true },
-  { id: "kitchen-appliances", name: "Kitchen & Appliances", slug: "kitchen-appliances", sortOrder: 6, isActive: true },
-  { id: "aya-housemaid", name: "Aya and Housemaid", slug: "aya-housemaid", sortOrder: 7, isActive: true },
-  { id: "pest-control", name: "Pest Control", slug: "pest-control", sortOrder: 8, isActive: true },
-  { id: "painter-plumber", name: "Painter & Plumber", slug: "painter-plumber", sortOrder: 9, isActive: true },
-  { id: "saloon-spa", name: "Saloon & Spa", slug: "saloon-spa", sortOrder: 10, isActive: true },
-  { id: "security", name: "Security", slug: "security", sortOrder: 11, isActive: true }
-];
 
-const fallbackServices: Service[] = [
-  {
-    id: "svc-1",
-    categoryId: "toilet-bath",
-    name: "Bathroom Deep Cleaning",
-    slug: "bathroom-deep-cleaning",
-    description: "Tiles, sink, toilet, mirror, fixtures, and floor sanitization.",
-    icon: "bathroom",
-    basePrice: 299,
-    durationMin: 90,
-    sortOrder: 1,
-    isActive: true
-  },
-  {
-    id: "svc-2",
-    categoryId: "ac-repair",
-    name: "AC Regular Servicing",
-    slug: "ac-regular-servicing",
-    description: "Filter cleaning, coil wash, drainage check, and basic cooling inspection.",
-    icon: "ac",
-    basePrice: 499,
-    durationMin: 60,
-    sortOrder: 2,
-    isActive: true
-  },
-  {
-    id: "svc-3",
-    categoryId: "deep-clean",
-    name: "Deep Home Cleaning - 2BHK",
-    slug: "deep-home-cleaning-2bhk",
-    description: "Full 2BHK home cleaning with bathrooms, kitchen, rooms, corridor, and fans.",
-    icon: "home",
-    basePrice: 2299,
-    durationMin: 360,
-    sortOrder: 3,
-    isActive: true
-  }
-];
 
 const fallbackBookings: Booking[] = [
   {
@@ -517,11 +467,24 @@ export function AdminCrmDashboard() {
 
       setDashboard(dashboardRes.data);
       setBookings(bookingsRes.data);
-      setServices(servicesRes.data);
-      const nextCategories = categoriesRes.data.length > 0 ? categoriesRes.data : fallbackCategories;
+
+      const remoteServices = servicesRes.data;
+      const remoteSlugs = new Set(remoteServices.map((s) => s.slug));
+      const combinedServices = [
+        ...remoteServices,
+        ...fallbackServices.filter((s) => !remoteSlugs.has(s.slug))
+      ];
+      setServices(combinedServices);
+
+      const remoteCategories = categoriesRes.data;
+      const remoteCategorySlugs = new Set(remoteCategories.map((c) => c.slug));
+      const nextCategories = [
+        ...remoteCategories,
+        ...fallbackCategories.filter((c) => !remoteCategorySlugs.has(c.slug))
+      ];
       setCategories(nextCategories);
       setServiceForm((current) =>
-        nextCategories.some((category) => category.id === current.categoryId)
+        nextCategories.some((category) => category.id === current.categoryId || category.slug === current.categoryId)
           ? current
           : { ...current, categoryId: nextCategories[0]?.id ?? current.categoryId }
       );
@@ -2153,35 +2116,142 @@ function ServiceTable({
   onEdit: (service: Service) => void;
   onDelete: (service: Service) => void;
 }) {
-  const categoryMap = new Map(categories.map((category) => [category.id, category.name]));
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
+  const categorySlugMap = useMemo(() => new Map(categories.map((c) => [c.slug, c.name])), [categories]);
+
+  const filteredServices = useMemo(() => {
+    return services.filter((service) => {
+      const matchCategory =
+        selectedCategory === "ALL" ||
+        service.categoryId === selectedCategory ||
+        categories.find((c) => c.id === selectedCategory)?.slug === service.categoryId ||
+        categories.find((c) => c.slug === selectedCategory)?.id === service.categoryId;
+
+      const q = searchQuery.trim().toLowerCase();
+      const catName = categoryMap.get(service.categoryId) ?? categorySlugMap.get(service.categoryId) ?? "";
+      const matchSearch =
+        !q ||
+        service.name.toLowerCase().includes(q) ||
+        service.description.toLowerCase().includes(q) ||
+        catName.toLowerCase().includes(q);
+
+      return matchCategory && matchSearch;
+    });
+  }, [services, selectedCategory, searchQuery, categories, categoryMap, categorySlugMap]);
 
   return (
-    <div className="service-list">
-      {services.map((service) => (
-        <div className={`service-row ${service.isActive ? "" : "inactive"}`} key={service.id}>
-          <div className="service-row-main">
-            <span className="service-row-icon">
-              <ServiceIcon className="admin-service-vector" name={resolveServiceIconKey(service.icon, [service.name, service.description].filter(Boolean).join(" "))} title={service.name} />
-            </span>
-            <div>
-              <strong>{service.name}</strong>
-              <span>{categoryMap.get(service.categoryId) ?? "Uncategorized"} - Rs. {service.basePrice.toLocaleString()}</span>
-              {(service.groupLabel || service.discountLabel || service.originalPrice != null) && (
-                <small>
-                  {[service.groupLabel, service.originalPrice != null ? `was Rs. ${service.originalPrice.toLocaleString()}` : "", service.discountLabel]
-                    .filter(Boolean)
-                    .join(" - ")}
-                </small>
-              )}
-              <small>{service.description}</small>
-            </div>
+    <div className="service-catalog-wrapper">
+      <div className="catalog-filter-bar">
+        <input
+          type="text"
+          className="catalog-search-input"
+          placeholder="Filter services by name or trade..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <select
+          className="catalog-category-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          <option value="ALL">All Categories ({services.length})</option>
+          {categories.map((cat) => {
+            const count = services.filter(
+              (s) => s.categoryId === cat.id || s.categoryId === cat.slug
+            ).length;
+            return (
+              <option value={cat.id} key={cat.id}>
+                {cat.name} ({count})
+              </option>
+            );
+          })}
+        </select>
+      </div>
+
+      <div className="catalog-pill-list">
+        <button
+          type="button"
+          className={`catalog-pill-btn ${selectedCategory === "ALL" ? "active" : ""}`}
+          onClick={() => setSelectedCategory("ALL")}
+        >
+          All ({services.length})
+        </button>
+        {categories.map((cat) => {
+          const count = services.filter(
+            (s) => s.categoryId === cat.id || s.categoryId === cat.slug
+          ).length;
+          if (count === 0) return null;
+          return (
+            <button
+              type="button"
+              className={`catalog-pill-btn ${selectedCategory === cat.id ? "active" : ""}`}
+              key={cat.id}
+              onClick={() => setSelectedCategory(selectedCategory === cat.id ? "ALL" : cat.id)}
+            >
+              {cat.name} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="service-list">
+        {filteredServices.length === 0 ? (
+          <div style={{ padding: "2.5rem 1rem", textAlign: "center", color: "var(--text-subtle)" }}>
+            No services match the selected filter.
           </div>
-          <div className="row-actions">
-            <button type="button" onClick={() => onEdit(service)}>Edit</button>
-            <button type="button" onClick={() => onDelete(service)}>{service.isActive ? "Disable" : "Disabled"}</button>
-          </div>
-        </div>
-      ))}
+        ) : (
+          filteredServices.map((service) => {
+            const categoryName =
+              service.category?.name ??
+              categoryMap.get(service.categoryId) ??
+              categorySlugMap.get(service.categoryId) ??
+              "General Service";
+
+            return (
+              <div className={`service-row ${service.isActive ? "" : "inactive"}`} key={service.id}>
+                <div className="service-row-main">
+                  <span className="service-row-icon">
+                    <ServiceIcon
+                      className="admin-service-vector"
+                      name={resolveServiceIconKey(service.icon, [service.name, service.description].filter(Boolean).join(" "))}
+                      title={service.name}
+                    />
+                  </span>
+                  <div>
+                    <strong>{service.name}</strong>
+                    <span>
+                      {categoryName} - Rs. {service.basePrice.toLocaleString()}
+                    </span>
+                    {(service.groupLabel || service.discountLabel || service.originalPrice != null) && (
+                      <small>
+                        {[
+                          service.groupLabel,
+                          service.originalPrice != null ? `was Rs. ${service.originalPrice.toLocaleString()}` : "",
+                          service.discountLabel
+                        ]
+                          .filter(Boolean)
+                          .join(" - ")}
+                      </small>
+                    )}
+                    <small>{service.description}</small>
+                  </div>
+                </div>
+                <div className="row-actions">
+                  <button type="button" onClick={() => onEdit(service)}>
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => onDelete(service)}>
+                    {service.isActive ? "Disable" : "Disabled"}
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
