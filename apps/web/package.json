@@ -13,6 +13,7 @@
     "@the-wings/api-client": "workspace:*",
     "@the-wings/types": "workspace:*",
     "@the-wings/validation": "workspace:*",
+    "firebase": "^12.19.0",
     "leaflet": "^1.9.4",
     "next": "^15.1.0",
     "react": "^19.0.0",

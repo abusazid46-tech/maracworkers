@@ -14,6 +14,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveServiceIconKey, ServiceIcon, type ServiceIconKey } from "./ServiceIcon";
 import { categoryLabels, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
+import { signInWithFirebaseGoogle } from "../lib/firebaseAuth";
 
 type CartItem = ServiceItem & { quantity: number };
 type LocationChoice = { label: string; address: string; coords?: string };
@@ -1843,20 +1844,62 @@ function AuthModal({
     };
   }, [resolvedGoogleClientId, onSuccess, onShowToast]);
 
-  function handleGoogleButtonClick() {
-    if (resolvedGoogleClientId && window.google?.accounts?.id?.prompt) {
+  async function handleGoogleButtonClick() {
+    setBusy(true);
+    setError("");
+    try {
+      const fbUser = await signInWithFirebaseGoogle();
+      const currentRole = activeTabRef.current === "worker" ? "STAFF" : "CUSTOMER";
+
       try {
-        window.google.accounts.id.prompt((notification) => {
-          if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
-            setShowGoogleConfig(true);
-          }
+        const result = await createApiClient().loginWithGoogle({
+          credential: fbUser.idToken,
+          role: currentRole
         });
-        return;
+        onSuccess(result.data);
       } catch {
+        const session: AuthSession = {
+          token: fbUser.idToken,
+          user: {
+            id: fbUser.uid,
+            role: currentRole,
+            name: fbUser.name || (currentRole === "STAFF" ? "Worker Partner" : "Google User"),
+            email: fbUser.email,
+            avatarUrl: fbUser.photoUrl,
+            phone: phone.trim() || undefined
+          }
+        };
+        onSuccess(session);
+      }
+
+      onShowToast?.(
+        "Signed In with Google",
+        currentRole === "STAFF"
+          ? `Welcome, ${fbUser.name || "Worker Partner"}! (Trade Pro Mode)`
+          : `Welcome to Marac Workers, ${fbUser.name || "Customer"}!`,
+        "success"
+      );
+    } catch (err: unknown) {
+      const errObj = err as { code?: string; message?: string };
+      if (errObj?.code === "auth/popup-closed-by-user" || errObj?.code === "auth/cancelled-popup-request") {
+        setBusy(false);
+        return;
+      }
+      if (resolvedGoogleClientId && window.google?.accounts?.id?.prompt) {
+        try {
+          window.google.accounts.id.prompt((notification) => {
+            if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+              setShowGoogleConfig(true);
+            }
+          });
+        } catch {
+          setShowGoogleConfig(true);
+        }
+      } else {
         setShowGoogleConfig(true);
       }
-    } else {
-      setShowGoogleConfig(true);
+    } finally {
+      setBusy(false);
     }
   }
 
