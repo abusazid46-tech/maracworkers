@@ -248,6 +248,13 @@ export class ApiClient {
     });
   }
 
+  async updatePartnerBookingStatus(bookingCode: string, payload: { status: string; note?: string; workerName?: string }) {
+    return this.request<{ success: boolean; data?: Booking }>(`/bookings/${encodeURIComponent(bookingCode)}/partner-status`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  }
+
   async createRazorpayOrder(input: RazorpayOrderCreateInput) {
     return this.request<{ data: RazorpayOrderResponse }>("/payments/razorpay/order", {
       method: "POST",

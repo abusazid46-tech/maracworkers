@@ -715,6 +715,34 @@ export function CustomerHome() {
           <ul className={`nav-links ${mobileMenuOpen ? "open" : ""}`} id="navLinks">
             <li><a href="#home" className="active" onClick={() => setMobileMenuOpen(false)}>Home</a></li>
             <li><a href="#services" onClick={() => setMobileMenuOpen(false)}>Services</a></li>
+            <li>
+              <Link
+                href="/track"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                <span>Live Tracking</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/worker"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(255, 72, 0, 0.08)",
+                  color: "var(--orange)",
+                  padding: "0.25rem 0.75rem",
+                  borderRadius: "99px",
+                  fontWeight: 700
+                }}
+              >
+                <span>🦺 Worker Console</span>
+              </Link>
+            </li>
             <li><a href="#howitworks" onClick={() => setMobileMenuOpen(false)}>How It Works</a></li>
             <li><a href="#become" onClick={(e) => { e.preventDefault(); setWorkerProfileModalOpen(true); setMobileMenuOpen(false); }}>Become a Worker</a></li>
             <li><a href="#about" onClick={() => setMobileMenuOpen(false)}>About Us</a></li>
@@ -2373,6 +2401,18 @@ function WorkerProfileModal({
               <span className="worker-kyc-item"><i className="fas fa-award" /> Marac Certified Master Pro</span>
             </div>
 
+            {/* Direct Cockpit Launcher */}
+            <div style={{ background: "linear-gradient(135deg, #0a192f, #13243d)", color: "white", padding: "1.2rem", borderRadius: "20px", margin: "1.2rem 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "1px", color: "#34d399", fontWeight: 800 }}>⚡ Partner Live Navigation</span>
+                <h4 style={{ color: "white", margin: "0.2rem 0", fontSize: "1.05rem" }}>Turn-by-Turn Partner Driving Console</h4>
+                <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: 0 }}>Stream GPS, navigate to customer doorstep, and track in real-time</p>
+              </div>
+              <Link href="/worker" className="btn-primary" style={{ background: "#059669", borderColor: "#059669", padding: "0.6rem 1.4rem", fontSize: "0.85rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                <span>🦺 Open Worker Cockpit</span>
+              </Link>
+            </div>
+
             <h4 style={{ color: "var(--navy)", margin: "1.2rem 0 0.8rem", fontSize: "1.1rem" }}>
               Available Jobs in Guwahati Today
             </h4>
@@ -2389,10 +2429,17 @@ function WorkerProfileModal({
               </div>
               <div className="worker-job-actions">
                 {acceptedJobs.includes("MW-ZOO-101") ? (
-                  <div style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ background: "rgba(16, 185, 129, 0.15)", color: "#065f46", padding: "0.45rem 0.9rem", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "6px" }}>
                       <i className="fas fa-check-circle" /> Assigned to You
                     </span>
+                    <Link
+                      href="/worker?code=MW-ZOO-101"
+                      className="btn-primary"
+                      style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem", textDecoration: "none", background: "#059669", borderColor: "#059669", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <span>🚀 Drive to Customer</span>
+                    </Link>
                     <a
                       href="https://wa.me/919365123456?text=Hi%2C%20I%20am%20your%20Marac%20Workers%20technician%20for%20Job%20MW-ZOO-101.%20I%20am%20on%20my%20way."
                       target="_blank"

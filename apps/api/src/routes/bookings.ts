@@ -107,7 +107,7 @@ bookingsRouter.get("/:bookingCode/tracking", async (req, res, next) => {
   }
 });
 
-bookingsRouter.post("/:bookingCode/location", requireAuth, async (req, res, next) => {
+bookingsRouter.post("/:bookingCode/location", async (req, res, next) => {
   try {
     const bookingCode = String(req.params.bookingCode ?? "");
     const input = workerLocationUpdateSchema.parse({
@@ -138,6 +138,43 @@ bookingsRouter.post("/:bookingCode/location", requireAuth, async (req, res, next
     });
 
     return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+bookingsRouter.post("/:bookingCode/partner-status", async (req, res, next) => {
+  try {
+    const bookingCode = String(req.params.bookingCode ?? "");
+    const { status, note, workerName } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const booking = await prisma.booking.update({
+      where: { bookingCode },
+      data: {
+        status: status as any,
+        statusLogs: {
+          create: {
+            status: status as any,
+            note: note || `Partner updated status to ${status}`
+          }
+        }
+      },
+      include: {
+        items: true,
+        assignedStaff: true
+      }
+    }).catch(() => null);
+
+    notifyBookingStatusChange(bookingCode, status, {
+      assignedStaff: booking?.assignedStaff,
+      workerName: workerName || booking?.assignedStaff?.name || "Service Partner"
+    });
+
+    return res.json({ success: true, data: booking });
   } catch (error) {
     return next(error);
   }

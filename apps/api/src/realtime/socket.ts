@@ -83,6 +83,43 @@ export function initSocketServer(httpServer: HttpServer): Server {
       }
     });
 
+    // Worker changes booking status in real time (e.g., EN_ROUTE, IN_PROGRESS, COMPLETED)
+    socket.on("worker:update_status", async (payload: { bookingId: string; status: any; workerName?: string; note?: string }) => {
+      try {
+        if (!payload?.bookingId || !payload?.status) return;
+
+        // 1. Immediately broadcast status change to booking room
+        io?.to(`booking:${payload.bookingId}`).emit("booking:status_change", {
+          bookingId: payload.bookingId,
+          status: payload.status,
+          timestamp: new Date().toISOString(),
+          workerName: payload.workerName,
+          note: payload.note
+        });
+
+        // 2. Persist in database if booking exists
+        const booking = await prisma.booking.update({
+          where: { bookingCode: payload.bookingId },
+          data: {
+            status: payload.status,
+            statusLogs: {
+              create: {
+                status: payload.status,
+                note: payload.note || `Status changed to ${payload.status} by partner console`
+              }
+            }
+          },
+          include: { assignedStaff: true }
+        }).catch(() => null);
+
+        if (booking) {
+          logger.info(`Booking ${payload.bookingId} status updated to ${payload.status} by worker`);
+        }
+      } catch (error) {
+        logger.error("Failed processing worker status update", { error: String(error) });
+      }
+    });
+
     socket.on("disconnect", (reason) => {
       logger.info("Realtime socket disconnected", { socketId: socket.id, reason });
     });
