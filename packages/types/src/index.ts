@@ -4,6 +4,7 @@ export type BookingStatus =
   | "PENDING"
   | "CONFIRMED"
   | "ASSIGNED"
+  | "EN_ROUTE"
   | "IN_PROGRESS"
   | "COMPLETED"
   | "CANCELLED"
@@ -175,6 +176,17 @@ export type BookingItem = {
   lineTotal: number;
 };
 
+export type StaffSummary = {
+  id: string;
+  name: string;
+  phone: string;
+  role?: string | null;
+  currentLat?: number | null;
+  currentLng?: number | null;
+  lastHeading?: number | null;
+  lastLocationAt?: string | null;
+};
+
 export type Booking = {
   id: string;
   bookingCode: string;
@@ -182,16 +194,42 @@ export type Booking = {
   customerPhone: string;
   addressLine: string;
   city: string;
+  latitude?: number | null;
+  longitude?: number | null;
   preferredDate: string;
   preferredTimeSlot: string;
   notes?: string | null;
   status: BookingStatus;
   paymentMode: PaymentMode;
   totalAmount: number;
+  assignedStaffId?: string | null;
+  assignedStaff?: StaffSummary | null;
   createdAt: string;
   updatedAt: string;
   items: BookingItem[];
   payments?: Payment[];
+};
+
+export type WorkerLocationPayload = {
+  bookingId: string;
+  workerId: string;
+  latitude: number;
+  longitude: number;
+  heading?: number | null;
+  speed?: number | null;
+  accuracy?: number | null;
+  timestamp?: string;
+};
+
+export type TrackingUpdateEvent = {
+  bookingId: string;
+  workerId?: string;
+  latitude: number;
+  longitude: number;
+  heading?: number | null;
+  speed?: number | null;
+  timestamp: string;
+  status?: BookingStatus;
 };
 
 export type RazorpayOrderCreateInput = {

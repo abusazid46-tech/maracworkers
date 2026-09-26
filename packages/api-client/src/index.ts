@@ -71,7 +71,7 @@ export class ApiClientError extends Error {
   }
 }
 
-function getDefaultApiUrl() {
+export function getDefaultApiUrl() {
   const configuredUrl = getConfiguredApiUrl();
   if (configuredUrl) return configuredUrl;
 
@@ -231,6 +231,17 @@ export class ApiClient {
 
   async getBooking(bookingCode: string) {
     return this.request<{ data: Booking }>(`/bookings/${encodeURIComponent(bookingCode)}`);
+  }
+
+  async getBookingTracking(bookingCode: string) {
+    return this.request<{ data: Booking }>(`/bookings/${encodeURIComponent(bookingCode)}/tracking`);
+  }
+
+  async updateWorkerLocation(bookingCode: string, payload: Record<string, unknown>) {
+    return this.request<{ success: boolean }>(`/bookings/${encodeURIComponent(bookingCode)}/location`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
   }
 
   async createRazorpayOrder(input: RazorpayOrderCreateInput) {

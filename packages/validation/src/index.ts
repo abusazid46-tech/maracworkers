@@ -80,9 +80,20 @@ export const googleLoginSchema = z.object({
 });
 
 export const bookingStatusUpdateSchema = z.object({
-  status: z.enum(["PENDING", "CONFIRMED", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "REFUNDED"]),
+  status: z.enum(["PENDING", "CONFIRMED", "ASSIGNED", "EN_ROUTE", "IN_PROGRESS", "COMPLETED", "CANCELLED", "REFUNDED"]),
   note: z.string().optional(),
   assignedStaffId: z.string().optional()
+});
+
+export const workerLocationUpdateSchema = z.object({
+  bookingId: z.string().min(1),
+  workerId: z.string().min(1),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  heading: z.number().optional().nullable(),
+  speed: z.number().optional().nullable(),
+  accuracy: z.number().optional().nullable(),
+  timestamp: z.string().optional()
 });
 
 export const leadCreateSchema = z.object({

@@ -1,11 +1,12 @@
 import { Router } from "express";
 import type { Prisma } from "@prisma/client";
-import { bookingCreateSchema, bookingStatusUpdateSchema } from "@the-wings/validation";
+import { bookingCreateSchema, bookingStatusUpdateSchema, workerLocationUpdateSchema } from "@the-wings/validation";
 import { env } from "../config/env.js";
 import { prisma } from "../db/prisma.js";
 import { AuthedRequest, canAccessUserResource, requireAuth, requireRoles } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rate-limit.js";
 import { sendWhatsAppText } from "../services/whatsapp.js";
+import { notifyBookingStatusChange, broadcastWorkerLocation } from "../realtime/socket.js";
 
 export const bookingsRouter = Router();
 
@@ -39,7 +40,8 @@ bookingsRouter.get("/:bookingCode", requireAuth, async (req, res, next) => {
       where: { bookingCode },
       include: {
         items: true,
-        payments: true
+        payments: true,
+        assignedStaff: true
       }
     });
 
@@ -52,6 +54,90 @@ bookingsRouter.get("/:bookingCode", requireAuth, async (req, res, next) => {
     }
 
     return res.json({ data: booking });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+bookingsRouter.get("/:bookingCode/tracking", async (req, res, next) => {
+  try {
+    const bookingCode = String(req.params.bookingCode ?? "");
+    const booking = await prisma.booking.findUnique({
+      where: { bookingCode },
+      select: {
+        id: true,
+        bookingCode: true,
+        customerName: true,
+        customerPhone: true,
+        addressLine: true,
+        city: true,
+        latitude: true,
+        longitude: true,
+        status: true,
+        preferredDate: true,
+        preferredTimeSlot: true,
+        assignedStaff: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            role: true,
+            currentLat: true,
+            currentLng: true,
+            lastHeading: true,
+            lastLocationAt: true
+          }
+        },
+        items: {
+          select: {
+            serviceName: true,
+            quantity: true
+          }
+        }
+      }
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    return res.json({ data: booking });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+bookingsRouter.post("/:bookingCode/location", requireAuth, async (req, res, next) => {
+  try {
+    const bookingCode = String(req.params.bookingCode ?? "");
+    const input = workerLocationUpdateSchema.parse({
+      ...req.body,
+      bookingId: bookingCode
+    });
+
+    if (input.workerId) {
+      await prisma.staff.update({
+        where: { id: input.workerId },
+        data: {
+          currentLat: input.latitude,
+          currentLng: input.longitude,
+          lastHeading: input.heading,
+          lastLocationAt: new Date()
+        }
+      }).catch(() => null);
+    }
+
+    broadcastWorkerLocation({
+      bookingId: bookingCode,
+      workerId: input.workerId,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      heading: input.heading,
+      speed: input.speed,
+      timestamp: new Date().toISOString()
+    });
+
+    return res.json({ success: true });
   } catch (error) {
     return next(error);
   }
@@ -74,8 +160,13 @@ bookingsRouter.patch("/:bookingCode/status", ...requireRoles("ADMIN", "MANAGER",
       },
       include: {
         items: true,
-        statusLogs: true
+        statusLogs: true,
+        assignedStaff: true
       }
+    });
+
+    notifyBookingStatusChange(booking.bookingCode, booking.status, {
+      assignedStaff: booking.assignedStaff
     });
 
     return res.json({ data: booking });

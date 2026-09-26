@@ -2635,6 +2635,25 @@ function BookingModal({
             </div>
           )}
 
+          {bookingRef && (
+            <Link
+              href={`/track?code=${encodeURIComponent(bookingRef)}`}
+              className="btn-primary"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                marginBottom: "0.75rem",
+                background: "#059669",
+                borderColor: "#059669",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem"
+              }}
+            >
+              <i className="fas fa-map-marked-alt" /> Track Service Partner Live
+            </Link>
+          )}
+
           <a
             className="btn-primary"
             style={{ width: "100%", justifyContent: "center" }}

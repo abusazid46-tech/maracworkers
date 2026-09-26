@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./site.css";
+import "leaflet/dist/leaflet.css";
 import type { Metadata } from "next";
 import { businessName, siteUrl } from "@/components/seo-data";
 

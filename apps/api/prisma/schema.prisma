@@ -18,6 +18,7 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   ASSIGNED
+  EN_ROUTE
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -162,6 +163,8 @@ model Booking {
   customerPhone     String
   addressLine       String
   city              String
+  latitude          Decimal?
+  longitude         Decimal?
   preferredDate     DateTime
   preferredTimeSlot String
   notes             String?
@@ -215,14 +218,18 @@ model Payment {
 }
 
 model Staff {
-  id        String    @id @default(cuid())
-  name      String
-  phone     String    @unique
-  role      String?
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
+  id              String    @id @default(cuid())
+  name            String
+  phone           String    @unique
+  role            String?
+  isActive        Boolean   @default(true)
+  currentLat      Decimal?
+  currentLng      Decimal?
+  lastHeading     Float?
+  lastLocationAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  bookings        Booking[]
 }
 
 model Lead {
