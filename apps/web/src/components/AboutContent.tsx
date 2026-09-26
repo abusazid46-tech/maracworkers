@@ -7,7 +7,7 @@ export function AboutContent() {
       <nav className="navbar">
         <div className="container nav-flex">
           <Link className="logo" href="/">
-            <i className="fas fa-hard-hat" />
+            <img src="/favicon.png" alt="Marac Workers" className="logo-badge" />
             <span className="marac">MARAC</span>
             <span className="workers">WORKERS</span>
           </Link>

@@ -707,7 +707,7 @@ export function CustomerHome() {
       <nav className={`navbar ${scrolled ? "scrolled" : ""}`} id="navbar">
         <div className="container nav-flex">
           <Link className="logo" href="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <i className="fas fa-hard-hat" />
+            <img src="/favicon.png" alt="Marac Workers" className="logo-badge" />
             <span className="marac">MARAC</span>
             <span className="workers">WORKERS</span>
           </Link>
@@ -3024,7 +3024,7 @@ export function SiteFooter({
         <div className="footer-grid">
           <div className="footer-col">
             <div className="footer-logo">
-              <i className="fas fa-hard-hat" style={{ color: "var(--orange)" }} />
+              <img src="/favicon.png" alt="Marac Workers" className="logo-badge" />
               <span className="marac">MARAC</span>
               <span className="workers">WORKERS</span>
             </div>

@@ -16,7 +16,7 @@ export default function TermsPage() {
       <section className="seo-hero" style={{ background: "var(--navy)", color: "white", padding: "4rem 0" }}>
         <div className="container">
           <Link className="logo" href="/" style={{ marginBottom: "1.5rem", display: "inline-flex" }}>
-            <i className="fas fa-hard-hat" style={{ color: "var(--orange)" }} />
+            <img src="/favicon.png" alt="Marac Workers" className="logo-badge" />
             <span style={{ color: "white" }}>MARAC</span>
             <span style={{ color: "var(--orange)" }}>WORKERS</span>
           </Link>

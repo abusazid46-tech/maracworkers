@@ -151,7 +151,7 @@ export default async function ServiceSeoPage({ params }: PageProps) {
       <section className="seo-hero">
         <div className="container">
           <Link className="seo-logo-link" href="/">
-            <i className="fas fa-hard-hat" style={{ color: "var(--orange)", fontSize: "1.6rem" }} />
+            <img src="/favicon.png" alt="Marac Workers" className="logo-badge" />
             <span style={{ fontWeight: 900, letterSpacing: "-0.02em" }}>{businessName}</span>
           </Link>
           <div className="section-label">Guwahati Home Services</div>
