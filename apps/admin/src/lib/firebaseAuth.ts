@@ -1,0 +1,41 @@
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDPnWksHuwKsSHQoLwR7I_fHLwgtCswFH4",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "apnarooms-guwahati.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "apnarooms-guwahati",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "apnarooms-guwahati.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "794053444845",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:794053444845:web:8c254ca78b5d975c6878e4",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-75HN5X3JKE"
+};
+
+export const getFirebaseApp = () => {
+  return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+};
+
+export async function signInWithFirebaseGoogle(): Promise<{
+  idToken: string;
+  name: string | null;
+  email: string | null;
+  photoUrl: string | null;
+  uid: string;
+}> {
+  const app = getFirebaseApp();
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  const result = await signInWithPopup(auth, provider);
+  const user = result.user;
+  const idToken = await user.getIdToken();
+
+  return {
+    idToken,
+    name: user.displayName,
+    email: user.email,
+    photoUrl: user.photoURL,
+    uid: user.uid
+  };
+}
