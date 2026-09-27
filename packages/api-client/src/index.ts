@@ -101,9 +101,10 @@ function shouldIgnoreConfiguredApiUrl(configuredUrl: string) {
     const currentHostname = globalThis.location?.hostname;
     const isCurrentPageOrigin = Boolean(currentHostname && configuredHostname === currentHostname);
     const isFrontendVercelUrl = configuredHostname.endsWith(".vercel.app");
+    const isRenderUrl = configuredHostname.includes("render.com");
     const isLocalApiInProduction = Boolean(currentHostname && currentHostname !== "localhost" && currentHostname !== "127.0.0.1" && configuredHostname === "localhost");
 
-    return isCurrentPageOrigin || isFrontendVercelUrl || isLocalApiInProduction;
+    return isCurrentPageOrigin || isFrontendVercelUrl || isLocalApiInProduction || isRenderUrl;
   } catch {
     return true;
   }
