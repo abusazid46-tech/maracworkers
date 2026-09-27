@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -47,13 +47,13 @@ enum LeadStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String    @id @db.VarChar(30) @default(cuid())
   role         UserRole  @default(CUSTOMER)
-  name         String?
-  email        String?   @unique
-  phone        String?   @unique
-  googleId     String?   @unique
-  avatarUrl    String?
+  name         String?   @db.VarChar(200)
+  email        String?   @unique @db.VarChar(255)
+  phone        String?   @unique @db.VarChar(20)
+  googleId     String?   @unique @db.VarChar(255)
+  avatarUrl    String?   @db.VarChar(512)
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -63,9 +63,9 @@ model User {
 }
 
 model AuthOtp {
-  id         String    @id @default(cuid())
-  phone      String
-  codeHash   String
+  id         String    @id @db.VarChar(30) @default(cuid())
+  phone      String    @db.VarChar(20)
+  codeHash   String    @db.VarChar(255)
   attempts   Int       @default(0)
   expiresAt  DateTime
   consumedAt DateTime?
@@ -76,27 +76,29 @@ model AuthOtp {
 }
 
 model Address {
-  id        String   @id @default(cuid())
-  userId    String?
-  label     String?
-  line1     String
-  line2     String?
-  city      String
-  state     String?
-  pincode   String?
-  latitude  Decimal?
-  longitude Decimal?
+  id        String   @id @db.VarChar(30) @default(cuid())
+  userId    String?  @db.VarChar(30)
+  label     String?  @db.VarChar(100)
+  line1     String   @db.VarChar(500)
+  line2     String?  @db.VarChar(500)
+  city      String   @db.VarChar(100)
+  state     String?  @db.VarChar(100)
+  pincode   String?  @db.VarChar(10)
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model ServiceCategory {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  description String?
-  imageUrl    String?
+  id          String    @id @db.VarChar(30) @default(cuid())
+  name        String    @db.VarChar(200)
+  slug        String    @unique @db.VarChar(200)
+  description String?   @db.Text
+  imageUrl    String?   @db.VarChar(512)
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
   services    Service[]
@@ -106,19 +108,19 @@ model ServiceCategory {
 }
 
 model Service {
-  id          String          @id @default(cuid())
-  categoryId  String
-  name        String
-  slug        String          @unique
-  description String
-  icon        String?
-  imageUrl    String?
+  id          String          @id @db.VarChar(30) @default(cuid())
+  categoryId  String          @db.VarChar(30)
+  name        String          @db.VarChar(200)
+  slug        String          @unique @db.VarChar(200)
+  description String          @db.Text
+  icon        String?         @db.VarChar(100)
+  imageUrl    String?         @db.VarChar(512)
   basePrice   Int
-  groupLabel  String?
-  priceLabel  String?
+  groupLabel  String?         @db.VarChar(200)
+  priceLabel  String?         @db.VarChar(200)
   originalPrice Int?
-  originalPriceLabel String?
-  discountLabel String?
+  originalPriceLabel String?  @db.VarChar(200)
+  discountLabel String?       @db.VarChar(200)
   durationMin Int?
   sortOrder   Int             @default(0)
   isActive    Boolean         @default(true)
@@ -127,19 +129,21 @@ model Service {
   category    ServiceCategory @relation(fields: [categoryId], references: [id])
   bookingItems BookingItem[]
   offerBanners OfferBanner[]
+
+  @@index([categoryId])
 }
 
 model OfferBanner {
-  id            String           @id @default(cuid())
-  title         String
-  subtitle      String?
-  serviceId     String?
-  categoryId    String?
-  imageUrl      String?
-  ctaLabel      String           @default("Book now")
+  id            String           @id @db.VarChar(30) @default(cuid())
+  title         String           @db.VarChar(300)
+  subtitle      String?          @db.VarChar(500)
+  serviceId     String?          @db.VarChar(30)
+  categoryId    String?          @db.VarChar(30)
+  imageUrl      String?          @db.VarChar(512)
+  ctaLabel      String           @default("Book now") @db.VarChar(100)
   offerPrice    Int?
   originalPrice Int?
-  discountText  String?
+  discountText  String?          @db.VarChar(200)
   sortOrder     Int              @default(0)
   isActive      Boolean          @default(true)
   startsAt      DateTime?
@@ -156,22 +160,22 @@ model OfferBanner {
 }
 
 model Booking {
-  id                String             @id @default(cuid())
-  bookingCode       String             @unique @default(cuid())
-  userId            String?
-  customerName      String
-  customerPhone     String
-  addressLine       String
-  city              String
-  latitude          Decimal?
-  longitude         Decimal?
+  id                String             @id @db.VarChar(30) @default(cuid())
+  bookingCode       String             @unique @db.VarChar(30) @default(cuid())
+  userId            String?            @db.VarChar(30)
+  customerName      String             @db.VarChar(200)
+  customerPhone     String             @db.VarChar(20)
+  addressLine       String             @db.VarChar(500)
+  city              String             @db.VarChar(100)
+  latitude          Decimal?           @db.Decimal(10, 7)
+  longitude         Decimal?           @db.Decimal(10, 7)
   preferredDate     DateTime
-  preferredTimeSlot String
-  notes             String?
+  preferredTimeSlot String             @db.VarChar(50)
+  notes             String?            @db.Text
   status            BookingStatus      @default(PENDING)
   paymentMode       PaymentMode        @default(COD)
   totalAmount       Int
-  assignedStaffId   String?
+  assignedStaffId   String?            @db.VarChar(30)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   user              User?              @relation(fields: [userId], references: [id])
@@ -179,52 +183,62 @@ model Booking {
   items             BookingItem[]
   payments          Payment[]
   statusLogs        BookingStatusLog[]
+
+  @@index([userId])
+  @@index([assignedStaffId])
 }
 
 model BookingItem {
-  id          String  @id @default(cuid())
-  bookingId   String
-  serviceId   String?
-  serviceName String
+  id          String  @id @db.VarChar(30) @default(cuid())
+  bookingId   String  @db.VarChar(30)
+  serviceId   String? @db.VarChar(30)
+  serviceName String  @db.VarChar(200)
   quantity    Int     @default(1)
   unitPrice   Int
   lineTotal   Int
   booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   service     Service? @relation(fields: [serviceId], references: [id])
+
+  @@index([bookingId])
+  @@index([serviceId])
 }
 
 model BookingStatusLog {
-  id        String        @id @default(cuid())
-  bookingId String
+  id        String        @id @db.VarChar(30) @default(cuid())
+  bookingId String        @db.VarChar(30)
   status    BookingStatus
-  note      String?
+  note      String?       @db.Text
   createdAt DateTime      @default(now())
   booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
 model Payment {
-  id                String        @id @default(cuid())
-  bookingId         String
-  provider          String
-  providerOrderId   String?
-  providerPaymentId String?
+  id                String        @id @db.VarChar(30) @default(cuid())
+  bookingId         String        @db.VarChar(30)
+  provider          String        @db.VarChar(50)
+  providerOrderId   String?       @db.VarChar(255)
+  providerPaymentId String?       @db.VarChar(255)
   amount            Int
-  currency          String        @default("INR")
+  currency          String        @default("INR") @db.VarChar(5)
   status            PaymentStatus @default(PENDING)
-  rawPayload         Json?
+  rawPayload        Json?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
 model Staff {
-  id              String    @id @default(cuid())
-  name            String
-  phone           String    @unique
-  role            String?
+  id              String    @id @db.VarChar(30) @default(cuid())
+  name            String    @db.VarChar(200)
+  phone           String    @unique @db.VarChar(20)
+  role            String?   @db.VarChar(100)
   isActive        Boolean   @default(true)
-  currentLat      Decimal?
-  currentLng      Decimal?
+  currentLat      Decimal?  @db.Decimal(10, 7)
+  currentLng      Decimal?  @db.Decimal(10, 7)
   lastHeading     Float?
   lastLocationAt  DateTime?
   createdAt       DateTime  @default(now())
@@ -233,32 +247,34 @@ model Staff {
 }
 
 model Lead {
-  id        String     @id @default(cuid())
-  name      String?
-  phone     String
-  email     String?
-  source    String?
+  id        String     @id @db.VarChar(30) @default(cuid())
+  name      String?    @db.VarChar(200)
+  phone     String     @db.VarChar(20)
+  email     String?    @db.VarChar(255)
+  source    String?    @db.VarChar(100)
   status    LeadStatus @default(NEW)
-  notes     String?
+  notes     String?    @db.Text
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }
 
 model CrmNote {
-  id        String   @id @default(cuid())
-  userId    String?
-  title     String
-  body      String
+  id        String   @id @db.VarChar(30) @default(cuid())
+  userId    String?  @db.VarChar(30)
+  title     String   @db.VarChar(300)
+  body      String   @db.Text
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model WhatsappMessage {
-  id          String   @id @default(cuid())
-  phone       String
-  template    String?
-  direction   String
-  status      String
+  id          String   @id @db.VarChar(30) @default(cuid())
+  phone       String   @db.VarChar(20)
+  template    String?  @db.VarChar(200)
+  direction   String   @db.VarChar(20)
+  status      String   @db.VarChar(50)
   payload     Json?
   createdAt   DateTime @default(now())
 }

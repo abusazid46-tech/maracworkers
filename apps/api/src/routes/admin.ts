@@ -142,11 +142,11 @@ adminRouter.get("/reports", async (req, res, next) => {
 
     if (filters.search) {
       where.OR = [
-        { bookingCode: { contains: filters.search, mode: "insensitive" } },
-        { customerName: { contains: filters.search, mode: "insensitive" } },
-        { customerPhone: { contains: filters.search, mode: "insensitive" } },
-        { city: { contains: filters.search, mode: "insensitive" } },
-        { items: { some: { serviceName: { contains: filters.search, mode: "insensitive" } } } }
+        { bookingCode: { contains: filters.search } },
+        { customerName: { contains: filters.search } },
+        { customerPhone: { contains: filters.search } },
+        { city: { contains: filters.search } },
+        { items: { some: { serviceName: { contains: filters.search } } } }
       ];
     }
 
