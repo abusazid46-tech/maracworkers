@@ -146,7 +146,7 @@ export class ApiClient {
   }
 
   async getMe() {
-    return this.request<{ data: AuthSession["user"] }>("/auth/me");
+    return this.request<{ data: AuthSession["user"] | null }>("/auth/me");
   }
 
   async logout() {

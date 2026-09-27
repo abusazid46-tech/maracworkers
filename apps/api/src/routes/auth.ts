@@ -43,7 +43,7 @@ function sessionForUser(user: User) {
 authRouter.get("/me", async (req, res, next) => {
   try {
     const user = await getAuthUserFromRequest(req);
-    if (!user) return res.status(401).json({ error: "Unauthorized" });
+    if (!user) return res.json({ data: null });
     return res.json({ data: serializeUser(user) });
   } catch (error) {
     return next(error);

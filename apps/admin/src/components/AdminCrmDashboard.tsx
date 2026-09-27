@@ -460,6 +460,11 @@ export function AdminCrmDashboard() {
       try {
         const response = await createApiClient().getMe();
         if (!mounted) return;
+        if (!response.data) {
+          setAuthMode("unauthenticated");
+          setAuthUser(null);
+          return;
+        }
         if (!isAdminUser(response.data)) {
           setAuthMode("forbidden");
           setAuthUser(response.data);

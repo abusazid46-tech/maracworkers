@@ -388,10 +388,14 @@ export function CustomerHome() {
       .getMe()
       .then((response) => {
         if (active) {
-          setAuthSession((prev) => ({
-            token: prev?.token,
-            user: response.data
-          }));
+          if (response.data) {
+            setAuthSession((prev) => ({
+              token: prev?.token,
+              user: response.data as any
+            }));
+          } else {
+            setAuthSession(null);
+          }
         }
       })
       .catch(() => {
