@@ -1,6 +1,8 @@
 import { StatusBar } from "expo-status-bar";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Linking,
   Modal,
@@ -13,17 +15,23 @@ import {
   View
 } from "react-native";
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "https://api.skyrouteglobal.in";
+const SUPPORT_PHONE = "9365123456";
+
+type TabId = "home" | "bookings" | "tracking" | "profile";
+
 type CategoryId =
-  | "toilet-bath"
-  | "tank-wash"
-  | "ac-repair"
-  | "sofa-clean"
-  | "deep-clean"
-  | "kitchen-appliances"
-  | "aya-housemaid"
-  | "pest-control"
-  | "painter-plumber"
-  | "saloon-spa"
+  | "electrician"
+  | "plumber"
+  | "carpenter"
+  | "mason"
+  | "daily_worker"
+  | "construction"
+  | "painter"
+  | "ac"
+  | "tank"
+  | "deep"
+  | "toilet"
   | "security";
 
 type Category = {
@@ -33,401 +41,889 @@ type Category = {
   badge?: string;
 };
 
-type Service = {
+type ServiceItem = {
   id: string;
   categoryId: CategoryId;
-  group: string;
   name: string;
+  trade: string;
   description: string;
   price: number;
   oldPrice?: number;
-  discount?: string;
+  rating: number;
+  jobsCount: number;
+  image: string;
   duration: string;
   popular?: boolean;
 };
 
-type CartItem = Service & { quantity: number };
+type CartItem = ServiceItem & { quantity: number };
 
-const brandLogo = require("./assets/the-wings-logo.png");
-const supportPhone = "9365123456";
+type BookingRecord = {
+  code: string;
+  service: string;
+  workerName: string;
+  workerTrade: string;
+  status: "CONFIRMED" | "DISPATCHED" | "COMPLETED";
+  amount: number;
+  date: string;
+  timeSlot: string;
+  otp: string;
+};
 
-const categories: Category[] = [
-  { id: "toilet-bath", name: "Toilet & Bath", icon: "TB", badge: "Same day" },
-  { id: "tank-wash", name: "Tank Wash", icon: "TW" },
-  { id: "ac-repair", name: "AC & Repair", icon: "AC", badge: "Popular" },
-  { id: "sofa-clean", name: "Sofa Clean", icon: "SC" },
-  { id: "deep-clean", name: "Deep Clean", icon: "DC" },
-  { id: "kitchen-appliances", name: "Kitchen & Appliances", icon: "KA" },
-  { id: "aya-housemaid", name: "Aya and Housemaid", icon: "AH" },
-  { id: "pest-control", name: "Pest Control", icon: "PC" },
-  { id: "painter-plumber", name: "Painter & Plumber", icon: "PP" },
-  { id: "saloon-spa", name: "Saloon & Spa", icon: "SS" },
-  { id: "security", name: "Security", icon: "SG" }
+const CATEGORIES: Category[] = [
+  { id: "electrician", name: "Electrician", icon: "⚡", badge: "30m Fast" },
+  { id: "plumber", name: "Plumber", icon: "🔧" },
+  { id: "carpenter", name: "Carpenter", icon: "🪚" },
+  { id: "mason", name: "Mason", icon: "🧱" },
+  { id: "daily_worker", name: "Daily Helpers", icon: "👷", badge: "Popular" },
+  { id: "construction", name: "Construction", icon: "🏗️" },
+  { id: "painter", name: "Painter", icon: "🎨" },
+  { id: "ac", name: "AC Repair", icon: "❄️" },
+  { id: "tank", name: "Tank Wash", icon: "💧" },
+  { id: "deep", name: "Deep Clean", icon: "✨" },
+  { id: "security", name: "Security", icon: "🛡️" }
 ];
 
-const services: Service[] = [
+const INITIAL_SERVICES: ServiceItem[] = [
   {
-    id: "bath-combo-1",
-    categoryId: "toilet-bath",
-    group: "Bathroom Cleaning",
-    name: "One attached toilet and bathroom cleaning",
-    description: "Complete scrubbing, tile cleaning, fixture cleaning, and sanitisation.",
-    price: 699,
-    duration: "2 hrs",
+    id: "elec-1",
+    categoryId: "electrician",
+    name: "Master Electrician Inspection & Repair",
+    trade: "Licensed Electrician",
+    description: "Short circuit repair, switchboard replacement, fan & MCB installation.",
+    price: 199,
+    oldPrice: 249,
+    rating: 4.9,
+    jobsCount: 420,
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80",
+    duration: "45 mins",
     popular: true
   },
   {
-    id: "bath-combo-2",
-    categoryId: "toilet-bath",
-    group: "Bathroom Cleaning",
-    name: "Two attached toilet and bathroom cleaning",
-    description: "Combo cleaning for two attached toilets and bathrooms.",
-    price: 1188,
-    oldPrice: 1398,
-    discount: "15% off",
-    duration: "3 hrs",
-    popular: true
-  },
-  {
-    id: "toilet-1",
-    categoryId: "toilet-bath",
-    group: "Toilet Cleaning",
-    name: "1 toilet cleaning",
-    description: "Toilet bowl, seat, flush area, wall touchpoints, and floor cleaning.",
-    price: 399,
-    duration: "1 hr"
-  },
-  {
-    id: "tank-500-1",
-    categoryId: "tank-wash",
-    group: "Overhead Tank Wash",
-    name: "One 500 litre overhead tank wash",
-    description: "Tank emptying, sludge removal, scrubbing, and disinfection.",
-    price: 499,
-    duration: "2 hrs",
-    popular: true
-  },
-  {
-    id: "tank-1000-2",
-    categoryId: "tank-wash",
-    group: "Overhead Tank Wash",
-    name: "Two 1000 litre overhead tank wash",
-    description: "Combo wash with scrubbing and bleaching treatment.",
-    price: 1018,
-    oldPrice: 1198,
-    discount: "15% off",
-    duration: "3 hrs"
-  },
-  {
-    id: "ac-foam-1",
-    categoryId: "ac-repair",
-    group: "AC Service",
-    name: "1 Foam-jet AC service indoor outdoor",
-    description: "Foam jet wash, filter clean, drainage check, and performance inspection.",
-    price: 799,
+    id: "plumb-1",
+    categoryId: "plumber",
+    name: "Pipe Leakage, Tap Fitting & Motor Repair",
+    trade: "Master Plumber",
+    description: "Bathroom leakage fix, water pump fitting, drain unclogging & pipe repairs.",
+    price: 199,
+    oldPrice: 249,
+    rating: 4.8,
+    jobsCount: 380,
+    image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=500&q=80",
     duration: "60 mins",
     popular: true
   },
   {
-    id: "ac-install",
-    categoryId: "ac-repair",
-    group: "AC Installation",
-    name: "New AC installation",
-    description: "Professional split/window AC installation support.",
-    price: 999,
-    duration: "90 mins"
-  },
-  {
-    id: "sofa-carpet",
-    categoryId: "sofa-clean",
-    group: "Sofa & Carpet",
-    name: "Carpet dry wash",
-    description: "Dry wash for carpets with dust removal and fabric care.",
-    price: 499,
-    duration: "90 mins",
+    id: "daily-1",
+    categoryId: "daily_worker",
+    name: "Daily Wage Helper & Heavy Shifting Labor",
+    trade: "Manual Labor / Helper",
+    description: "House shifting, heavy lifting, construction loading & garden digging.",
+    price: 450,
+    oldPrice: 500,
+    rating: 4.9,
+    jobsCount: 510,
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&q=80",
+    duration: "Half-Day (4 hrs)",
     popular: true
   },
   {
-    id: "deep-2bhk",
-    categoryId: "deep-clean",
-    group: "Deep Home Cleaning",
-    name: "2 BHK deep cleaning",
-    description: "Full home deep cleaning for rooms, kitchen, bathrooms, fans, and floors.",
-    price: 2999,
-    duration: "5 hrs",
-    popular: true
-  },
-  {
-    id: "kitchen-complete",
-    categoryId: "kitchen-appliances",
-    group: "Kitchen & Appliances",
-    name: "Complete kitchen cleaning",
-    description: "Counter, tiles, sink, cabinets exterior, grease removal, and floor cleaning.",
-    price: 999,
-    duration: "3 hrs"
-  },
-  {
-    id: "maid-hour",
-    categoryId: "aya-housemaid",
-    group: "Maid Service",
-    name: "Instant maid service",
-    description: "Hourly maid support in Agartala for urgent home help.",
-    price: 99,
-    duration: "Per hour"
-  },
-  {
-    id: "pest-start",
-    categoryId: "pest-control",
-    group: "Pest Control",
-    name: "Pest control package",
-    description: "General home pest control package starting from Rs. 999.",
-    price: 999,
-    duration: "2 hrs"
-  },
-  {
-    id: "plumber-visit",
-    categoryId: "painter-plumber",
-    group: "Painter & Plumber",
-    name: "Painter and plumber verification visit",
-    description: "Rate and work estimate after site verification.",
-    price: 199,
-    duration: "Visit"
-  },
-  {
-    id: "saloon-home",
-    categoryId: "saloon-spa",
-    group: "Saloon & Spa",
-    name: "Home salon consultation",
-    description: "At-home grooming, salon, and spa support with final quote after service selection.",
+    id: "carp-1",
+    categoryId: "carpenter",
+    name: "Furniture & Door Lock Specialist",
+    trade: "Master Carpenter",
+    description: "Door alignment, lock fitting, cabinet repairs, bed & chair assembly.",
     price: 299,
-    duration: "Visit"
+    oldPrice: 399,
+    rating: 4.9,
+    jobsCount: 290,
+    image: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=500&q=80",
+    duration: "60 mins",
+    popular: true
   },
   {
-    id: "security-domestic",
-    categoryId: "security",
-    group: "Security",
-    name: "Domestic security guard",
-    description: "12 hours duty security support for domestic requirements.",
-    price: 1299,
-    duration: "12 hrs"
+    id: "mason-1",
+    categoryId: "mason",
+    name: "Head Mason (Rajmistri) Daily Service",
+    trade: "Master Mason / Rajmistri",
+    description: "Brick laying, plaster repair, tile fixing, floor leveling & concrete work.",
+    price: 1100,
+    oldPrice: 1250,
+    rating: 4.9,
+    jobsCount: 310,
+    image: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=500&q=80",
+    duration: "Full Day (8 hrs)",
+    popular: true
+  },
+  {
+    id: "ac-1",
+    categoryId: "ac",
+    name: "Foam Jet Deep AC Servicing",
+    trade: "AC Technician",
+    description: "High pressure foam wash for indoor & outdoor units with gas check.",
+    price: 799,
+    oldPrice: 999,
+    rating: 4.8,
+    jobsCount: 240,
+    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=500&q=80",
+    duration: "60 mins"
+  },
+  {
+    id: "paint-1",
+    categoryId: "painter",
+    name: "Full Home Painting & Touchup Specialist",
+    trade: "Professional Painter",
+    description: "Wall putty, primer, waterproof coating & decorative paint touchups.",
+    price: 850,
+    oldPrice: 1000,
+    rating: 4.8,
+    jobsCount: 190,
+    image: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=500&q=80",
+    duration: "Full Day"
   }
 ];
 
-const bookingHistory = [
-  { code: "TWG-260601-A7Q2", service: "Bathroom Cleaning", status: "CONFIRMED", amount: 699 },
-  { code: "TWG-260529-M9P1", service: "AC Foam-jet Service", status: "COMPLETED", amount: 799 }
+const GUWAHATI_LOCALITIES = [
+  "GS Road, Guwahati",
+  "Paltan Bazaar, Guwahati",
+  "Beltola Tiniali, Guwahati",
+  "Zoo Road (R.G. Baruah Rd)",
+  "Ganeshguri, Guwahati",
+  "Jalukbari, Guwahati",
+  "Dispur Capital Complex"
+];
+
+const INITIAL_BOOKINGS: BookingRecord[] = [
+  {
+    code: "MW-8821",
+    service: "Master Electrician Inspection & Repair",
+    workerName: "Rajesh Kalita",
+    workerTrade: "Licensed Master Electrician",
+    status: "DISPATCHED",
+    amount: 199,
+    date: "Today",
+    timeSlot: "12 mins arrival",
+    otp: "4821"
+  },
+  {
+    code: "MW-7940",
+    service: "Daily Wage Helper & Heavy Shifting",
+    workerName: "Bikram Das",
+    workerTrade: "Verified Helper Pro",
+    status: "COMPLETED",
+    amount: 450,
+    date: "Yesterday",
+    timeSlot: "10:00 AM",
+    otp: "7103"
+  }
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"home" | "bookings" | "account">("home");
+  const [activeTab, setActiveTab] = useState<TabId>("home");
+  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
+  const [selectedLocation, setSelectedLocation] = useState("GS Road, Guwahati");
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<Record<string, CartItem>>({});
   const [cartOpen, setCartOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    alternatePhone: "",
-    address: "",
-    date: "",
-    time: "09:00 AM - 11:00 AM"
-  });
+  const [bookings, setBookings] = useState<BookingRecord[]>(INITIAL_BOOKINGS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const cartItems = Object.values(cart);
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const popularServices = useMemo(() => services.filter((service) => service.popular).slice(0, 5), []);
-  const filteredPopular = query.trim()
-    ? services.filter((service) => [service.name, service.group, service.description].join(" ").toLowerCase().includes(query.trim().toLowerCase()))
-    : popularServices;
-  const categoryServices = selectedCategory ? services.filter((service) => service.categoryId === selectedCategory.id) : [];
+  // Booking Form Fields
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"COD" | "ONLINE">("COD");
 
-  function addToCart(service: Service) {
-    setCart((current) => {
-      const existing = current[service.id];
+  // Fetch live services from Hostinger API on mount
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/services`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+          const apiServices: ServiceItem[] = data.data.map((item: any) => ({
+            id: String(item.id),
+            categoryId: (item.categoryId || "electrician") as CategoryId,
+            name: item.name || "Skilled Trade Service",
+            trade: item.categoryName || "Verified Specialist",
+            description: item.description || "Verified technician support in Guwahati.",
+            price: Number(item.price) || 199,
+            oldPrice: Math.round((Number(item.price) || 199) * 1.25),
+            rating: 4.9,
+            jobsCount: 350,
+            image: item.imageUrl || "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80",
+            duration: item.duration || "45-60 mins",
+            popular: true
+          }));
+          setServices(apiServices);
+        }
+      })
+      .catch(() => {
+        // Fallback gracefully to INITIAL_SERVICES
+      });
+  }, []);
+
+  const cartItems = useMemo(() => Object.values(cart), [cart]);
+  const cartCount = useMemo(() => cartItems.reduce((acc, it) => acc + it.quantity, 0), [cartItems]);
+  const cartTotal = useMemo(() => cartItems.reduce((acc, it) => acc + it.price * it.quantity, 0), [cartItems]);
+
+  const filteredServices = useMemo(() => {
+    let result = services;
+    if (selectedCategory) {
+      result = result.filter(
+        (s) => s.categoryId === selectedCategory.id || s.trade.toLowerCase().includes(selectedCategory.name.toLowerCase())
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.trade.toLowerCase().includes(q) ||
+          s.description.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [services, selectedCategory, searchQuery]);
+
+  function addToCart(service: ServiceItem) {
+    setCart((prev) => {
+      const existing = prev[service.id];
       return {
-        ...current,
+        ...prev,
         [service.id]: existing ? { ...existing, quantity: existing.quantity + 1 } : { ...service, quantity: 1 }
       };
     });
   }
 
   function updateQuantity(id: string, delta: number) {
-    setCart((current) => {
-      const item = current[id];
-      if (!item) return current;
-      const nextQuantity = item.quantity + delta;
-      if (nextQuantity <= 0) {
-        const next = { ...current };
+    setCart((prev) => {
+      const item = prev[id];
+      if (!item) return prev;
+      const nextQty = item.quantity + delta;
+      if (nextQty <= 0) {
+        const next = { ...prev };
         delete next[id];
         return next;
       }
-      return { ...current, [id]: { ...item, quantity: nextQuantity } };
+      return { ...prev, [id]: { ...item, quantity: nextQty } };
     });
+  }
+
+  async function handleConfirmBooking() {
+    if (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()) {
+      Alert.alert("Required Details", "Please enter your name, mobile number, and address in Guwahati.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const newCode = `MW-${Math.floor(1000 + Math.random() * 9000)}`;
+    const randomOtp = `${Math.floor(1000 + Math.random() * 9000)}`;
+
+    try {
+      await fetch(`${API_BASE_URL}/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName,
+          phone: customerPhone,
+          addressLine: customerAddress,
+          city: "Guwahati",
+          items: cartItems.map((c) => ({ serviceId: c.id, quantity: c.quantity, price: c.price })),
+          totalAmount: cartTotal,
+          paymentMode
+        })
+      });
+    } catch {
+      // Local fallback
+    }
+
+    const newBooking: BookingRecord = {
+      code: newCode,
+      service: cartItems[0]?.name || "Skilled Trade Request",
+      workerName: "Rajesh Kalita",
+      workerTrade: "Licensed Master Electrician",
+      status: "DISPATCHED",
+      amount: cartTotal,
+      date: "Today",
+      timeSlot: "15 mins arrival",
+      otp: randomOtp
+    };
+
+    setBookings([newBooking, ...bookings]);
+    setCart({});
+    setCartOpen(false);
+    setIsSubmitting(false);
+
+    Alert.alert(
+      "Booking Confirmed!",
+      `Order #${newCode} confirmed. Your technician has been dispatched with OTP ${randomOtp}.`,
+      [
+        {
+          text: "Track Live",
+          onPress: () => setActiveTab("tracking")
+        },
+        { text: "OK" }
+      ]
+    );
   }
 
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
-      <View style={styles.appFrame}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {activeTab === "home" && (
-            <>
-              <Header cartCount={cartCount} onCart={() => setCartOpen(true)} />
-              <FloatingContact />
-              <View style={styles.searchBox}>
-                <Text style={styles.searchIcon}>Search</Text>
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder="Bathroom cleaning, AC service..."
-                  placeholderTextColor="#7d8794"
-                  style={styles.searchInput}
-                />
-              </View>
-              <PromoCard />
-              <SectionTitle eyebrow="Book a service" title="Choose a category" />
-              <View style={styles.categoryGrid}>
-                {categories.map((category) => (
-                  <Pressable style={styles.categoryCard} key={category.id} onPress={() => setSelectedCategory(category)}>
-                    {category.badge && <Text style={styles.categoryBadge}>{category.badge}</Text>}
-                    <View style={styles.categoryIcon}>
-                      <Text style={styles.categoryIconText}>{category.icon}</Text>
-                    </View>
-                    <Text style={styles.categoryName}>{category.name}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              <SectionTitle eyebrow={query ? "Search results" : "Booking ranked"} title={query ? "Matching services" : "Popular services"} />
-              <View style={styles.serviceList}>
-                {filteredPopular.length > 0 ? (
-                  filteredPopular.map((service) => (
-                    <ServiceCard
-                      key={service.id}
-                      service={service}
-                      added={Boolean(cart[service.id])}
-                      onAdd={() => addToCart(service)}
-                    />
-                  ))
-                ) : (
-                  <Text style={styles.emptyText}>No matching services found. Try bathroom, tank, AC, sofa, kitchen, pest, or security.</Text>
-                )}
-              </View>
-              <TrustSection />
-            </>
-          )}
 
-          {activeTab === "bookings" && <BookingsScreen />}
-          {activeTab === "account" && <AccountScreen />}
-        </ScrollView>
-
-        {cartCount > 0 && (
-          <Pressable style={styles.checkoutBar} onPress={() => setCartOpen(true)}>
-            <View>
-              <Text style={styles.checkoutTitle}>{cartCount} service{cartCount === 1 ? "" : "s"} selected</Text>
-              <Text style={styles.checkoutSubtitle}>Review booking details</Text>
+      {/* TOP HEADER BAR */}
+      <View style={styles.topHeader}>
+        <Pressable style={styles.locationSelector} onPress={() => setLocationModalOpen(true)}>
+          <Text style={styles.locationPinIcon}>📍</Text>
+          <View>
+            <View style={styles.locationTitleRow}>
+              <Text style={styles.locationTitleText}>{selectedLocation.split(",")[0]}</Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
             </View>
-            <Text style={styles.checkoutTotal}>Rs. {total.toLocaleString()}</Text>
-          </Pressable>
-        )}
+            <Text style={styles.locationSubText}>Guwahati, Assam</Text>
+          </View>
+        </Pressable>
 
-        <BottomNav activeTab={activeTab} onChange={setActiveTab} />
+        <View style={styles.headerRightRow}>
+          <Pressable style={styles.notificationBell} onPress={() => Alert.alert("Notifications", "24 verified technicians online in Guwahati right now.")}>
+            <Text style={styles.bellIcon}>🔔</Text>
+            <View style={styles.bellBadge} />
+          </Pressable>
+
+          <Pressable style={styles.cartHeaderButton} onPress={() => setCartOpen(true)}>
+            <Text style={styles.cartHeaderIcon}>🛍️</Text>
+            {cartCount > 0 && (
+              <View style={styles.cartHeaderBadge}>
+                <Text style={styles.cartHeaderBadgeText}>{cartCount}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
       </View>
 
-      <Modal visible={Boolean(selectedCategory)} animationType="slide" transparent onRequestClose={() => setSelectedCategory(null)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.categoryModal}>
-            <View style={styles.modalHeader}>
-              <Pressable style={styles.iconButton} onPress={() => setSelectedCategory(null)}>
-                <Text style={styles.iconButtonText}>Back</Text>
-              </Pressable>
-              <View>
-                <Text style={styles.modalEyebrow}>Marac Workers</Text>
-                <Text style={styles.modalTitle}>{selectedCategory?.name}</Text>
-              </View>
-              <Pressable style={styles.cartButtonSmall} onPress={() => setCartOpen(true)}>
-                <Text style={styles.cartButtonText}>{cartCount}</Text>
-              </Pressable>
+      {/* MAIN SCREEN BODY */}
+      <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
+        {activeTab === "home" && (
+          <>
+            {/* FLOATING SEARCH BAR */}
+            <View style={styles.searchBarBox}>
+              <Text style={styles.searchMagnifier}>🔍</Text>
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search electrician, plumber, daily worker..."
+                placeholderTextColor="#64748b"
+                style={styles.searchTextInput}
+              />
+              {searchQuery.length > 0 && (
+                <Pressable onPress={() => setSearchQuery("")}>
+                  <Text style={styles.clearSearchIcon}>✕</Text>
+                </Pressable>
+              )}
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {groupServices(categoryServices).map(([group, items]) => (
-                <View key={group} style={styles.groupBlock}>
-                  <Text style={styles.groupTitle}>{group}</Text>
-                  {items.map((service) => (
-                    <ServiceRow key={service.id} service={service} added={Boolean(cart[service.id])} onAdd={() => addToCart(service)} />
+
+            {/* QUICK CATEGORY ICONS GRID */}
+            <View style={styles.categorySection}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Categories</Text>
+                {selectedCategory && (
+                  <Pressable onPress={() => setSelectedCategory(null)}>
+                    <Text style={styles.clearCategoryText}>Clear Filter ✕</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                {CATEGORIES.map((cat) => {
+                  const isSelected = selectedCategory?.id === cat.id;
+                  return (
+                    <Pressable
+                      key={cat.id}
+                      style={[styles.categoryCircleCard, isSelected && styles.categoryCircleCardActive]}
+                      onPress={() => setSelectedCategory(isSelected ? null : cat)}
+                    >
+                      {cat.badge && <Text style={styles.catBadgePill}>{cat.badge}</Text>}
+                      <View style={[styles.catIconWrap, isSelected && styles.catIconWrapActive]}>
+                        <Text style={styles.catIconEmoji}>{cat.icon}</Text>
+                      </View>
+                      <Text style={[styles.catLabel, isSelected && styles.catLabelActive]} numberOfLines={1}>
+                        {cat.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* FEATURED PROMO BANNER */}
+            <View style={styles.promoBanner}>
+              <View style={styles.promoContent}>
+                <View style={styles.promoTag}>
+                  <Text style={styles.promoTagText}>MARAC GUARANTEE</Text>
+                </View>
+                <Text style={styles.promoTitle}>Verified Trade Experts in 30 Mins, Pay After Service</Text>
+                <Text style={styles.promoSub}>Electricians, Plumbers, Helpers & Masons across Guwahati.</Text>
+              </View>
+              <View style={styles.promoBadgeCircle}>
+                <Text style={styles.promoBadgePercent}>100%</Text>
+                <Text style={styles.promoBadgeLabel}>Verified</Text>
+              </View>
+            </View>
+
+            {/* LIVE BOOKING TICKER PILL */}
+            <View style={styles.liveBookingTicker}>
+              <View style={styles.liveDotPulsing} />
+              <Text style={styles.liveTickerText}>
+                <Text style={styles.liveTickerBold}>Live Booking: </Text>
+                Plumber booked in Paltan Bazaar 12 mins ago.
+              </Text>
+            </View>
+
+            {/* TOP-RATED VERIFIED SERVICES FEED */}
+            <View style={styles.servicesHeader}>
+              <Text style={styles.sectionHeading}>Top-Rated Verified Services</Text>
+              <Text style={styles.servicesCountBadge}>{filteredServices.length} Pros</Text>
+            </View>
+
+            <View style={styles.serviceFeed}>
+              {filteredServices.map((service) => {
+                const qty = cart[service.id]?.quantity || 0;
+                return (
+                  <View key={service.id} style={styles.serviceFeedCard}>
+                    <Image source={{ uri: service.image }} style={styles.workerPhoto} />
+                    <View style={styles.serviceCardInfo}>
+                      <View style={styles.ratingRow}>
+                        <Text style={styles.starIcon}>⭐</Text>
+                        <Text style={styles.ratingNumber}>{service.rating}</Text>
+                        <Text style={styles.reviewCount}>({service.jobsCount}+ jobs)</Text>
+                      </View>
+
+                      <Text style={styles.serviceProTitle}>{service.name}</Text>
+                      <Text style={styles.serviceTradeLabel}>{service.trade}</Text>
+
+                      <View style={styles.cardBottomRow}>
+                        <View>
+                          <Text style={styles.priceAmount}>
+                            ₹{service.price}
+                            <Text style={styles.priceUnit}> / {service.duration}</Text>
+                          </Text>
+                          {service.oldPrice && <Text style={styles.priceStrike}>₹{service.oldPrice}</Text>}
+                        </View>
+
+                        {qty === 0 ? (
+                          <Pressable style={styles.addCtaButton} onPress={() => addToCart(service)}>
+                            <Text style={styles.addCtaText}>+ Add</Text>
+                          </Pressable>
+                        ) : (
+                          <View style={styles.stepperWrap}>
+                            <Pressable style={styles.stepBtn} onPress={() => updateQuantity(service.id, -1)}>
+                              <Text style={styles.stepBtnText}>−</Text>
+                            </Pressable>
+                            <Text style={styles.stepQty}>{qty}</Text>
+                            <Pressable style={styles.stepBtn} onPress={() => updateQuantity(service.id, 1)}>
+                              <Text style={styles.stepBtnText}>+</Text>
+                            </Pressable>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </>
+        )}
+
+        {/* 2. BOOKINGS TAB */}
+        {activeTab === "bookings" && (
+          <View style={styles.bookingsContainer}>
+            <Text style={styles.screenMainTitle}>My Service Bookings</Text>
+            <Text style={styles.screenSubtitle}>Track active dispatches & past service history in Guwahati.</Text>
+
+            {bookings.map((b) => (
+              <View key={b.code} style={styles.bookingCard}>
+                <View style={styles.bookingCardHeader}>
+                  <View>
+                    <Text style={styles.bookingCodeText}>#{b.code}</Text>
+                    <Text style={styles.bookingServiceTitle}>{b.service}</Text>
+                  </View>
+                  <View style={[styles.statusPill, b.status === "DISPATCHED" ? styles.statusDispatched : styles.statusCompleted]}>
+                    <Text style={styles.statusPillText}>{b.status}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.bookingDetailsRow}>
+                  <Text style={styles.bookingDetailItem}>👤 Pro: {b.workerName}</Text>
+                  <Text style={styles.bookingDetailItem}>📅 {b.date} • {b.timeSlot}</Text>
+                  <Text style={styles.bookingDetailPrice}>Total: ₹{b.amount}</Text>
+                </View>
+
+                {b.status === "DISPATCHED" && (
+                  <View style={styles.bookingCardActions}>
+                    <Pressable
+                      style={styles.trackCardBtn}
+                      onPress={() => setActiveTab("tracking")}
+                    >
+                      <Text style={styles.trackCardBtnText}>🗺️ Track Technician Live (ETA 12m)</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 3. TRACKING TAB (Matching generated Image 2) */}
+        {activeTab === "tracking" && (
+          <View style={styles.trackingContainer}>
+            <View style={styles.trackingTopHeader}>
+              <Text style={styles.trackingTopHeading}>Booking #MW-8821</Text>
+              <Text style={styles.trackingTopSub}>Live Field Dispatch Status</Text>
+            </View>
+
+            {/* MAP VIEWPORT SIMULATION */}
+            <View style={styles.mapCanvas}>
+              {/* Simulated Map Background */}
+              <View style={styles.mapGridOverlay}>
+                <View style={styles.mapRoadHorizontal} />
+                <View style={styles.mapRoadVertical} />
+                <View style={styles.mapRiverBar}>
+                  <Text style={styles.mapRiverText}>Brahmaputra River</Text>
+                </View>
+
+                {/* Destination Pin (Customer) */}
+                <View style={styles.customerPinMarker}>
+                  <Text style={styles.pinIcon}>📍</Text>
+                  <View style={styles.pinTooltip}>
+                    <Text style={styles.pinTooltipText}>Your Home</Text>
+                  </View>
+                </View>
+
+                {/* Moving Worker Pin Marker */}
+                <View style={styles.workerPinMarker}>
+                  <View style={styles.workerPinCircle}>
+                    <Text style={styles.workerPinIcon}>⚡</Text>
+                  </View>
+                  <View style={styles.workerRadarWave} />
+                </View>
+              </View>
+
+              {/* Floating ETA Status Banner */}
+              <View style={styles.floatingEtaBanner}>
+                <View style={styles.etaDotGreen} />
+                <Text style={styles.floatingEtaText}>Electrician On The Way • 12 mins arrival</Text>
+              </View>
+            </View>
+
+            {/* VERIFIED WORKER CARD SHEET */}
+            <View style={styles.trackingProCard}>
+              <View style={styles.proProfileHeader}>
+                <Image
+                  source={{ uri: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&q=80" }}
+                  style={styles.trackingAvatar}
+                />
+                <View style={styles.trackingProInfo}>
+                  <View style={styles.proNameBadgeRow}>
+                    <Text style={styles.trackingProName}>Rajesh Kalita</Text>
+                    <Text style={styles.verifiedCheckIcon}>✓</Text>
+                  </View>
+                  <View style={styles.licensedPill}>
+                    <Text style={styles.licensedPillText}>Licensed Master Electrician</Text>
+                  </View>
+                  <Text style={styles.trackingProScore}>⭐ 4.9 (420+ jobs) • Police Verified</Text>
+                </View>
+              </View>
+
+              {/* START JOB PIN BOX */}
+              <View style={styles.otpPinContainer}>
+                <View>
+                  <Text style={styles.otpLabel}>Start Job PIN</Text>
+                  <Text style={styles.otpSub}>Service OTP:</Text>
+                </View>
+                <View style={styles.otpBoxesRow}>
+                  {["4", "8", "2", "1"].map((digit, i) => (
+                    <View key={i} style={styles.otpDigitBox}>
+                      <Text style={styles.otpDigitText}>{digit}</Text>
+                    </View>
                   ))}
                 </View>
-              ))}
-              <View style={styles.promiseCard}>
-                <Text style={styles.promiseTitle}>TWG Promise</Text>
-                <Text style={styles.promiseItem}>Verified professionals</Text>
-                <Text style={styles.promiseItem}>Safe chemicals and tools</Text>
-                <Text style={styles.promiseItem}>Clear pricing before booking</Text>
               </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
 
-      <Modal visible={cartOpen} animationType="slide" transparent onRequestClose={() => setCartOpen(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.cartModal}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalEyebrow}>Review booking</Text>
-                <Text style={styles.modalTitle}>Your cart</Text>
+              {/* ACTION BUTTONS (Call & WhatsApp) */}
+              <View style={styles.trackingActionButtons}>
+                <Pressable
+                  style={styles.callWorkerBtn}
+                  onPress={() => Linking.openURL(`tel:+91${SUPPORT_PHONE}`)}
+                >
+                  <Text style={styles.callWorkerBtnText}>📞 Call Worker</Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.whatsappWorkerBtn}
+                  onPress={() => Linking.openURL(`https://wa.me/91${SUPPORT_PHONE}?text=Hi%20Rajesh%2C%20regarding%20booking%20%23MW-8821`)}
+                >
+                  <Text style={styles.whatsappWorkerBtnText}>💬 Chat on WhatsApp</Text>
+                </Pressable>
               </View>
-              <Pressable style={styles.iconButton} onPress={() => setCartOpen(false)}>
-                <Text style={styles.iconButtonText}>Close</Text>
+
+              {/* SERVICE SUMMARY */}
+              <View style={styles.trackingOrderSummary}>
+                <Text style={styles.trackingSummaryTitle}>Ceiling Fan & Switchboard Repair</Text>
+                <Text style={styles.trackingSummaryPrice}>💵 ₹199 • Pay on Completion</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 4. PROFILE TAB */}
+        {activeTab === "profile" && (
+          <View style={styles.profileContainer}>
+            <View style={styles.profileHeaderBox}>
+              <View style={styles.profileAvatarCircle}>
+                <Text style={styles.profileAvatarInitial}>U</Text>
+              </View>
+              <View>
+                <Text style={styles.profileUserName}>Valued Customer</Text>
+                <Text style={styles.profileUserCity}>Guwahati, Assam • Verified Customer</Text>
+              </View>
+            </View>
+
+            <View style={styles.profileMenuBlock}>
+              <Pressable
+                style={styles.profileMenuItem}
+                onPress={() => Linking.openURL("https://maracworkers.vercel.app/worker/register")}
+              >
+                <Text style={styles.profileMenuIcon}>🦺</Text>
+                <View style={styles.profileMenuTextWrap}>
+                  <Text style={styles.profileMenuTitle}>Become a Marac Worker</Text>
+                  <Text style={styles.profileMenuSub}>Join 500+ verified tradesmen & earn daily</Text>
+                </View>
+                <Text style={styles.menuChevron}>›</Text>
+              </Pressable>
+
+              <Pressable style={styles.profileMenuItem} onPress={() => setLocationModalOpen(true)}>
+                <Text style={styles.profileMenuIcon}>📍</Text>
+                <View style={styles.profileMenuTextWrap}>
+                  <Text style={styles.profileMenuTitle}>Saved Addresses</Text>
+                  <Text style={styles.profileMenuSub}>{selectedLocation}</Text>
+                </View>
+                <Text style={styles.menuChevron}>›</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.profileMenuItem}
+                onPress={() => Linking.openURL(`tel:+91${SUPPORT_PHONE}`)}
+              >
+                <Text style={styles.profileMenuIcon}>📞</Text>
+                <View style={styles.profileMenuTextWrap}>
+                  <Text style={styles.profileMenuTitle}>24/7 Helpline & Support</Text>
+                  <Text style={styles.profileMenuSub}>+91 {SUPPORT_PHONE}</Text>
+                </View>
+                <Text style={styles.menuChevron}>›</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.profileMenuItem}
+                onPress={() => Alert.alert("Language Selected", "English (Assamese & Hindi coming in next release).")}
+              >
+                <Text style={styles.profileMenuIcon}>🌐</Text>
+                <View style={styles.profileMenuTextWrap}>
+                  <Text style={styles.profileMenuTitle}>Language / ভাষা</Text>
+                  <Text style={styles.profileMenuSub}>English (অসমীয়া / हिंदी)</Text>
+                </View>
+                <Text style={styles.menuChevron}>›</Text>
               </Pressable>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* FLOATING CART SUMMARY BAR (WHEN SERVICES SELECTED) */}
+      {cartCount > 0 && activeTab === "home" && (
+        <View style={styles.floatingCartBar}>
+          <View>
+            <Text style={styles.floatingCartCount}>{cartCount} Service{cartCount > 1 ? "s" : ""} in Cart</Text>
+            <Text style={styles.floatingCartTotal}>Total: ₹{cartTotal.toLocaleString()} <Text style={styles.floatingCartSub}>· Pay after service</Text></Text>
+          </View>
+          <Pressable style={styles.floatingCartButton} onPress={() => setCartOpen(true)}>
+            <Text style={styles.floatingCartBtnText}>View Cart & Book →</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* BOTTOM TAB BAR */}
+      <View style={styles.bottomTabBar}>
+        <Pressable style={styles.tabBtn} onPress={() => setActiveTab("home")}>
+          <Text style={[styles.tabIcon, activeTab === "home" && styles.tabIconActive]}>🏠</Text>
+          <Text style={[styles.tabLabel, activeTab === "home" && styles.tabLabelActive]}>Home</Text>
+        </Pressable>
+
+        <Pressable style={styles.tabBtn} onPress={() => setActiveTab("bookings")}>
+          <Text style={[styles.tabIcon, activeTab === "bookings" && styles.tabIconActive]}>📅</Text>
+          <Text style={[styles.tabLabel, activeTab === "bookings" && styles.tabLabelActive]}>Bookings</Text>
+        </Pressable>
+
+        <Pressable style={styles.tabBtn} onPress={() => setActiveTab("tracking")}>
+          <Text style={[styles.tabIcon, activeTab === "tracking" && styles.tabIconActive]}>📍</Text>
+          <Text style={[styles.tabLabel, activeTab === "tracking" && styles.tabLabelActive]}>Tracking</Text>
+        </Pressable>
+
+        <Pressable style={styles.tabBtn} onPress={() => setActiveTab("profile")}>
+          <Text style={[styles.tabIcon, activeTab === "profile" && styles.tabIconActive]}>👤</Text>
+          <Text style={[styles.tabLabel, activeTab === "profile" && styles.tabLabelActive]}>Profile</Text>
+        </Pressable>
+      </View>
+
+      {/* CART & CHECKOUT MODAL */}
+      <Modal visible={cartOpen} animationType="slide" transparent onRequestClose={() => setCartOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.cartModalCard}>
+            <View style={styles.cartModalHeader}>
+              <Text style={styles.cartModalTitle}>Selected Services ({cartCount})</Text>
+              <Pressable style={styles.modalCloseCircle} onPress={() => setCartOpen(false)}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.cartItemsScroll} showsVerticalScrollIndicator={false}>
               {cartItems.length === 0 ? (
-                <Text style={styles.emptyText}>No services added yet.</Text>
+                <View style={styles.emptyCartBox}>
+                  <Text style={styles.emptyCartIcon}>🛍️</Text>
+                  <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+                  <Text style={styles.emptyCartSub}>Add verified technicians or helpers from home.</Text>
+                </View>
               ) : (
                 cartItems.map((item) => (
-                  <View style={styles.cartRow} key={item.id}>
-                    <View style={styles.cartCopy}>
-                      <Text style={styles.cartName}>{item.name}</Text>
-                      <Text style={styles.cartPrice}>Rs. {(item.price * item.quantity).toLocaleString()}</Text>
+                  <View key={item.id} style={styles.cartRowCard}>
+                    <View style={styles.cartRowInfo}>
+                      <Text style={styles.cartItemName}>{item.name}</Text>
+                      <Text style={styles.cartItemPrice}>₹{item.price * item.quantity}</Text>
                     </View>
-                    <View style={styles.quantityControl}>
-                      <Pressable onPress={() => updateQuantity(item.id, -1)}><Text style={styles.qtyButton}>-</Text></Pressable>
-                      <Text style={styles.qtyValue}>{item.quantity}</Text>
-                      <Pressable onPress={() => updateQuantity(item.id, 1)}><Text style={styles.qtyButton}>+</Text></Pressable>
+                    <View style={styles.stepperWrap}>
+                      <Pressable style={styles.stepBtn} onPress={() => updateQuantity(item.id, -1)}>
+                        <Text style={styles.stepBtnText}>−</Text>
+                      </Pressable>
+                      <Text style={styles.stepQty}>{item.quantity}</Text>
+                      <Pressable style={styles.stepBtn} onPress={() => updateQuantity(item.id, 1)}>
+                        <Text style={styles.stepBtnText}>+</Text>
+                      </Pressable>
                     </View>
                   </View>
                 ))
               )}
-              <View style={styles.bookingForm}>
-                <Text style={styles.formTitle}>Customer details</Text>
-                <Input label="Full name" value={form.name} onChangeText={(value) => setForm((current) => ({ ...current, name: value }))} />
-                <Input label="Mobile number" value={form.phone} onChangeText={(value) => setForm((current) => ({ ...current, phone: value }))} keyboardType="phone-pad" />
-                <Input label="Alternate mobile no." value={form.alternatePhone} onChangeText={(value) => setForm((current) => ({ ...current, alternatePhone: value }))} keyboardType="phone-pad" />
-                <Input label="Agartala address" value={form.address} onChangeText={(value) => setForm((current) => ({ ...current, address: value }))} multiline />
-                <View style={styles.formGridTwo}>
-                  <Input label="Date" value={form.date} onChangeText={(value) => setForm((current) => ({ ...current, date: value }))} placeholder="YYYY-MM-DD" />
-                  <Input label="Time slot" value={form.time} onChangeText={(value) => setForm((current) => ({ ...current, time: value }))} />
-                </View>
-                <View style={styles.paymentPanel}>
-                  <Text style={styles.paymentTitle}>Payment flow</Text>
-                  <Text style={styles.paymentText}>For online payment, collect payment confirmation first, then confirm the booking in the system.</Text>
-                  <View style={styles.paymentOptions}>
-                    <Text style={styles.paymentChipActive}>Online payment</Text>
-                    <Text style={styles.paymentChip}>Cash after service</Text>
+
+              {cartItems.length > 0 && (
+                <View style={styles.checkoutFormBox}>
+                  <Text style={styles.checkoutFormHeading}>Service Address & Schedule</Text>
+
+                  <Text style={styles.inputFieldLabel}>Your Full Name *</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={customerName}
+                    onChangeText={setCustomerName}
+                    placeholder="e.g. Rahul Sharma"
+                    placeholderTextColor="#64748b"
+                  />
+
+                  <Text style={styles.inputFieldLabel}>Mobile Number *</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={customerPhone}
+                    onChangeText={setCustomerPhone}
+                    placeholder="10-digit mobile"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    placeholderTextColor="#64748b"
+                  />
+
+                  <Text style={styles.inputFieldLabel}>Complete Address in Guwahati *</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalInputMultiline]}
+                    value={customerAddress}
+                    onChangeText={setCustomerAddress}
+                    placeholder="Flat/House No., Landmark, Area in Guwahati"
+                    multiline
+                    placeholderTextColor="#64748b"
+                  />
+
+                  <Text style={styles.inputFieldLabel}>Payment Preference</Text>
+                  <View style={styles.paymentToggleRow}>
+                    <Pressable
+                      style={[styles.paymentPill, paymentMode === "COD" && styles.paymentPillActive]}
+                      onPress={() => setPaymentMode("COD")}
+                    >
+                      <Text style={[styles.paymentPillText, paymentMode === "COD" && styles.paymentPillTextActive]}>
+                        💵 Pay After Service (Cash/UPI)
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.paymentPill, paymentMode === "ONLINE" && styles.paymentPillActive]}
+                      onPress={() => setPaymentMode("ONLINE")}
+                    >
+                      <Text style={[styles.paymentPillText, paymentMode === "ONLINE" && styles.paymentPillTextActive]}>
+                        💳 Online (Razorpay)
+                      </Text>
+                    </Pressable>
                   </View>
                 </View>
-              </View>
+              )}
             </ScrollView>
-            <View style={styles.cartFooter}>
-              <View>
-                <Text style={styles.totalLabel}>Total amount</Text>
-                <Text style={styles.totalValue}>Rs. {total.toLocaleString()}</Text>
+
+            {cartItems.length > 0 && (
+              <View style={styles.cartFooterBar}>
+                <View>
+                  <Text style={styles.cartFooterSub}>Total to Pay</Text>
+                  <Text style={styles.cartFooterTotal}>₹{cartTotal.toLocaleString()}</Text>
+                </View>
+                <Pressable
+                  style={[styles.cartSubmitBtn, isSubmitting && styles.cartSubmitBtnDisabled]}
+                  onPress={handleConfirmBooking}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text style={styles.cartSubmitText}>Confirm & Dispatch Pro →</Text>
+                  )}
+                </Pressable>
               </View>
-              <Pressable style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Confirm booking</Text>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* LOCATION SWITCHER MODAL */}
+      <Modal visible={locationModalOpen} animationType="fade" transparent onRequestClose={() => setLocationModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.locationModalCard}>
+            <View style={styles.cartModalHeader}>
+              <Text style={styles.cartModalTitle}>Select Your Locality</Text>
+              <Pressable style={styles.modalCloseCircle} onPress={() => setLocationModalOpen(false)}>
+                <Text style={styles.modalCloseText}>✕</Text>
               </Pressable>
             </View>
+            <Text style={styles.locationModalSub}>Choose your area in Guwahati for instant 30-min technician matching.</Text>
+
+            <ScrollView style={{ marginTop: 12 }}>
+              {GUWAHATI_LOCALITIES.map((loc) => (
+                <Pressable
+                  key={loc}
+                  style={[styles.locationOptionItem, selectedLocation === loc && styles.locationOptionItemActive]}
+                  onPress={() => {
+                    setSelectedLocation(loc);
+                    setLocationModalOpen(false);
+                  }}
+                >
+                  <Text style={styles.locationOptionIcon}>📍</Text>
+                  <Text style={[styles.locationOptionText, selectedLocation === loc && styles.locationOptionTextActive]}>
+                    {loc}
+                  </Text>
+                  {selectedLocation === loc && <Text style={styles.locationCheckIcon}>✓</Text>}
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -435,1055 +931,1170 @@ export default function App() {
   );
 }
 
-function Header({ cartCount, onCart }: { cartCount: number; onCart: () => void }) {
-  return (
-    <View style={styles.header}>
-      <View style={styles.headerTop}>
-        <View style={styles.logoWrap}>
-          <Image source={brandLogo} style={styles.logo} />
-          <View>
-            <Text style={styles.brandName}>Marac Workers</Text>
-            <Text style={styles.brandSub}>Agartala home services</Text>
-          </View>
-        </View>
-        <Pressable style={styles.cartCircle} onPress={onCart}>
-          <Text style={styles.cartCircleText}>{cartCount}</Text>
-        </Pressable>
-      </View>
-      <Pressable style={styles.locationPill}>
-        <Text style={styles.locationTitle}>In 14 minutes</Text>
-        <Text style={styles.locationText}>Agartala, Tripura - service area only</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function PromoCard() {
-  return (
-    <View style={styles.promoCard}>
-      <View>
-        <Text style={styles.promoKicker}>Limited offer</Text>
-        <Text style={styles.promoTitle}>Bathroom cleaning from Rs. 399</Text>
-        <Text style={styles.promoText}>Same-day booking in Agartala. Pay after service.</Text>
-      </View>
-      <View style={styles.promoBadge}>
-        <Text style={styles.promoBadgeText}>60% OFF</Text>
-      </View>
-    </View>
-  );
-}
-
-function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <View style={styles.sectionHead}>
-      <Text style={styles.sectionEyebrow}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-  );
-}
-
-function ServiceCard({ service, added, onAdd }: { service: Service; added: boolean; onAdd: () => void }) {
-  return (
-    <View style={styles.serviceCard}>
-      <View style={styles.serviceIconLarge}>
-        <Text style={styles.serviceIconText}>{categoryIcon(service.categoryId)}</Text>
-      </View>
-      <View style={styles.serviceCardBody}>
-        <Text style={styles.serviceGroup}>{service.group}</Text>
-        <Text style={styles.serviceName}>{service.name}</Text>
-        <Text style={styles.serviceDesc}>{service.description}</Text>
-        <View style={styles.priceRow}>
-          <View>
-            <Text style={styles.price}>Rs. {service.price.toLocaleString()}</Text>
-            <Text style={styles.duration}>{service.duration}</Text>
-          </View>
-          <Pressable style={[styles.addButton, added && styles.addButtonActive]} onPress={onAdd}>
-            <Text style={[styles.addButtonText, added && styles.addButtonTextActive]}>{added ? "Added" : "Add"}</Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function ServiceRow({ service, added, onAdd }: { service: Service; added: boolean; onAdd: () => void }) {
-  return (
-    <View style={styles.serviceRow}>
-      <View style={styles.serviceRowCopy}>
-        <Text style={styles.rowName}>{service.name}</Text>
-        <Text style={styles.rowDesc}>{service.description}</Text>
-        <View style={styles.rowPriceLine}>
-          <Text style={styles.rowPrice}>Rs. {service.price.toLocaleString()}</Text>
-          {service.oldPrice && <Text style={styles.oldPrice}>Rs. {service.oldPrice.toLocaleString()}</Text>}
-          {service.discount && <Text style={styles.discount}>{service.discount}</Text>}
-        </View>
-        <Text style={styles.duration}>{service.duration}</Text>
-      </View>
-      <View style={styles.rowMedia}>
-        <Text style={styles.rowMediaText}>{categoryIcon(service.categoryId)}</Text>
-        <Pressable style={[styles.addButtonSmall, added && styles.addButtonActive]} onPress={onAdd}>
-          <Text style={[styles.addButtonText, added && styles.addButtonTextActive]}>{added ? "Added" : "Add"}</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-function TrustSection() {
-  return (
-    <View style={styles.trustCard}>
-      <Text style={styles.trustTitle}>Why customers choose TWG</Text>
-      <View style={styles.trustGrid}>
-        {["Verified staff", "Cash on delivery", "Agartala support", "Live booking status"].map((item) => (
-          <View style={styles.trustItem} key={item}>
-            <View style={styles.trustDot} />
-            <Text style={styles.trustText}>{item}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-function FloatingContact() {
-  return (
-    <View style={styles.floatingContact}>
-      <Pressable style={styles.floatButton} onPress={() => Linking.openURL(`tel:+91${supportPhone}`)}>
-        <Text style={styles.floatButtonText}>Call</Text>
-      </Pressable>
-      <Pressable style={[styles.floatButton, styles.whatsAppButton]} onPress={() => Linking.openURL(`https://wa.me/91${supportPhone}`)}>
-        <Text style={styles.floatButtonText}>WA</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function BookingsScreen() {
-  return (
-    <View style={styles.simpleScreen}>
-      <SectionTitle eyebrow="My bookings" title="Booking history" />
-      {bookingHistory.map((booking) => (
-        <View style={styles.historyCard} key={booking.code}>
-          <View>
-            <Text style={styles.historyCode}>{booking.code}</Text>
-            <Text style={styles.historyService}>{booking.service}</Text>
-          </View>
-          <View style={styles.historyRight}>
-            <Text style={styles.historyAmount}>Rs. {booking.amount.toLocaleString()}</Text>
-            <Text style={styles.historyStatus}>{booking.status}</Text>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function AccountScreen() {
-  return (
-    <View style={styles.simpleScreen}>
-      <SectionTitle eyebrow="Profile" title="Customer account" />
-      <View style={styles.accountCard}>
-        <Image source={brandLogo} style={styles.accountLogo} />
-        <Text style={styles.accountTitle}>Sign in with Google</Text>
-        <Text style={styles.accountText}>Connect your account to view booking history, payment status, and saved addresses.</Text>
-        <Pressable style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Continue with Google</Text>
-        </Pressable>
-      </View>
-      <View style={styles.accountCard}>
-        <Text style={styles.accountTitle}>Need help?</Text>
-        <Text style={styles.accountText}>Call or WhatsApp Marac Workers support team.</Text>
-        <View style={styles.helpButtons}>
-          <Pressable style={styles.helpButton} onPress={() => Linking.openURL(`tel:+91${supportPhone}`)}>
-            <Text style={styles.helpButtonText}>Call</Text>
-          </Pressable>
-          <Pressable style={styles.helpButton} onPress={() => Linking.openURL(`https://wa.me/91${supportPhone}`)}>
-            <Text style={styles.helpButtonText}>WhatsApp</Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function BottomNav({ activeTab, onChange }: { activeTab: "home" | "bookings" | "account"; onChange: (tab: "home" | "bookings" | "account") => void }) {
-  const tabs: Array<{ id: "home" | "bookings" | "account"; label: string }> = [
-    { id: "home", label: "Home" },
-    { id: "bookings", label: "Bookings" },
-    { id: "account", label: "Account" }
-  ];
-
-  return (
-    <View style={styles.bottomNav}>
-      {tabs.map((tab) => (
-        <Pressable style={[styles.navItem, activeTab === tab.id && styles.navItemActive]} key={tab.id} onPress={() => onChange(tab.id)}>
-          <Text style={[styles.navLabel, activeTab === tab.id && styles.navLabelActive]}>{tab.label}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType,
-  multiline
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  placeholder?: string;
-  keyboardType?: "default" | "phone-pad";
-  multiline?: boolean;
-}) {
-  return (
-    <View style={styles.inputWrap}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        keyboardType={keyboardType}
-        multiline={multiline}
-        placeholderTextColor="#98a2b3"
-        style={[styles.input, multiline && styles.inputMultiline]}
-      />
-    </View>
-  );
-}
-
-function groupServices(items: Service[]) {
-  const groups = new Map<string, Service[]>();
-  for (const item of items) {
-    groups.set(item.group, [...(groups.get(item.group) ?? []), item]);
-  }
-  return Array.from(groups.entries());
-}
-
-function categoryIcon(categoryId: CategoryId) {
-  return categories.find((category) => category.id === categoryId)?.icon ?? "TW";
-}
-
 const colors = {
-  navy: "#071020",
-  ink: "#101828",
-  muted: "#667085",
-  line: "#e4eaf2",
-  bg: "#f4f8fd",
-  gold: "#d4a017",
-  green: "#22a96d",
-  sky: "#1a6fa8",
-  purple: "#5b2bd6"
+  navyDark: "#07101e",
+  navyCard: "#0f1c2e",
+  navyBorder: "#1e2d42",
+  orange: "#ff4800",
+  orangeDark: "#e03e00",
+  emerald: "#10b981",
+  textWhite: "#ffffff",
+  textMuted: "#94a3b8",
+  textSubtle: "#64748b"
 };
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.bg
+    backgroundColor: colors.navyDark
   },
-  appFrame: {
-    flex: 1,
-    backgroundColor: colors.bg
-  },
-  content: {
-    paddingBottom: 110
-  },
-  header: {
-    backgroundColor: colors.purple,
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 18
-  },
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12
-  },
-  logoWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1
-  },
-  logo: {
-    width: 54,
-    height: 38,
-    borderRadius: 9
-  },
-  brandName: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "900"
-  },
-  brandSub: {
-    color: "rgba(255,255,255,0.78)",
-    marginTop: 2,
-    fontSize: 12,
-    fontWeight: "600"
-  },
-  cartCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  cartCircleText: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  locationPill: {
-    marginTop: 14,
-    backgroundColor: "rgba(255,255,255,0.13)",
-    borderRadius: 12,
-    padding: 12
-  },
-  locationTitle: {
-    color: "white",
-    fontSize: 17,
-    fontWeight: "900"
-  },
-  locationText: {
-    color: "rgba(255,255,255,0.82)",
-    marginTop: 4,
-    fontSize: 12
-  },
-  searchBox: {
-    margin: 16,
-    marginTop: -1,
-    backgroundColor: "white",
-    borderRadius: 13,
-    minHeight: 52,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: colors.line
-  },
-  searchIcon: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase"
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.ink,
-    fontSize: 15
-  },
-  promoCard: {
-    marginHorizontal: 16,
-    backgroundColor: colors.purple,
-    borderRadius: 16,
-    padding: 18,
+  topHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: colors.navyDark,
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 16,
-    alignItems: "center"
-  },
-  promoKicker: {
-    color: "#f5dc80",
-    fontWeight: "900",
-    textTransform: "uppercase",
-    fontSize: 11
-  },
-  promoTitle: {
-    color: "white",
-    fontWeight: "900",
-    fontSize: 19,
-    marginTop: 5
-  },
-  promoText: {
-    color: "rgba(255,255,255,0.76)",
-    marginTop: 6,
-    lineHeight: 19,
-    maxWidth: 220
-  },
-  promoBadge: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    backgroundColor: "white",
     alignItems: "center",
-    justifyContent: "center"
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)"
   },
-  promoBadgeText: {
-    color: colors.purple,
-    fontWeight: "900",
-    textAlign: "center"
-  },
-  sectionHead: {
-    paddingHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 12
-  },
-  sectionEyebrow: {
-    color: colors.sky,
-    textTransform: "uppercase",
-    fontWeight: "900",
-    fontSize: 11,
-    letterSpacing: 0
-  },
-  sectionTitle: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 23,
-    marginTop: 4
-  },
-  categoryGrid: {
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10
-  },
-  categoryCard: {
-    width: "31.5%",
-    minHeight: 112,
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.line,
-    position: "relative"
-  },
-  categoryBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    backgroundColor: "#eef8f2",
-    color: colors.green,
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    fontSize: 9,
-    fontWeight: "900"
-  },
-  categoryIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: "#eef5fb",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  categoryIconText: {
-    color: colors.sky,
-    fontWeight: "900"
-  },
-  categoryName: {
-    marginTop: 9,
-    color: colors.ink,
-    fontWeight: "800",
-    textAlign: "center",
-    fontSize: 12,
-    lineHeight: 16
-  },
-  serviceList: {
-    paddingHorizontal: 16,
-    gap: 12
-  },
-  serviceCard: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    overflow: "hidden"
-  },
-  serviceIconLarge: {
-    height: 92,
-    backgroundColor: "#eef5fb",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  serviceIconText: {
-    color: colors.sky,
-    fontSize: 28,
-    fontWeight: "900"
-  },
-  serviceCardBody: {
-    padding: 15
-  },
-  serviceGroup: {
-    color: colors.sky,
-    textTransform: "uppercase",
-    fontSize: 10,
-    fontWeight: "900"
-  },
-  serviceName: {
-    color: colors.navy,
-    fontSize: 16,
-    fontWeight: "900",
-    marginTop: 5
-  },
-  serviceDesc: {
-    color: colors.muted,
-    lineHeight: 20,
-    marginTop: 6,
-    fontSize: 13
-  },
-  priceRow: {
-    marginTop: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  price: {
-    color: colors.navy,
-    fontSize: 17,
-    fontWeight: "900"
-  },
-  duration: {
-    color: colors.muted,
-    fontSize: 12,
-    marginTop: 3
-  },
-  addButton: {
-    borderWidth: 1,
-    borderColor: colors.purple,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: "white"
-  },
-  addButtonActive: {
-    backgroundColor: colors.purple
-  },
-  addButtonText: {
-    color: colors.purple,
-    fontWeight: "900"
-  },
-  addButtonTextActive: {
-    color: "white"
-  },
-  trustCard: {
-    margin: 16,
-    backgroundColor: colors.navy,
-    borderRadius: 16,
-    padding: 18
-  },
-  trustTitle: {
-    color: "white",
-    fontWeight: "900",
-    fontSize: 17
-  },
-  trustGrid: {
-    marginTop: 14,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12
-  },
-  trustItem: {
-    width: "47%",
+  locationSelector: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8
   },
-  trustDot: {
+  locationPinIcon: {
+    fontSize: 20
+  },
+  locationTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5
+  },
+  locationTitleText: {
+    color: colors.textWhite,
+    fontSize: 16,
+    fontWeight: "800"
+  },
+  dropdownArrow: {
+    color: colors.orange,
+    fontSize: 10
+  },
+  locationSubText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "600"
+  },
+  headerRightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  notificationBell: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative"
+  },
+  bellIcon: {
+    fontSize: 16
+  },
+  bellBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.gold
+    backgroundColor: colors.orange
   },
-  trustText: {
-    color: "rgba(255,255,255,0.78)",
-    fontWeight: "700",
-    fontSize: 12
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(7,16,32,0.42)",
-    justifyContent: "flex-end"
-  },
-  categoryModal: {
-    height: "86%",
-    backgroundColor: colors.bg,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    overflow: "hidden"
-  },
-  cartModal: {
-    height: "91%",
-    backgroundColor: colors.bg,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    overflow: "hidden"
-  },
-  modalHeader: {
-    backgroundColor: "white",
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line
-  },
-  modalEyebrow: {
-    color: colors.sky,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    fontSize: 10
-  },
-  modalTitle: {
-    color: colors.navy,
-    fontSize: 20,
-    fontWeight: "900",
-    marginTop: 2
-  },
-  iconButton: {
+  cartHeaderButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.navyCard,
     borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    backgroundColor: "white"
-  },
-  iconButtonText: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  cartButtonSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.navy,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  cartButtonText: {
-    color: "white",
-    fontWeight: "900"
-  },
-  groupBlock: {
-    paddingHorizontal: 16,
-    paddingTop: 18
-  },
-  groupTitle: {
-    color: colors.navy,
-    fontSize: 18,
-    fontWeight: "900",
-    marginBottom: 10
-  },
-  serviceRow: {
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.line,
-    marginBottom: 12,
-    flexDirection: "row",
-    gap: 12
-  },
-  serviceRowCopy: {
-    flex: 1
-  },
-  rowName: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 15,
-    lineHeight: 20
-  },
-  rowDesc: {
-    color: colors.muted,
-    lineHeight: 19,
-    marginTop: 5,
-    fontSize: 12
-  },
-  rowPriceLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 9,
-    flexWrap: "wrap"
-  },
-  rowPrice: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  oldPrice: {
-    color: colors.muted,
-    textDecorationLine: "line-through"
-  },
-  discount: {
-    color: colors.green,
-    fontWeight: "900",
-    fontSize: 12
-  },
-  rowMedia: {
-    width: 92,
-    alignItems: "center",
-    justifyContent: "space-between"
-  },
-  rowMediaText: {
-    width: 76,
-    height: 64,
-    borderRadius: 13,
-    backgroundColor: "#eef5fb",
-    color: colors.sky,
-    fontWeight: "900",
-    textAlign: "center",
-    textAlignVertical: "center",
-    paddingTop: 21
-  },
-  addButtonSmall: {
-    borderWidth: 1,
-    borderColor: colors.purple,
-    borderRadius: 9,
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-    backgroundColor: "white"
-  },
-  promiseCard: {
-    margin: 16,
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.line
-  },
-  promiseTitle: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 17,
-    marginBottom: 8
-  },
-  promiseItem: {
-    color: colors.muted,
-    fontWeight: "700",
-    marginTop: 8
-  },
-  checkoutBar: {
-    position: "absolute",
-    left: 14,
-    right: 14,
-    bottom: 72,
-    backgroundColor: colors.navy,
-    borderRadius: 16,
-    padding: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  floatingContact: {
-    position: "absolute",
-    right: 14,
-    top: 148,
-    zIndex: 4,
-    gap: 10
-  },
-  floatButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.navy,
+    borderColor: colors.navyBorder,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "white"
+    position: "relative"
   },
-  whatsAppButton: {
-    backgroundColor: colors.green
-  },
-  floatButtonText: {
-    color: "white",
-    fontWeight: "900",
-    fontSize: 12
-  },
-  checkoutTitle: {
-    color: "white",
-    fontWeight: "900"
-  },
-  checkoutSubtitle: {
-    color: "rgba(255,255,255,0.68)",
-    fontSize: 12,
-    marginTop: 2
-  },
-  checkoutTotal: {
-    color: colors.gold,
-    fontWeight: "900",
+  cartHeaderIcon: {
     fontSize: 16
   },
-  bottomNav: {
+  cartHeaderBadge: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    minHeight: 62,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingTop: 8
-  },
-  navItem: {
-    flex: 1,
+    top: -4,
+    right: -4,
+    backgroundColor: colors.orange,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
-    minHeight: 44
+    paddingHorizontal: 4
   },
-  navItemActive: {
-    backgroundColor: "#eef5fb"
+  cartHeaderBadgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "900"
   },
-  navLabel: {
-    color: colors.muted,
-    fontWeight: "800"
+  scrollBody: {
+    paddingBottom: 110
   },
-  navLabelActive: {
-    color: colors.sky
-  },
-  cartRow: {
+  searchBarBox: {
     marginHorizontal: 16,
-    marginTop: 12,
-    backgroundColor: "white",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.line,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12
-  },
-  cartCopy: {
-    flex: 1
-  },
-  cartName: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  cartPrice: {
-    color: colors.muted,
-    marginTop: 5
-  },
-  quantityControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#f5f8fb",
-    borderRadius: 10,
-    padding: 5
-  },
-  qtyButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: "white",
-    color: colors.navy,
-    textAlign: "center",
-    textAlignVertical: "center",
-    fontWeight: "900"
-  },
-  qtyValue: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  bookingForm: {
-    margin: 16,
-    backgroundColor: "white",
+    marginTop: 14,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 16,
-    gap: 12
-  },
-  formTitle: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 17
-  },
-  inputWrap: {
-    flex: 1,
-    gap: 6
-  },
-  inputLabel: {
-    color: colors.muted,
-    fontSize: 11,
-    fontWeight: "900",
-    textTransform: "uppercase"
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: 11,
-    minHeight: 44,
-    paddingHorizontal: 12,
-    color: colors.ink,
-    backgroundColor: "#fbfdff"
-  },
-  inputMultiline: {
-    minHeight: 78,
-    paddingTop: 12,
-    textAlignVertical: "top"
-  },
-  formGridTwo: {
+    paddingHorizontal: 14,
     flexDirection: "row",
+    alignItems: "center",
+    minHeight: 50,
     gap: 10
   },
-  paymentPanel: {
-    backgroundColor: "#f5f8fb",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
-    gap: 8
+  searchMagnifier: {
+    fontSize: 15
   },
-  paymentTitle: {
-    color: colors.navy,
-    fontWeight: "900"
+  searchTextInput: {
+    flex: 1,
+    color: colors.textWhite,
+    fontSize: 14,
+    fontWeight: "500"
   },
-  paymentText: {
-    color: colors.muted,
-    lineHeight: 19,
-    fontSize: 12
+  clearSearchIcon: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "700"
   },
-  paymentOptions: {
+  categorySection: {
+    marginTop: 18
+  },
+  sectionHeaderRow: {
+    paddingHorizontal: 16,
     flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap"
-  },
-  paymentChipActive: {
-    backgroundColor: colors.navy,
-    color: "white",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    overflow: "hidden",
-    fontSize: 12,
-    fontWeight: "900"
-  },
-  paymentChip: {
-    backgroundColor: "white",
-    color: colors.navy,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    overflow: "hidden",
-    fontSize: 12,
-    fontWeight: "900",
-    borderWidth: 1,
-    borderColor: colors.line
-  },
-  cartFooter: {
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10
+  },
+  sectionHeading: {
+    color: colors.textWhite,
+    fontSize: 18,
+    fontWeight: "800"
+  },
+  clearCategoryText: {
+    color: colors.orange,
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  categoryScroll: {
+    paddingHorizontal: 16,
     gap: 12
   },
-  totalLabel: {
-    color: colors.muted,
+  categoryCircleCard: {
+    alignItems: "center",
+    width: 74,
+    position: "relative"
+  },
+  categoryCircleCardActive: {
+    transform: [{ scale: 1.05 }]
+  },
+  catBadgePill: {
+    position: "absolute",
+    top: -4,
+    zIndex: 2,
+    backgroundColor: colors.orange,
+    color: "white",
+    fontSize: 8,
     fontWeight: "800",
-    fontSize: 12
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6
   },
-  totalValue: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 20
+  catIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6
   },
-  primaryButton: {
-    backgroundColor: colors.navy,
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 13,
+  catIconWrapActive: {
+    borderColor: colors.orange,
+    backgroundColor: "rgba(255, 72, 0, 0.15)"
+  },
+  catIconEmoji: {
+    fontSize: 24
+  },
+  catLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center"
+  },
+  catLabelActive: {
+    color: colors.orange
+  },
+  promoBanner: {
+    marginHorizontal: 16,
+    marginTop: 18,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  promoContent: {
+    flex: 1,
+    paddingRight: 10
+  },
+  promoTag: {
+    backgroundColor: "rgba(255, 72, 0, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    marginBottom: 6
+  },
+  promoTagText: {
+    color: colors.orange,
+    fontSize: 9,
+    fontWeight: "800"
+  },
+  promoTitle: {
+    color: colors.textWhite,
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 20
+  },
+  promoSub: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 4
+  },
+  promoBadgeCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    borderWidth: 1.5,
+    borderColor: colors.emerald,
     alignItems: "center",
     justifyContent: "center"
   },
-  primaryButtonText: {
-    color: "white",
+  promoBadgePercent: {
+    color: colors.emerald,
+    fontSize: 14,
     fontWeight: "900"
   },
-  emptyText: {
-    color: colors.muted,
-    textAlign: "center",
-    padding: 24,
+  promoBadgeLabel: {
+    color: colors.emerald,
+    fontSize: 9,
     fontWeight: "700"
   },
-  simpleScreen: {
+  liveBookingTicker: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.2)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  liveDotPulsing: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.emerald
+  },
+  liveTickerText: {
+    color: colors.textMuted,
+    fontSize: 12
+  },
+  liveTickerBold: {
+    color: colors.emerald,
+    fontWeight: "800"
+  },
+  servicesHeader: {
+    paddingHorizontal: 16,
+    marginTop: 22,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  servicesCountBadge: {
+    color: colors.textSubtle,
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  serviceFeed: {
+    paddingHorizontal: 16,
+    gap: 14
+  },
+  serviceFeedCard: {
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    borderRadius: 18,
+    padding: 12,
+    flexDirection: "row",
+    gap: 12
+  },
+  workerPhoto: {
+    width: 88,
+    height: 88,
+    borderRadius: 14,
+    backgroundColor: colors.navyDark
+  },
+  serviceCardInfo: {
+    flex: 1
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4
+  },
+  starIcon: {
+    fontSize: 12
+  },
+  ratingNumber: {
+    color: "#f59e0b",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  reviewCount: {
+    color: colors.textSubtle,
+    fontSize: 11
+  },
+  serviceProTitle: {
+    color: colors.textWhite,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 18
+  },
+  serviceTradeLabel: {
+    color: colors.orange,
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 2
+  },
+  cardBottomRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end"
+  },
+  priceAmount: {
+    color: colors.textWhite,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  priceUnit: {
+    color: colors.textSubtle,
+    fontSize: 11,
+    fontWeight: "600"
+  },
+  priceStrike: {
+    color: colors.textSubtle,
+    fontSize: 11,
+    textDecorationLine: "line-through"
+  },
+  addCtaButton: {
+    backgroundColor: colors.orange,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 10
+  },
+  addCtaText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  stepperWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.emerald,
+    borderRadius: 10,
+    overflow: "hidden"
+  },
+  stepBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  stepBtnText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  stepQty: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "800",
+    minWidth: 16,
+    textAlign: "center"
+  },
+  floatingCartBar: {
+    position: "absolute",
+    bottom: 74,
+    left: 14,
+    right: 14,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.orange,
+    borderRadius: 18,
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8
+  },
+  floatingCartCount: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  floatingCartTotal: {
+    color: colors.textWhite,
+    fontSize: 15,
+    fontWeight: "900"
+  },
+  floatingCartSub: {
+    color: colors.emerald,
+    fontSize: 10,
+    fontWeight: "600"
+  },
+  floatingCartButton: {
+    backgroundColor: colors.orange,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 12
+  },
+  floatingCartBtnText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  bottomTabBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 64,
+    backgroundColor: "#060d18",
+    borderTopWidth: 1,
+    borderTopColor: colors.navyBorder,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12
+  },
+  tabBtn: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3
+  },
+  tabIcon: {
+    fontSize: 18,
+    opacity: 0.5
+  },
+  tabIconActive: {
+    opacity: 1
+  },
+  tabLabel: {
+    color: colors.textSubtle,
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  tabLabelActive: {
+    color: colors.orange
+  },
+  bookingsContainer: {
+    padding: 16
+  },
+  screenMainTitle: {
+    color: colors.textWhite,
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 4
+  },
+  screenSubtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginBottom: 16
+  },
+  bookingCard: {
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 14
+  },
+  bookingCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8
+  },
+  bookingCodeText: {
+    color: colors.orange,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  bookingServiceTitle: {
+    color: colors.textWhite,
+    fontSize: 15,
+    fontWeight: "800",
+    marginTop: 2
+  },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8
+  },
+  statusDispatched: {
+    backgroundColor: "rgba(16, 185, 129, 0.2)"
+  },
+  statusCompleted: {
+    backgroundColor: "rgba(100, 116, 139, 0.2)"
+  },
+  statusPillText: {
+    color: colors.emerald,
+    fontSize: 10,
+    fontWeight: "800"
+  },
+  bookingDetailsRow: {
+    gap: 4,
+    marginTop: 6
+  },
+  bookingDetailItem: {
+    color: colors.textMuted,
+    fontSize: 12
+  },
+  bookingDetailPrice: {
+    color: colors.textWhite,
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 4
+  },
+  bookingCardActions: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.navyBorder,
     paddingTop: 10
   },
-  historyCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: "white",
-    borderRadius: 14,
+  trackCardBtn: {
+    backgroundColor: "rgba(255, 72, 0, 0.15)",
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: colors.orange,
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: "center"
+  },
+  trackCardBtnText: {
+    color: colors.orange,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  trackingContainer: {
+    paddingBottom: 20
+  },
+  trackingTopHeader: {
+    padding: 16
+  },
+  trackingTopHeading: {
+    color: colors.textWhite,
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  trackingTopSub: {
+    color: colors.emerald,
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  mapCanvas: {
+    height: 280,
+    backgroundColor: "#132338",
+    position: "relative",
+    overflow: "hidden"
+  },
+  mapGridOverlay: {
+    flex: 1,
+    position: "relative"
+  },
+  mapRoadHorizontal: {
+    position: "absolute",
+    top: 130,
+    left: 0,
+    right: 0,
+    height: 14,
+    backgroundColor: "#1c324e"
+  },
+  mapRoadVertical: {
+    position: "absolute",
+    left: 170,
+    top: 0,
+    bottom: 0,
+    width: 14,
+    backgroundColor: "#1c324e"
+  },
+  mapRiverBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 48,
+    backgroundColor: "#0d5c8a",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  mapRiverText: {
+    color: "rgba(255, 255, 255, 0.6)",
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  customerPinMarker: {
+    position: "absolute",
+    top: 80,
+    right: 60,
+    alignItems: "center"
+  },
+  pinIcon: {
+    fontSize: 28
+  },
+  pinTooltip: {
+    backgroundColor: colors.emerald,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: -4
+  },
+  pinTooltipText: {
+    color: "white",
+    fontSize: 9,
+    fontWeight: "800"
+  },
+  workerPinMarker: {
+    position: "absolute",
+    top: 115,
+    left: 100,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  workerPinCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.orange,
+    borderWidth: 3,
+    borderColor: "white",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  workerPinIcon: {
+    fontSize: 20
+  },
+  workerRadarWave: {
+    position: "absolute",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: colors.orange,
+    opacity: 0.6
+  },
+  floatingEtaBanner: {
+    position: "absolute",
+    top: 14,
+    left: 16,
+    right: 16,
+    backgroundColor: "rgba(7, 16, 30, 0.95)",
+    borderWidth: 1,
+    borderColor: colors.emerald,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 8
+  },
+  etaDotGreen: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.emerald
+  },
+  floatingEtaText: {
+    color: colors.textWhite,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  trackingProCard: {
+    margin: 16,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    borderRadius: 22,
+    padding: 16
+  },
+  proProfileHeader: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center"
+  },
+  trackingAvatar: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2,
+    borderColor: colors.orange
+  },
+  trackingProInfo: {
+    flex: 1
+  },
+  proNameBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
+  },
+  trackingProName: {
+    color: colors.textWhite,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  verifiedCheckIcon: {
+    color: colors.emerald,
+    fontSize: 14,
+    fontWeight: "900"
+  },
+  licensedPill: {
+    backgroundColor: "rgba(255, 72, 0, 0.15)",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 3
+  },
+  licensedPillText: {
+    color: colors.orange,
+    fontSize: 10,
+    fontWeight: "800"
+  },
+  trackingProScore: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 4
+  },
+  otpPinContainer: {
+    backgroundColor: colors.navyDark,
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  otpLabel: {
+    color: colors.textWhite,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  otpSub: {
+    color: colors.textSubtle,
+    fontSize: 10
+  },
+  otpBoxesRow: {
+    flexDirection: "row",
+    gap: 6
+  },
+  otpDigitBox: {
+    width: 34,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.orange,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  otpDigitText: {
+    color: colors.textWhite,
+    fontSize: 16,
+    fontWeight: "900"
+  },
+  trackingActionButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14
+  },
+  callWorkerBtn: {
+    flex: 1,
+    backgroundColor: "#1e293b",
+    borderWidth: 1,
+    borderColor: "#334155",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center"
+  },
+  callWorkerBtnText: {
+    color: colors.textWhite,
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  whatsappWorkerBtn: {
+    flex: 1.2,
+    backgroundColor: "#25d366",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center"
+  },
+  whatsappWorkerBtnText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "800"
+  },
+  trackingOrderSummary: {
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.navyBorder,
+    paddingTop: 12
+  },
+  trackingSummaryTitle: {
+    color: colors.textWhite,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  trackingSummaryPrice: {
+    color: colors.emerald,
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 2
+  },
+  profileContainer: {
+    padding: 16
+  },
+  profileHeaderBox: {
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 16
+  },
+  profileAvatarCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: colors.orange,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  profileAvatarInitial: {
+    color: "white",
+    fontSize: 22,
+    fontWeight: "900"
+  },
+  profileUserName: {
+    color: colors.textWhite,
+    fontSize: 17,
+    fontWeight: "900"
+  },
+  profileUserCity: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 2
+  },
+  profileMenuBlock: {
+    backgroundColor: colors.navyCard,
+    borderWidth: 1.5,
+    borderColor: colors.navyBorder,
+    borderRadius: 20,
+    overflow: "hidden"
+  },
+  profileMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    gap: 12
+  },
+  profileMenuIcon: {
+    fontSize: 20
+  },
+  profileMenuTextWrap: {
+    flex: 1
+  },
+  profileMenuTitle: {
+    color: colors.textWhite,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  profileMenuSub: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2
+  },
+  menuChevron: {
+    color: colors.textSubtle,
+    fontSize: 20,
+    fontWeight: "700"
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "flex-end"
+  },
+  cartModalCard: {
+    height: "88%",
+    backgroundColor: colors.navyDark,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    borderWidth: 1,
+    borderColor: colors.navyBorder
+  },
+  cartModalHeader: {
     padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 12
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.navyBorder
   },
-  historyCode: {
-    color: colors.navy,
+  cartModalTitle: {
+    color: colors.textWhite,
+    fontSize: 18,
     fontWeight: "900"
   },
-  historyService: {
-    color: colors.muted,
-    marginTop: 5
-  },
-  historyRight: {
-    alignItems: "flex-end"
-  },
-  historyAmount: {
-    color: colors.navy,
-    fontWeight: "900"
-  },
-  historyStatus: {
-    color: colors.green,
-    fontWeight: "900",
-    marginTop: 5,
-    fontSize: 12
-  },
-  accountCard: {
-    marginHorizontal: 16,
-    marginBottom: 14,
-    backgroundColor: "white",
+  modalCloseCircle: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: 18,
-    gap: 12
+    backgroundColor: colors.navyCard,
+    alignItems: "center",
+    justifyContent: "center"
   },
-  accountLogo: {
-    width: 78,
-    height: 50,
-    borderRadius: 10
+  modalCloseText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: "900"
   },
-  accountTitle: {
-    color: colors.navy,
-    fontWeight: "900",
-    fontSize: 18
+  cartItemsScroll: {
+    padding: 16,
+    paddingBottom: 40
   },
-  accountText: {
-    color: colors.muted,
-    lineHeight: 20
-  },
-  helpButtons: {
-    flexDirection: "row",
-    gap: 10
-  },
-  helpButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.navy,
-    borderRadius: 12,
-    paddingVertical: 12,
+  emptyCartBox: {
+    padding: 30,
     alignItems: "center"
   },
-  helpButtonText: {
-    color: colors.navy,
+  emptyCartIcon: {
+    fontSize: 48,
+    marginBottom: 10
+  },
+  emptyCartTitle: {
+    color: colors.textWhite,
+    fontSize: 16,
+    fontWeight: "800"
+  },
+  emptyCartSub: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 4
+  },
+  cartRowCard: {
+    backgroundColor: colors.navyCard,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  cartRowInfo: {
+    flex: 1,
+    paddingRight: 10
+  },
+  cartItemName: {
+    color: colors.textWhite,
+    fontSize: 13,
+    fontWeight: "700"
+  },
+  cartItemPrice: {
+    color: colors.orange,
+    fontSize: 14,
+    fontWeight: "900",
+    marginTop: 2
+  },
+  checkoutFormBox: {
+    backgroundColor: colors.navyCard,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: colors.navyBorder
+  },
+  checkoutFormHeading: {
+    color: colors.textWhite,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 12
+  },
+  inputFieldLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 4,
+    marginTop: 8
+  },
+  modalInput: {
+    backgroundColor: colors.navyDark,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: colors.textWhite,
+    fontSize: 13
+  },
+  modalInputMultiline: {
+    minHeight: 60,
+    textAlignVertical: "top"
+  },
+  paymentToggleRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 6
+  },
+  paymentPill: {
+    flex: 1,
+    backgroundColor: colors.navyDark,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: "center"
+  },
+  paymentPillActive: {
+    borderColor: colors.emerald,
+    backgroundColor: "rgba(16, 185, 129, 0.1)"
+  },
+  paymentPillText: {
+    color: colors.textSubtle,
+    fontSize: 10,
+    fontWeight: "800",
+    textAlign: "center"
+  },
+  paymentPillTextActive: {
+    color: colors.emerald
+  },
+  cartFooterBar: {
+    backgroundColor: "#060d18",
+    borderTopWidth: 1,
+    borderTopColor: colors.navyBorder,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  cartFooterSub: {
+    color: colors.textSubtle,
+    fontSize: 11,
+    fontWeight: "700"
+  },
+  cartFooterTotal: {
+    color: colors.textWhite,
+    fontSize: 20,
+    fontWeight: "900"
+  },
+  cartSubmitBtn: {
+    backgroundColor: colors.orange,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14
+  },
+  cartSubmitBtnDisabled: {
+    opacity: 0.6
+  },
+  cartSubmitText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  locationModalCard: {
+    backgroundColor: colors.navyDark,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
+    borderWidth: 1,
+    borderColor: colors.navyBorder,
+    paddingBottom: 30,
+    maxHeight: "75%"
+  },
+  locationModalSub: {
+    color: colors.textMuted,
+    fontSize: 12,
+    paddingHorizontal: 16,
+    marginTop: 4
+  },
+  locationOptionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+    gap: 10
+  },
+  locationOptionItemActive: {
+    backgroundColor: "rgba(255, 72, 0, 0.1)"
+  },
+  locationOptionIcon: {
+    fontSize: 16
+  },
+  locationOptionText: {
+    flex: 1,
+    color: colors.textWhite,
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  locationOptionTextActive: {
+    color: colors.orange,
+    fontWeight: "900"
+  },
+  locationCheckIcon: {
+    color: colors.orange,
+    fontSize: 14,
     fontWeight: "900"
   }
 });
