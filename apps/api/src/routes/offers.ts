@@ -1,8 +1,8 @@
-import { Router, type NextFunction, type Response } from "express";
-import { Prisma } from "@prisma/client";
+import { Router, type NextFunction, type Request, type Response } from "express";
+import { Prisma, type User } from "@prisma/client";
 import { offerBannerCreateSchema, offerBannerUpdateSchema } from "@the-wings/validation";
 import { prisma } from "../db/prisma.js";
-import { requireRoles } from "../middleware/auth.js";
+import { optionalAuth, requireRoles, type AuthedRequest } from "../middleware/auth.js";
 
 export const offersRouter = Router();
 
@@ -39,11 +39,29 @@ offersRouter.get("/active", async (req, res, next) => {
   }
 });
 
-offersRouter.get("/", ...requireRoles("ADMIN", "MANAGER"), async (_req, res, next) => {
+offersRouter.get("/", optionalAuth, async (req: Request, res, next) => {
   try {
+    const authUser = (req as Request & { authUser?: User }).authUser;
+    const isAdminOrManager = authUser && (authUser.role === "ADMIN" || authUser.role === "MANAGER");
+    if (isAdminOrManager) {
+      const offers = await prisma.offerBanner.findMany({
+        include: offerInclude,
+        orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }, { updatedAt: "desc" }]
+      });
+      return res.json({ data: offers });
+    }
+
+    const now = new Date();
     const offers = await prisma.offerBanner.findMany({
+      where: {
+        isActive: true,
+        AND: [
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }
+        ]
+      },
       include: offerInclude,
-      orderBy: [{ isActive: "desc" }, { sortOrder: "asc" }, { updatedAt: "desc" }]
+      orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }]
     });
     return res.json({ data: offers });
   } catch (error) {

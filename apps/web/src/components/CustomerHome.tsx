@@ -356,7 +356,7 @@ export function CustomerHome() {
       const [categoriesResponse, servicesResponse, offersResponse] = await Promise.allSettled([
         api.getServiceCategories(),
         api.getServices(),
-        api.getOfferBanners()
+        api.getActiveOfferBanners()
       ]);
 
       if (requestId !== catalogRequestRef.current) return;
