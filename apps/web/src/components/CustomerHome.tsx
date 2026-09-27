@@ -738,6 +738,81 @@ export function CustomerHome() {
             <li><Link href="/worker/register" onClick={() => setMobileMenuOpen(false)} style={{ color: "var(--orange)", fontWeight: 700 }}>Become a Worker</Link></li>
             <li><a href="#about" onClick={() => setMobileMenuOpen(false)}>About Us</a></li>
             <li><a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a></li>
+
+            {/* Mobile Drawer Auth & Quick Actions */}
+            <li className="mobile-nav-user-slot">
+              {authSession ? (
+                <div className="mobile-nav-user-card">
+                  <div className="mobile-nav-user-header">
+                    <div className="mobile-user-avatar">
+                      <i className="fas fa-user" />
+                    </div>
+                    <div className="mobile-user-details">
+                      <strong>{authSession.user.name || "Customer Account"}</strong>
+                      <span>{authSession.user.phone ? `+91 ${authSession.user.phone}` : "Verified User"}</span>
+                    </div>
+                  </div>
+                  <div className="mobile-nav-user-btns">
+                    <button
+                      className="btn-outline"
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setUserProfileModalOpen(true);
+                      }}
+                      style={{ width: "100%", padding: "0.65rem 1rem", fontSize: "0.9rem" }}
+                    >
+                      <i className="fas fa-calendar-check" /> My Profile &amp; Bookings
+                    </button>
+                    <button
+                      className="mobile-logout-link"
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      <i className="fas fa-sign-out-alt" /> Log Out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mobile-nav-auth-btns">
+                  <button
+                    className="btn-outline"
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAuthInitialTab("customer");
+                      setAuthModalOpen(true);
+                    }}
+                    style={{ width: "100%", padding: "0.75rem", fontSize: "0.92rem", justifyContent: "center" }}
+                  >
+                    <i className="fas fa-sign-in-alt" /> Login
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setRoleModalOpen(true);
+                    }}
+                    style={{ width: "100%", padding: "0.75rem", fontSize: "0.92rem", justifyContent: "center" }}
+                  >
+                    <i className="fas fa-user-plus" /> Register
+                  </button>
+                </div>
+              )}
+            </li>
+
+            <li className="mobile-nav-lang-slot">
+              <span className="mobile-lang-label">Language:</span>
+              <div className="lang-selector">
+                <span className={activeLang === "en" ? "active" : ""} onClick={() => setActiveLang("en")}>English</span>
+                <span className={activeLang === "as" ? "active" : ""} onClick={() => setActiveLang("as")}>অসমীয়া</span>
+                <span className={activeLang === "hi" ? "active" : ""} onClick={() => setActiveLang("hi")}>हिंदी</span>
+              </div>
+            </li>
           </ul>
 
           <div className="nav-actions">
@@ -748,11 +823,11 @@ export function CustomerHome() {
               title="Change area in Guwahati"
             >
               <i className="fas fa-map-marker-alt" />
-              <span>{location.label.split(",")[0] || "Guwahati"}</span>
+              <span className="nav-location-text">{location.label.split(",")[0] || "Guwahati"}</span>
               <i className="fas fa-chevron-down" style={{ fontSize: "0.65rem", opacity: 0.7 }} />
             </button>
 
-            <div className="lang-selector">
+            <div className="lang-selector desktop-only">
               <span className={activeLang === "en" ? "active" : ""} onClick={() => setActiveLang("en")}>En</span>
               <span className={activeLang === "as" ? "active" : ""} onClick={() => setActiveLang("as")}>অ</span>
               <span className={activeLang === "hi" ? "active" : ""} onClick={() => setActiveLang("hi")}>हि</span>
@@ -760,13 +835,13 @@ export function CustomerHome() {
 
             <button className="cart-nav-btn" type="button" onClick={openCart} title="View Cart">
               <i className="fas fa-shopping-bag" />
-              <span>Cart</span>
+              <span className="cart-nav-label">Cart</span>
               {cartCount > 0 && <span className="cart-badge-count">{cartCount}</span>}
             </button>
 
             {authSession ? (
               <button
-                className="btn-outline"
+                className="btn-outline desktop-only"
                 type="button"
                 onClick={() => setUserProfileModalOpen(true)}
                 title="View My Profile & Bookings"
@@ -778,7 +853,7 @@ export function CustomerHome() {
             ) : (
               <>
                 <button
-                  className="btn-outline"
+                  className="btn-outline desktop-only"
                   type="button"
                   onClick={() => {
                     setAuthInitialTab("customer");
@@ -788,7 +863,7 @@ export function CustomerHome() {
                   Login
                 </button>
                 <button
-                  className="btn-secondary"
+                  className="btn-secondary desktop-only"
                   type="button"
                   onClick={() => setRoleModalOpen(true)}
                   style={{ padding: "0.55rem 1.6rem", fontSize: "0.92rem" }}
@@ -2805,7 +2880,7 @@ function BookingModal({
             {errors.name && <div style={{ color: "#d94a1a", fontSize: "0.8rem", marginTop: 4 }}>{errors.name}</div>}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="booking-form-row">
             <div className="form-group">
               <label className="form-label">Mobile Number *</label>
               <input
@@ -2843,7 +2918,7 @@ function BookingModal({
             {errors.address && <div style={{ color: "#d94a1a", fontSize: "0.8rem", marginTop: 4 }}>{errors.address}</div>}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="booking-form-row">
             <div className="form-group">
               <label className="form-label">Preferred Date *</label>
               <input
