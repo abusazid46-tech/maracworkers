@@ -21,14 +21,15 @@ import type {
   PaymentStatus,
   Service,
   ServiceCategory,
-  ServiceCreateInput
+  ServiceCreateInput,
+  StaffSummary
 } from "@the-wings/types";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { normalizeServiceIconKey, resolveServiceIconKey, ServiceIcon, serviceIconOptions } from "./ServiceIcon";
 import { signInWithFirebaseGoogle } from "../lib/firebaseAuth";
 import { initialCategories as fallbackCategories, initialServices as fallbackServices } from "../data/catalog";
 
-type TabId = "dashboard" | "bookings" | "reports" | "services" | "offers" | "customers" | "leads" | "whatsapp";
+type TabId = "dashboard" | "bookings" | "staff" | "reports" | "services" | "offers" | "customers" | "leads" | "whatsapp";
 type DataMode = "loading" | "live" | "demo";
 type AuthMode = "checking" | "unauthenticated" | "forbidden" | "authenticated";
 type LiveStatus = "idle" | "connecting" | "connected" | "syncing" | "reconnecting" | "offline";
@@ -172,114 +173,23 @@ const initialReportFilters: AdminReportFilters = {
 
 
 
-const fallbackBookings: Booking[] = [
-  {
-    id: "bk-1",
-    bookingCode: "TWG-260517-A104",
-    customerName: "Rahul Deb",
-    customerPhone: "9774887803",
-    addressLine: "Post Office Chowmuhani, Agartala",
-    city: "Agartala",
-    preferredDate: "2026-05-17T09:00:00.000Z",
-    preferredTimeSlot: "9:00 AM - 11:00 AM",
-    notes: "Call before arriving.",
-    status: "CONFIRMED",
-    paymentMode: "COD",
-    totalAmount: 2299,
-    createdAt: "2026-05-17T03:20:00.000Z",
-    updatedAt: "2026-05-17T03:20:00.000Z",
-    items: [{ id: "bki-1", serviceName: "Deep Home Cleaning - 2BHK", quantity: 1, unitPrice: 2299, lineTotal: 2299 }],
-    payments: []
-  },
-  {
-    id: "bk-2",
-    bookingCode: "TWG-260517-A105",
-    customerName: "Madhumita Saha",
-    customerPhone: "9876543210",
-    addressLine: "HGB Road, Agartala",
-    city: "Agartala",
-    preferredDate: "2026-05-17T15:00:00.000Z",
-    preferredTimeSlot: "3:00 PM - 5:00 PM",
-    notes: null,
-    status: "PENDING",
-    paymentMode: "COD",
-    totalAmount: 499,
-    createdAt: "2026-05-17T04:15:00.000Z",
-    updatedAt: "2026-05-17T04:15:00.000Z",
-    items: [{ id: "bki-2", serviceName: "AC Regular Servicing", quantity: 1, unitPrice: 499, lineTotal: 499 }],
-    payments: []
-  }
-];
-
-const fallbackLeads: Lead[] = [
-  {
-    id: "lead-1",
-    name: "Apartment Welfare Committee",
-    phone: "9123456789",
-    email: "committee@example.com",
-    source: "Website",
-    status: "QUALIFIED",
-    notes: "Interested in monthly deep cleaning plan for 20 flats.",
-    createdAt: "2026-05-16T08:00:00.000Z",
-    updatedAt: "2026-05-17T08:00:00.000Z"
-  },
-  {
-    id: "lead-2",
-    name: "Mitali Roy",
-    phone: "9988776655",
-    email: null,
-    source: "WhatsApp",
-    status: "NEW",
-    notes: "Asked for sofa cleaning and bathroom cleaning package.",
-    createdAt: "2026-05-17T07:00:00.000Z",
-    updatedAt: "2026-05-17T07:00:00.000Z"
-  }
-];
-
-const fallbackCustomers: CustomerSummary[] = [
-  {
-    name: "Rahul Deb",
-    phone: "9774887803",
-    bookingsCount: 4,
-    totalSpend: 7496,
-    lastBookingAt: "2026-05-17T03:20:00.000Z",
-    lastService: "Deep Home Cleaning - 2BHK",
-    city: "Agartala",
-    status: "CONFIRMED"
-  },
-  {
-    name: "Madhumita Saha",
-    phone: "9876543210",
-    bookingsCount: 1,
-    totalSpend: 499,
-    lastBookingAt: "2026-05-17T04:15:00.000Z",
-    lastService: "AC Regular Servicing",
-    city: "Agartala",
-    status: "PENDING"
-  }
-];
-
-const fallbackNotes: CrmNote[] = [
-  {
-    id: "note-1",
-    title: "Follow up for society plan",
-    body: "Send proposal for monthly bathroom and common-area cleaning.",
-    createdAt: "2026-05-17T08:00:00.000Z"
-  }
-];
+const fallbackBookings: Booking[] = [];
+const fallbackLeads: Lead[] = [];
+const fallbackCustomers: CustomerSummary[] = [];
+const fallbackNotes: CrmNote[] = [];
 
 const fallbackDashboard: AdminDashboard = {
   metrics: {
-    todayBookings: fallbackBookings.length,
-    pendingBookings: fallbackBookings.filter((booking) => ["PENDING", "CONFIRMED", "ASSIGNED"].includes(booking.status)).length,
-    monthRevenue: fallbackBookings.reduce((sum, booking) => sum + booking.totalAmount, 0),
+    todayBookings: 0,
+    pendingBookings: 0,
+    monthRevenue: 0,
     activeServices: fallbackServices.filter((service) => service.isActive).length,
-    openLeads: fallbackLeads.filter((lead) => ["NEW", "CONTACTED", "QUALIFIED"].includes(lead.status)).length,
-    customers: fallbackCustomers.length
+    openLeads: 0,
+    customers: 0
   },
-  recentBookings: fallbackBookings,
-  hotLeads: fallbackLeads,
-  customers: fallbackCustomers
+  recentBookings: [],
+  hotLeads: [],
+  customers: []
 };
 
 const initialServiceForm: ServiceForm = {
@@ -347,6 +257,8 @@ export function AdminCrmDashboard() {
   const [leads, setLeads] = useState<Lead[]>(fallbackLeads);
   const [offers, setOffers] = useState<OfferBanner[]>([]);
   const [notes, setNotes] = useState<CrmNote[]>(fallbackNotes);
+  const [staffList, setStaffList] = useState<StaffSummary[]>([]);
+  const [newStaffForm, setNewStaffForm] = useState({ name: "", phone: "", role: "Electrician" });
   const [report, setReport] = useState<AdminReport | null>(null);
   const [reportFilters, setReportFilters] = useState<AdminReportFilters>(initialReportFilters);
   const [reportLoading, setReportLoading] = useState(false);
@@ -454,7 +366,7 @@ export function AdminCrmDashboard() {
   const loadAdminData = useCallback(async (reason = "manual") => {
     try {
       const api = createApiClient();
-      const [dashboardRes, bookingsRes, servicesRes, categoriesRes, customersRes, leadsRes, offersRes, notesRes] = await Promise.all([
+      const [dashboardRes, bookingsRes, servicesRes, categoriesRes, customersRes, leadsRes, offersRes, notesRes, staffRes] = await Promise.all([
         api.getAdminDashboard(),
         api.getBookings(),
         api.getServices({ includeInactive: true }),
@@ -462,11 +374,13 @@ export function AdminCrmDashboard() {
         api.getCustomers(),
         api.getLeads(),
         api.getOfferBanners().catch(() => ({ data: [] as OfferBanner[] })),
-        api.getCrmNotes()
+        api.getCrmNotes(),
+        api.getStaff().catch(() => ({ data: [] as any }))
       ]);
 
       setDashboard(dashboardRes.data);
       setBookings(bookingsRes.data);
+      setStaffList(staffRes.data || []);
 
       const remoteServices = servicesRes.data;
       const remoteSlugs = new Set(remoteServices.map((s) => s.slug));
@@ -1020,6 +934,54 @@ export function AdminCrmDashboard() {
     }));
   }
 
+  async function assignBookingStaff(booking: Booking, staffId: string) {
+    try {
+      const response = await createApiClient().updateBookingStatus(booking.bookingCode, {
+        status: staffId ? "ASSIGNED" : booking.status,
+        assignedStaffId: staffId || undefined,
+        note: staffId ? `Admin assigned staff ID ${staffId}` : "Admin unassigned staff"
+      });
+      replaceBooking(response.data);
+      setNotice(`Booking #${booking.bookingCode} staff assignment updated.`);
+      pushActivity({
+        title: "Staff Assigned",
+        detail: `Booking #${booking.bookingCode} assigned to field worker.`,
+        tone: "success"
+      });
+    } catch (error) {
+      adminConsole("error", "Staff assignment failed", error);
+    }
+  }
+
+  async function toggleStaffStatus(staff: StaffSummary) {
+    try {
+      const nextActive = !(staff as any).isActive;
+      await createApiClient().updateStaff(staff.id, { isActive: nextActive });
+      setStaffList((prev) => prev.map((s) => (s.id === staff.id ? ({ ...s, isActive: nextActive } as any) : s)));
+      setNotice(`Staff ${staff.name} is now ${nextActive ? "Active" : "Inactive"}.`);
+    } catch (error) {
+      adminConsole("error", "Failed to update staff status", error);
+    }
+  }
+
+  async function handleAddStaff(e: FormEvent) {
+    e.preventDefault();
+    if (!newStaffForm.name || !newStaffForm.phone) return;
+    try {
+      const res = await createApiClient().createStaff(newStaffForm);
+      setStaffList((prev) => [res.data, ...prev]);
+      setNewStaffForm({ name: "", phone: "", role: "Electrician" });
+      setNotice(`Worker ${res.data.name} added to roster.`);
+      pushActivity({
+        title: "Worker Added",
+        detail: `${res.data.name} (${newStaffForm.role}) registered in network.`,
+        tone: "success"
+      });
+    } catch (error) {
+      adminConsole("error", "Failed to create staff", error);
+    }
+  }
+
   async function saveLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const payload = {
@@ -1261,6 +1223,7 @@ export function AdminCrmDashboard() {
           {[
             ["dashboard", "Dashboard"],
             ["bookings", "Bookings"],
+            ["staff", "Trade Workers & Staff"],
             ["reports", "Reports"],
             ["services", "Services"],
             ["offers", "Offers"],
@@ -1350,7 +1313,30 @@ export function AdminCrmDashboard() {
         {activeTab === "bookings" && (
           <section className="panel">
             <PanelHead title="Booking Operations" subtitle="Confirm, assign, complete, cancel, and message customers." />
-            <BookingTable bookings={filteredBookings} onStatusChange={updateBookingStatus} onWhatsapp={sendWhatsapp} />
+            <BookingTable
+              bookings={filteredBookings}
+              staffList={staffList}
+              onStatusChange={updateBookingStatus}
+              onAssignStaff={assignBookingStaff}
+              onWhatsapp={sendWhatsapp}
+            />
+          </section>
+        )}
+
+        {activeTab === "staff" && (
+          <section className="panel">
+            <PanelHead
+              title="Trade Workers & Field Staff"
+              subtitle="Registered technicians, field specialists, GPS availability, and partner roster."
+            />
+            <StaffManagementPanel
+              staffList={staffList}
+              onToggleStatus={toggleStaffStatus}
+              newStaffForm={newStaffForm}
+              onNewStaffFormChange={(field, val) => setNewStaffForm((prev) => ({ ...prev, [field]: val }))}
+              onAddStaff={handleAddStaff}
+              onWhatsapp={sendWhatsapp}
+            />
           </section>
         )}
 
@@ -1963,12 +1949,16 @@ function PanelHead({ title, subtitle, action, onAction }: { title: string; subti
 function BookingTable({
   bookings,
   compact,
+  staffList,
   onStatusChange,
+  onAssignStaff,
   onWhatsapp
 }: {
   bookings: Booking[];
   compact?: boolean;
+  staffList?: StaffSummary[];
   onStatusChange: (booking: Booking, status: BookingStatus) => void;
+  onAssignStaff?: (booking: Booking, staffId: string) => void;
   onWhatsapp: (phone: string, message: string) => void;
 }) {
   return (
@@ -1978,30 +1968,51 @@ function BookingTable({
         <span>Customer</span>
         <span>Service</span>
         <span>Status</span>
+        <span>Assign Worker</span>
         <span>Payment</span>
         <span>Total</span>
         <span>Action</span>
       </div>
-      {bookings.map((booking) => {
-        const serviceSummary = booking.items.map((item) => item.serviceName).join(", ") || "Service booking";
-        const paidPayment = booking.payments?.find((payment) => payment.status === "PAID");
-        const paymentLabel = paidPayment ? "PAID" : booking.paymentMode;
-        return (
-          <div className="table-row" key={booking.bookingCode}>
-            <strong>{booking.bookingCode}</strong>
-            <span>{booking.customerName}<small>{booking.customerPhone}</small></span>
-            <span>{serviceSummary}<small>{formatDate(booking.preferredDate)} - {booking.preferredTimeSlot}</small></span>
-            <select value={booking.status} onChange={(event) => onStatusChange(booking, event.target.value as BookingStatus)}>
-              {bookingStatuses.map((status) => <option key={status}>{status}</option>)}
-            </select>
-            <span className={`payment-pill ${paymentLabel.toLowerCase()}`}>{paymentLabel}</span>
-            <strong>Rs. {booking.totalAmount.toLocaleString()}</strong>
-            <button type="button" onClick={() => onWhatsapp(booking.customerPhone, `Hi ${booking.customerName}, your booking ${booking.bookingCode} is ${booking.status}.`)}>
-              WhatsApp
-            </button>
-          </div>
-        );
-      })}
+      {bookings.length === 0 ? (
+        <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
+          <p style={{ fontWeight: 600, fontSize: "1.05rem", margin: 0 }}>No bookings recorded yet.</p>
+          <small>Customer bookings submitted on the web storefront will appear here instantly in real-time.</small>
+        </div>
+      ) : (
+        bookings.map((booking) => {
+          const serviceSummary = booking.items.map((item) => item.serviceName).join(", ") || "Service booking";
+          const paidPayment = booking.payments?.find((payment) => payment.status === "PAID");
+          const paymentLabel = paidPayment ? "PAID" : booking.paymentMode;
+          return (
+            <div className="table-row" key={booking.bookingCode}>
+              <strong>{booking.bookingCode}</strong>
+              <span>{booking.customerName}<small>{booking.customerPhone}</small></span>
+              <span>{serviceSummary}<small>{formatDate(booking.preferredDate)} - {booking.preferredTimeSlot}</small></span>
+              <select value={booking.status} onChange={(event) => onStatusChange(booking, event.target.value as BookingStatus)}>
+                {bookingStatuses.map((status) => <option key={status}>{status}</option>)}
+              </select>
+              <select
+                value={booking.assignedStaffId || ""}
+                onChange={(e) => onAssignStaff?.(booking, e.target.value)}
+                style={{ fontSize: "0.8rem", maxWidth: 140 }}
+                title="Assign field technician"
+              >
+                <option value="">Unassigned</option>
+                {staffList?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.role || "Specialist"})
+                  </option>
+                ))}
+              </select>
+              <span className={`payment-pill ${paymentLabel.toLowerCase()}`}>{paymentLabel}</span>
+              <strong>Rs. {booking.totalAmount.toLocaleString()}</strong>
+              <button type="button" onClick={() => onWhatsapp(booking.customerPhone, `Hi ${booking.customerName}, your booking #${booking.bookingCode} is ${booking.status}.`)}>
+                WhatsApp
+              </button>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -2401,18 +2412,25 @@ function CustomerTable({ customers, onWhatsapp }: { customers: CustomerSummary[]
         <span>Last Status</span>
         <span>Action</span>
       </div>
-      {customers.map((customer) => (
-        <div className="table-row" key={customer.phone}>
-          <span>{customer.name}<small>{customer.phone}</small></span>
-          <span>{customer.lastService}<small>{customer.city} - {formatDate(customer.lastBookingAt)}</small></span>
-          <strong>{customer.bookingsCount}</strong>
-          <strong>Rs. {customer.totalSpend.toLocaleString()}</strong>
-          <span className={`status-pill ${customer.status.toLowerCase()}`}>{customer.status}</span>
-          <button type="button" onClick={() => onWhatsapp(customer.phone, `Hi ${customer.name}, thank you for choosing Marac Workers.`)}>
-            Message
-          </button>
+      {customers.length === 0 ? (
+        <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
+          <p style={{ fontWeight: 600, fontSize: "1.05rem", margin: 0 }}>No customer profiles recorded yet.</p>
+          <small>Customer accounts will automatically be generated as bookings are placed.</small>
         </div>
-      ))}
+      ) : (
+        customers.map((customer) => (
+          <div className="table-row" key={customer.phone}>
+            <span>{customer.name}<small>{customer.phone}</small></span>
+            <span>{customer.lastService}<small>{customer.city} - {formatDate(customer.lastBookingAt)}</small></span>
+            <strong>{customer.bookingsCount}</strong>
+            <strong>Rs. {customer.totalSpend.toLocaleString()}</strong>
+            <span className={`status-pill ${customer.status.toLowerCase()}`}>{customer.status}</span>
+            <button type="button" onClick={() => onWhatsapp(customer.phone, `Hi ${customer.name}, thank you for choosing Marac Workers.`)}>
+              Message
+            </button>
+          </div>
+        ))
+      )}
     </div>
   );
 }
@@ -2479,25 +2497,199 @@ function LeadList({
 }) {
   return (
     <div className="lead-list">
-      {leads.map((lead) => (
-        <div className="lead-row" key={lead.id}>
-          <div>
-            <strong>{lead.name ?? "Unnamed lead"}</strong>
-            <span>{lead.phone}{lead.source ? ` - ${lead.source}` : ""}</span>
-            {lead.notes && <small>{lead.notes}</small>}
-          </div>
-          <select value={lead.status} onChange={(event) => onStatusChange(lead, event.target.value as LeadStatus)}>
-            {leadStatuses.map((status) => <option key={status}>{status}</option>)}
-          </select>
-          <div className="row-actions">
-            <button type="button" onClick={() => onEdit(lead)}>Edit</button>
-            <button type="button" onClick={() => onWhatsapp(lead.phone, `Hi ${lead.name ?? "there"}, this is Marac Workers following up on your service enquiry.`)}>
-              WhatsApp
+      {leads.length === 0 ? (
+        <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
+          <p style={{ fontWeight: 600, fontSize: "1.05rem", margin: 0 }}>No leads recorded yet.</p>
+          <small>Customer enquiries and worker applications will appear here instantly.</small>
+        </div>
+      ) : (
+        leads.map((lead) => {
+          const isWorker = lead.source === "worker_registration";
+          return (
+            <div className="lead-row" key={lead.id}>
+              <div>
+                <strong>{lead.name ?? "Unnamed lead"}</strong>
+                <span>
+                  {lead.phone}
+                  {lead.source ? (
+                    <span style={{ marginLeft: 6, fontWeight: isWorker ? 700 : 400, color: isWorker ? "#e65100" : "#64748b" }}>
+                      · {isWorker ? "👷 Trade Pro Partner" : lead.source}
+                    </span>
+                  ) : ""}
+                </span>
+                {lead.notes && <small>{lead.notes}</small>}
+              </div>
+              <select value={lead.status} onChange={(event) => onStatusChange(lead, event.target.value as LeadStatus)}>
+                {leadStatuses.map((status) => <option key={status}>{status}</option>)}
+              </select>
+              <div className="row-actions">
+                <button type="button" onClick={() => onEdit(lead)}>Edit</button>
+                <button type="button" onClick={() => onWhatsapp(lead.phone, `Hi ${lead.name ?? "there"}, this is Marac Workers following up on your service enquiry.`)}>
+                  WhatsApp
+                </button>
+                {onDelete && <button type="button" onClick={() => onDelete(lead)}>Delete</button>}
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+function StaffManagementPanel({
+  staffList,
+  onToggleStatus,
+  newStaffForm,
+  onNewStaffFormChange,
+  onAddStaff,
+  onWhatsapp
+}: {
+  staffList: StaffSummary[];
+  onToggleStatus: (staff: StaffSummary) => void;
+  newStaffForm: { name: string; phone: string; role: string };
+  onNewStaffFormChange: (field: string, val: string) => void;
+  onAddStaff: (e: FormEvent) => void;
+  onWhatsapp: (phone: string, message: string) => void;
+}) {
+  const activeCount = staffList.filter((s) => (s as any).isActive !== false).length;
+  const withLocationCount = staffList.filter((s) => s.currentLat && s.currentLng).length;
+
+  return (
+    <div className="split-grid">
+      <section className="panel">
+        <PanelHead title="Register Trade Worker" subtitle="Add skilled worker to the Marac Workers dispatch network." />
+        <form className="form-grid" onSubmit={onAddStaff}>
+          <label>
+            Full Name
+            <input
+              type="text"
+              required
+              value={newStaffForm.name}
+              onChange={(e) => onNewStaffFormChange("name", e.target.value)}
+              placeholder="e.g. Rahul Das"
+            />
+          </label>
+          <label>
+            Phone Number
+            <input
+              type="tel"
+              required
+              value={newStaffForm.phone}
+              onChange={(e) => onNewStaffFormChange("phone", e.target.value)}
+              placeholder="10-digit mobile number"
+            />
+          </label>
+          <label>
+            Trade / Specialization
+            <select
+              value={newStaffForm.role}
+              onChange={(e) => onNewStaffFormChange("role", e.target.value)}
+            >
+              <option value="Electrician">Electrician</option>
+              <option value="Plumber">Plumber</option>
+              <option value="Daily Worker & Helper">Daily Worker & Helper</option>
+              <option value="Carpenter">Carpenter</option>
+              <option value="Mason / Rajmistri">Mason / Rajmistri</option>
+              <option value="Painter">Painter</option>
+              <option value="Construction Labor">Construction Labor</option>
+              <option value="AC Technician">AC Technician</option>
+            </select>
+          </label>
+          <div className="form-actions">
+            <button className="primary-button" type="submit">
+              Register Worker
             </button>
-            {onDelete && <button type="button" onClick={() => onDelete(lead)}>Delete</button>}
+          </div>
+        </form>
+
+        <div style={{ marginTop: "2rem", padding: "1.2rem", background: "rgba(15, 23, 42, 0.03)", borderRadius: "8px" }}>
+          <div style={{ fontWeight: 700, marginBottom: "0.5rem", color: "#1e293b" }}>Roster Statistics</div>
+          <div style={{ display: "flex", gap: "1.5rem" }}>
+            <div>
+              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Total Workers</span>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800 }}>{staffList.length}</div>
+            </div>
+            <div>
+              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Available</span>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#16a34a" }}>{activeCount}</div>
+            </div>
+            <div>
+              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>GPS Active</span>
+              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#2563eb" }}>{withLocationCount}</div>
+            </div>
           </div>
         </div>
-      ))}
+      </section>
+
+      <section className="panel">
+        <PanelHead title="Verified Workers & Partners" subtitle="Active field specialists available for customer dispatch." />
+        {staffList.length === 0 ? (
+          <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
+            <p style={{ fontWeight: 600, fontSize: "1.05rem", margin: 0 }}>No workers registered yet.</p>
+            <small>Workers registering on the website ('Join as Trade Pro') will automatically appear here.</small>
+          </div>
+        ) : (
+          <div className="data-table">
+            <div className="table-head">
+              <span>Worker</span>
+              <span>Trade</span>
+              <span>GPS Status</span>
+              <span>Availability</span>
+              <span>Action</span>
+            </div>
+            {staffList.map((staff) => {
+              const isActive = (staff as any).isActive !== false;
+              const hasGps = staff.currentLat && staff.currentLng;
+              return (
+                <div className="table-row" key={staff.id}>
+                  <span>
+                    <strong>{staff.name}</strong>
+                    <small>{staff.phone}</small>
+                  </span>
+                  <span>{staff.role || "Trade Specialist"}</span>
+                  <span>
+                    {hasGps ? (
+                      <small style={{ color: "#16a34a", fontWeight: 600 }}>
+                        Live GPS: {Number(staff.currentLat).toFixed(3)}, {Number(staff.currentLng).toFixed(3)}
+                      </small>
+                    ) : (
+                      <small style={{ color: "#94a3b8" }}>Standby</small>
+                    )}
+                  </span>
+                  <span>
+                    <button
+                      type="button"
+                      style={{
+                        padding: "0.3rem 0.6rem",
+                        fontSize: "0.75rem",
+                        borderRadius: "20px",
+                        border: "none",
+                        background: isActive ? "#dcfce7" : "#f1f5f9",
+                        color: isActive ? "#15803d" : "#64748b",
+                        fontWeight: 700,
+                        cursor: "pointer"
+                      }}
+                      onClick={() => onToggleStatus(staff)}
+                      title="Click to toggle availability"
+                    >
+                      {isActive ? "● Active" : "○ Inactive"}
+                    </button>
+                  </span>
+                  <span>
+                    <button
+                      type="button"
+                      onClick={() => onWhatsapp(staff.phone, `Hi ${staff.name}, this is Marac Workers Dispatch team regarding service assignment.`)}
+                    >
+                      WhatsApp
+                    </button>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

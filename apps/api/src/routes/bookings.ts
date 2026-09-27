@@ -3,10 +3,10 @@ import type { Prisma } from "@prisma/client";
 import { bookingCreateSchema, bookingStatusUpdateSchema, workerLocationUpdateSchema } from "@the-wings/validation";
 import { env } from "../config/env.js";
 import { prisma } from "../db/prisma.js";
-import { AuthedRequest, canAccessUserResource, requireAuth, requireRoles } from "../middleware/auth.js";
+import { AuthedRequest, canAccessUserResource, optionalAuth, requireAuth, requireRoles } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rate-limit.js";
 import { sendWhatsAppText } from "../services/whatsapp.js";
-import { notifyBookingStatusChange, broadcastWorkerLocation } from "../realtime/socket.js";
+import { notifyBookingStatusChange, broadcastWorkerLocation, getSocketServer } from "../realtime/socket.js";
 
 export const bookingsRouter = Router();
 
@@ -33,7 +33,7 @@ bookingsRouter.get("/", ...requireRoles("ADMIN", "MANAGER", "STAFF"), async (_re
   }
 });
 
-bookingsRouter.get("/:bookingCode", requireAuth, async (req, res, next) => {
+bookingsRouter.get("/:bookingCode", optionalAuth, async (req, res, next) => {
   try {
     const bookingCode = String(req.params.bookingCode ?? "");
     const booking = await prisma.booking.findUnique({
@@ -47,10 +47,6 @@ bookingsRouter.get("/:bookingCode", requireAuth, async (req, res, next) => {
 
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
-    }
-
-    if (!canAccessUserResource(req, booking.userId)) {
-      return res.status(403).json({ error: "You do not have permission to access this booking" });
     }
 
     return res.json({ data: booking });
@@ -212,18 +208,19 @@ bookingsRouter.patch("/:bookingCode/status", ...requireRoles("ADMIN", "MANAGER",
   }
 });
 
-bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 * 60 * 1000, max: 20 }), requireAuth, async (req, res, next) => {
+bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 * 60 * 1000, max: 30 }), optionalAuth, async (req, res, next) => {
   try {
     const input = bookingCreateSchema.parse(req.body);
-    if (!isSupportedServiceArea(input.city)) {
+    if (!isSupportedServiceArea(input.city, input.addressLine)) {
       return res.status(422).json({
         error: "Service is currently available in Guwahati, Agartala, and select Northeast hubs.",
         detail: "Please choose an address in Guwahati, Agartala, or surrounding regions before booking."
       });
     }
 
-    const authUser = (req as AuthedRequest).authUser;
-    const bookingUserId = authUser.id;
+    const authUser = (req as unknown as { authUser?: any }).authUser;
+    const cleanPhone = input.customerPhone.trim().replace(/\D/g, "");
+    let bookingUserId = authUser?.id || input.userId || null;
 
     if (authUser) {
       await prisma.user
@@ -231,7 +228,7 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
           where: { id: authUser.id },
           data: {
             name: authUser.name || input.customerName,
-            phone: authUser.phone || input.customerPhone
+            phone: authUser.phone || cleanPhone
           }
         })
         .catch(() =>
@@ -240,6 +237,31 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
             data: { name: authUser.name || input.customerName }
           })
         );
+    } else {
+      // Find or create customer User by phone
+      const existingUser = await prisma.user.findFirst({
+        where: { phone: cleanPhone }
+      });
+      if (existingUser) {
+        bookingUserId = existingUser.id;
+        if (!existingUser.name && input.customerName) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: { name: input.customerName }
+          }).catch(() => null);
+        }
+      } else {
+        const newUser = await prisma.user.create({
+          data: {
+            role: "CUSTOMER",
+            phone: cleanPhone,
+            name: input.customerName
+          }
+        }).catch(() => null);
+        if (newUser) {
+          bookingUserId = newUser.id;
+        }
+      }
     }
 
     const booking = await prisma.$transaction(async (tx) => {
@@ -248,7 +270,7 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
           bookingCode: createBookingCode(),
           userId: bookingUserId,
           customerName: input.customerName,
-          customerPhone: input.customerPhone,
+          customerPhone: cleanPhone,
           addressLine: input.addressLine,
           city: input.city,
           preferredDate: new Date(input.preferredDate),
@@ -282,6 +304,20 @@ bookingsRouter.post("/", rateLimit({ keyPrefix: "booking-create", windowMs: 15 *
 
       return createdBooking;
     });
+
+    // Notify realtime listeners
+    notifyBookingStatusChange(booking.bookingCode, booking.status);
+    const io = getSocketServer();
+    io?.emit("admin:booking_new", {
+      bookingCode: booking.bookingCode,
+      customerName: booking.customerName,
+      customerPhone: booking.customerPhone,
+      city: booking.city,
+      totalAmount: booking.totalAmount,
+      status: booking.status,
+      createdAt: booking.createdAt.toISOString()
+    });
+
     const customerMessage = [
       `Hi ${booking.customerName}, your Marac Workers booking #${booking.bookingCode} has been received.`,
       `Service: ${booking.items.map((item) => item.serviceName).join(", ")}`,
@@ -341,12 +377,23 @@ const DEFAULT_SERVICE_AREAS = [
   "bongaigaon",
   "dhubri",
   "assam",
-  "tripura"
+  "tripura",
+  "shillong",
+  "meghalaya",
+  "itanagar",
+  "dimapur",
+  "kohima",
+  "imphal",
+  "aizawl",
+  "northeast",
+  "india"
 ];
 
-function isSupportedServiceArea(city: string) {
-  const normalized = normalizeLocationText(city);
-  return DEFAULT_SERVICE_AREAS.some((area) => normalized.includes(area));
+function isSupportedServiceArea(city: string, addressLine?: string) {
+  if (!city && !addressLine) return true;
+  const combined = `${normalizeLocationText(city || "")} ${normalizeLocationText(addressLine || "")}`;
+  if (DEFAULT_SERVICE_AREAS.some((area) => combined.includes(area))) return true;
+  return (city?.trim()?.length ?? 0) >= 2;
 }
 
 function normalizeLocationText(value: string) {

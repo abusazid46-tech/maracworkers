@@ -147,24 +147,70 @@ authRouter.post("/otp/verify", rateLimit({ keyPrefix: "otp-verify", windowMs: 15
       return res.status(400).json({ error: "Invalid OTP." });
     }
 
+    const userRole = input.role || "CUSTOMER";
+
     const user = await prisma.$transaction(async (tx) => {
       await tx.authOtp.update({
         where: { id: otpRecord.id },
         data: { consumedAt: new Date() }
       });
 
-      return tx.user.upsert({
+      const upsertedUser = await tx.user.upsert({
         where: { phone },
         update: {
           isActive: true,
-          name: input.name
+          name: input.name,
+          ...(userRole === "STAFF" ? { role: "STAFF" } : {})
         },
         create: {
-          role: "CUSTOMER",
+          role: userRole,
           phone,
           name: input.name
         }
       });
+
+      if (userRole === "STAFF") {
+        await tx.staff.upsert({
+          where: { phone },
+          update: {
+            name: input.name || "Trade Specialist",
+            isActive: true
+          },
+          create: {
+            name: input.name || "Trade Specialist",
+            phone,
+            role: "Field Specialist",
+            isActive: true
+          }
+        }).catch(() => null);
+
+        const existingLead = await tx.lead.findFirst({
+          where: { phone },
+          orderBy: { updatedAt: "desc" }
+        });
+        if (existingLead) {
+          await tx.lead.update({
+            where: { id: existingLead.id },
+            data: {
+              name: input.name || existingLead.name,
+              source: "worker_registration",
+              status: "QUALIFIED"
+            }
+          }).catch(() => null);
+        } else {
+          await tx.lead.create({
+            data: {
+              name: input.name || "Trade Specialist",
+              phone,
+              source: "worker_registration",
+              status: "QUALIFIED",
+              notes: "Registered as Trade Worker via OTP Login"
+            }
+          }).catch(() => null);
+        }
+      }
+
+      return upsertedUser;
     });
 
     const session = sessionForUser(user);

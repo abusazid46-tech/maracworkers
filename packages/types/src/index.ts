@@ -141,6 +141,7 @@ export type OtpVerifyInput = {
   phone: string;
   code: string;
   name?: string;
+  role?: UserRole;
 };
 
 export type GoogleLoginInput = {

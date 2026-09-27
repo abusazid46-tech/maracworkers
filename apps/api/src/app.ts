@@ -13,6 +13,7 @@ import { leadsRouter } from "./routes/leads.js";
 import { offersRouter } from "./routes/offers.js";
 import { paymentsRouter } from "./routes/payments.js";
 import { servicesRouter } from "./routes/services.js";
+import { staffRouter } from "./routes/staff.js";
 import { reportError } from "./services/logger.js";
 
 export function createApp() {
@@ -39,6 +40,7 @@ export function createApp() {
   app.use("/offers", offersRouter);
   app.use("/payments", paymentsRouter);
   app.use("/leads", leadsRouter);
+  app.use("/staff", staffRouter);
   app.use("/crm", crmRouter);
 
   app.use((_req, res) => {

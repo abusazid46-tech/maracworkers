@@ -27,6 +27,7 @@ import type {
   ServiceCategory,
   ServiceCreateInput,
   ServiceUpdateInput,
+  StaffSummary,
   WhatsappMessageCreateInput,
   WhatsappSendResponse
 } from "@the-wings/types";
@@ -344,6 +345,49 @@ export class ApiClient {
     return this.request<WhatsappSendResponse>("/crm/whatsapp", {
       method: "POST",
       body: JSON.stringify(input)
+    });
+  }
+
+  async getStaff() {
+    return this.request<{ data: (StaffSummary & { bookings?: Array<{ id: string; bookingCode: string; status: string }> })[] }>("/staff");
+  }
+
+  async getPublicStaff() {
+    return this.request<{ data: StaffSummary[] }>("/staff/public");
+  }
+
+  async registerWorker(input: {
+    name: string;
+    phone: string;
+    trade: string;
+    locality?: string;
+    experience?: string;
+    dailyRate?: string | number;
+    aadhaarNumber?: string;
+  }) {
+    return this.request<{ data: StaffSummary; message: string }>("/staff/register", {
+      method: "POST",
+      body: JSON.stringify(input)
+    });
+  }
+
+  async createStaff(input: { name: string; phone: string; role?: string; isActive?: boolean }) {
+    return this.request<{ data: StaffSummary }>("/staff", {
+      method: "POST",
+      body: JSON.stringify(input)
+    });
+  }
+
+  async updateStaff(id: string, input: { name?: string; phone?: string; role?: string; isActive?: boolean }) {
+    return this.request<{ data: StaffSummary }>(`/staff/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    });
+  }
+
+  async deleteStaff(id: string) {
+    return this.request<{ success: boolean }>(`/staff/${encodeURIComponent(id)}`, {
+      method: "DELETE"
     });
   }
 

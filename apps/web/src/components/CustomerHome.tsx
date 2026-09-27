@@ -15,6 +15,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { resolveServiceIconKey, ServiceIcon, type ServiceIconKey } from "./ServiceIcon";
 import { categoryLabels, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
 import { signInWithFirebaseGoogle } from "../lib/firebaseAuth";
+import { broadcastRideState, setLastActiveBookingCode } from "../lib/trackingSync";
 
 type CartItem = ServiceItem & { quantity: number };
 type LocationChoice = { label: string; address: string; coords?: string };
@@ -183,84 +184,60 @@ const liveBookings = [
   { name: "Bikash S.", trade: "Construction Site Labor", location: "Dispur, Guwahati", time: "14m ago" }
 ];
 
-const topWorkers = [
+const tradeShowcase = [
   {
-    id: "w1",
-    name: "Biswajit Saikia",
+    id: "trade-electrician",
     trade: "Licensed Electrician",
-    rating: 4.9,
-    reviews: 142,
-    jobsDone: 210,
+    categoryLink: "electrician",
     rate: "₹199",
     rateUnit: "visit",
     image: "/images/workers/electrician.jpg",
-    skills: ["Wiring", "MCB Trip", "Inverter Setup", "Short Circuit"],
-    categoryLink: "electrician"
+    skills: ["Short Circuit", "MCB Trip", "Inverter Setup", "House Wiring"]
   },
   {
-    id: "w2",
-    name: "Manoj Kalita",
+    id: "trade-plumber",
     trade: "Master Plumber",
-    rating: 4.9,
-    reviews: 118,
-    jobsDone: 185,
+    categoryLink: "plumber",
     rate: "₹199",
     rateUnit: "visit",
     image: "/images/workers/plumber.jpg",
-    skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Drain Clear"],
-    categoryLink: "plumber"
+    skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Drain Clear"]
   },
   {
-    id: "w3",
-    name: "Dhananjay Ali",
+    id: "trade-daily-worker",
     trade: "Daily Wage Helper & Shifting",
-    rating: 4.8,
-    reviews: 130,
-    jobsDone: 220,
+    categoryLink: "daily_worker",
     rate: "₹450",
     rateUnit: "half-day",
     image: "/images/workers/daily_workers.jpg",
-    skills: ["Heavy Lifting", "House Shifting", "Digging", "Yard Work"],
-    categoryLink: "daily_worker"
+    skills: ["Heavy Lifting", "House Shifting", "Digging", "Yard Work"]
   },
   {
-    id: "w4",
-    name: "Pranab Barman",
+    id: "trade-carpenter",
     trade: "Master Carpenter",
-    rating: 4.9,
-    reviews: 95,
-    jobsDone: 160,
+    categoryLink: "carpenter",
     rate: "₹299",
     rateUnit: "visit",
     image: "/images/workers/carpenter.jpg",
-    skills: ["Door Locks", "Wood Repair", "Wardrobes", "Chairs"],
-    categoryLink: "carpenter"
+    skills: ["Door Locks", "Wood Repair", "Wardrobes", "Chairs"]
   },
   {
-    id: "w5",
-    name: "Ramen Nath",
+    id: "trade-mason",
     trade: "Head Mason / Rajmistri",
-    rating: 4.9,
-    reviews: 88,
-    jobsDone: 145,
+    categoryLink: "mason",
     rate: "₹1,100",
     rateUnit: "day",
     image: "/images/workers/mason.jpg",
-    skills: ["Brick Wall", "Plastering", "Tile Fixing", "Concrete"],
-    categoryLink: "mason"
+    skills: ["Brick Wall", "Plastering", "Tile Fixing", "Concrete"]
   },
   {
-    id: "w6",
-    name: "Suresh Rai",
+    id: "trade-construction",
     trade: "Construction Site Labor",
-    rating: 4.8,
-    reviews: 104,
-    jobsDone: 190,
+    categoryLink: "construction",
     rate: "₹800",
     rateUnit: "day",
     image: "/images/workers/construction.jpg",
-    skills: ["Site Helper", "Shuttering", "Iron Rebar", "Cement Mix"],
-    categoryLink: "construction"
+    skills: ["Site Helper", "Shuttering", "Iron Rebar", "Cement Mix"]
   }
 ];
 
@@ -565,6 +542,14 @@ export function CustomerHome() {
 
       setBookingResult(result);
       setBookingRef(bookingData.bookingCode);
+      setLastActiveBookingCode(bookingData.bookingCode);
+      broadcastRideState({
+        bookingCode: bookingData.bookingCode,
+        status: bookingData.status || "PENDING",
+        customerName: payload.customerName,
+        customerAddress: payload.addressLine,
+        customerLocation: { lat: 26.1445, lng: 91.7362 }
+      });
       setSuccess(true);
       setSubmitStatus("success");
       setSubmitMessage("Booking created successfully!");
@@ -591,6 +576,7 @@ export function CustomerHome() {
 
       setBookingResult(result);
       setBookingRef(localCode);
+      setLastActiveBookingCode(localCode);
       setSuccess(true);
       setSubmitStatus("offline");
       setSubmitMessage("Saved offline. Please share details with our team on WhatsApp.");
@@ -945,7 +931,7 @@ export function CustomerHome() {
                 <div className="pro-avatar-box">
                   <img
                     src="/images/workers/electrician.jpg"
-                    alt="Biswajit Saikia - Licensed Electrician"
+                    alt="Marac Workers Verified Trade Partner"
                   />
                   <span className="pro-check-badge" title="Police & Background Verified">
                     <i className="fas fa-check" />
@@ -953,15 +939,15 @@ export function CustomerHome() {
                 </div>
                 <div className="pro-info-box">
                   <div className="pro-tag-row">
-                    <span className="trade-pill">Licensed Electrician</span>
-                    <span className="rating-pill"><i className="fas fa-star" /> 4.9 (142)</span>
+                    <span className="trade-pill">Verified Trade Network</span>
+                    <span className="rating-pill"><i className="fas fa-star" /> 4.9 • Top Rated</span>
                   </div>
-                  <h3 className="pro-name">Biswajit Saikia</h3>
-                  <p className="pro-location"><i className="fas fa-map-marker-alt" /> Zoo Road, Guwahati • 210+ jobs done</p>
+                  <h3 className="pro-name">Licensed Trade Specialist</h3>
+                  <p className="pro-location"><i className="fas fa-map-marker-alt" /> Guwahati &amp; Northeast Hub • Verified ID</p>
                   <div className="pro-skills-strip">
-                    <span>Wiring</span>
-                    <span>Inverter</span>
-                    <span>MCB Fix</span>
+                    <span>Electrician</span>
+                    <span>Plumber</span>
+                    <span>Daily Helpers</span>
                   </div>
                 </div>
               </div>
@@ -1190,33 +1176,33 @@ export function CustomerHome() {
         </div>
 
         <div className="verified-workers-grid">
-          {topWorkers.map((worker) => (
-            <div className="worker-card" key={worker.id}>
+          {tradeShowcase.map((trade) => (
+            <div className="worker-card" key={trade.id}>
               <div className="worker-card-header">
                 <div className="worker-avatar-wrap">
-                  <img src={worker.image} alt={worker.name} />
+                  <img src={trade.image} alt={trade.trade} />
                   <span className="worker-verified-badge" title="Verified Trade Professional">
                     <i className="fas fa-check" />
                   </span>
                 </div>
                 <div className="worker-info">
-                  <h4>{worker.name}</h4>
-                  <div className="worker-trade">{worker.trade}</div>
+                  <h4>{trade.trade}</h4>
+                  <div className="worker-trade">Verified Field Specialist</div>
                 </div>
               </div>
 
               <div className="worker-stats-row">
                 <span className="rating-stars">
-                  <i className="fas fa-star" /> {worker.rating} ({worker.reviews})
+                  <i className="fas fa-star" /> 4.9 (Top Rated)
                 </span>
                 <span>
-                  <i className="fas fa-briefcase" style={{ color: "var(--orange)", marginRight: "4px" }} />
-                  {worker.jobsDone}+ jobs done
+                  <i className="fas fa-shield-alt" style={{ color: "var(--orange)", marginRight: "4px" }} />
+                  ID &amp; Police Verified
                 </span>
               </div>
 
               <div className="worker-skills-chips">
-                {worker.skills.map((skill, i) => (
+                {trade.skills.map((skill, i) => (
                   <span className="worker-skill-tag" key={i}>
                     {skill}
                   </span>
@@ -1227,19 +1213,19 @@ export function CustomerHome() {
                 <div>
                   <span className="worker-rate-label">Starting at</span>
                   <div className="worker-rate-value">
-                    {worker.rate} <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--text-muted)" }}>/ {worker.rateUnit}</span>
+                    {trade.rate} <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--text-muted)" }}>/ {trade.rateUnit}</span>
                   </div>
                 </div>
                 <button
                   className="worker-book-btn"
                   type="button"
                   onClick={() => {
-                    setCategory(worker.categoryLink as any);
+                    setCategory(trade.categoryLink as any);
                     const el = document.getElementById("services");
                     if (el) el.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
-                  Book {worker.name.split(" ")[0]}
+                  Book Pro →
                 </button>
               </div>
             </div>
@@ -1893,7 +1879,8 @@ function AuthModal({
       const result = await createApiClient().verifyOtp({
         phone: cleanPhone,
         code: cleanCode,
-        name: name.trim() || undefined
+        name: name.trim() || undefined,
+        role: activeTab === "worker" ? "STAFF" : "CUSTOMER"
       });
       onSuccess(result.data);
       onShowToast?.("Signed In", "Welcome to Marac Workers!", "success");
@@ -1958,7 +1945,7 @@ function AuthModal({
               <input
                 className="form-input"
                 type="text"
-                placeholder={activeTab === "worker" ? "e.g. Biswajit Saikia" : "Enter your full name"}
+                placeholder="Enter your full name"
                 value={name}
                 required={activeTab === "worker"}
                 onChange={(e) => setName(e.target.value)}
@@ -2295,16 +2282,24 @@ function WorkerProfileModal({
     e.preventDefault();
     setSubmitting(true);
     try {
+      await createApiClient().registerWorker({
+        name: regForm.name,
+        phone: regForm.phone,
+        trade: regForm.trade,
+        locality: regForm.locality,
+        experience: regForm.experience,
+        dailyRate: regForm.dailyRate,
+        aadhaarNumber: regForm.aadhaarNumber
+      });
+      setSubmitted(true);
+      onShowToast?.("Registration Submitted!", "You are registered in the Marac Workers verified partner network", "success");
+    } catch {
       await createApiClient().createLead({
         name: regForm.name,
         phone: regForm.phone,
         source: "worker_registration",
         notes: `Trade: ${regForm.trade} | Area: ${regForm.locality} | Exp: ${regForm.experience} | Rate: ₹${regForm.dailyRate}/day | Aadhaar: ${regForm.aadhaarNumber}`
-      });
-      setSubmitted(true);
-      onShowToast?.("Registration Submitted!", "Our Guwahati onboarding team will verify your documents within 2 hours", "success");
-    } catch {
-      // Local fallback
+      }).catch(() => null);
       setSubmitted(true);
       onShowToast?.("Registration Received!", "Application saved. Team will contact you shortly", "success");
     } finally {
@@ -2346,7 +2341,7 @@ function WorkerProfileModal({
                     className="worker-pro-avatar"
                   />
                   <div className="worker-pro-title">
-                    <h3>{authSession?.user?.name || "Biswajit Saikia"}</h3>
+                    <h3>{authSession?.user?.name || "Active Field Specialist"}</h3>
                     <span className="worker-trade-pill">
                       <i className="fas fa-bolt" /> Licensed Electrician • Guwahati Pro
                     </span>
@@ -2552,7 +2547,7 @@ function WorkerProfileModal({
                   required
                   value={regForm.name}
                   onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
-                  placeholder="e.g. Biswajit Saikia"
+                  placeholder="Enter worker full name"
                 />
               </div>
 

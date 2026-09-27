@@ -72,7 +72,8 @@ export const otpRequestSchema = z.object({
 export const otpVerifySchema = z.object({
   phone: phoneSchema,
   code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit OTP"),
-  name: z.string().trim().min(2).optional()
+  name: z.string().trim().min(2).optional(),
+  role: z.enum(["CUSTOMER", "STAFF", "ADMIN", "MANAGER"]).optional().default("CUSTOMER")
 });
 
 export const googleLoginSchema = z.object({
