@@ -2078,6 +2078,18 @@ function ServiceFormView({
       <label className="wide">
         Service Image URL
         <input value={form.imageUrl} onChange={(event) => onChange("imageUrl", event.target.value)} placeholder="https://example.com/service-photo.jpg" />
+        {form.imageUrl && (
+          <div className="service-form-thumb-preview">
+            <img
+              src={form.imageUrl}
+              alt="Service preview"
+              onError={(e) => {
+                (e.currentTarget as HTMLElement).style.display = "none";
+              }}
+            />
+            <span>Image Preview</span>
+          </div>
+        )}
       </label>
       <div className="wide icon-picker-field">
         <span className="field-label">Service Icon</span>
@@ -2225,13 +2237,22 @@ function ServiceTable({
             return (
               <div className={`service-row ${service.isActive ? "" : "inactive"}`} key={service.id}>
                 <div className="service-row-main">
-                  <span className="service-row-icon">
-                    <ServiceIcon
-                      className="admin-service-vector"
-                      name={resolveServiceIconKey(service.icon, [service.name, service.description].filter(Boolean).join(" "))}
-                      title={service.name}
+                  {service.imageUrl ? (
+                    <img
+                      src={service.imageUrl}
+                      alt={service.name}
+                      className="service-row-thumb"
+                      loading="lazy"
                     />
-                  </span>
+                  ) : (
+                    <span className="service-row-icon">
+                      <ServiceIcon
+                        className="admin-service-vector"
+                        name={resolveServiceIconKey(service.icon, [service.name, service.description].filter(Boolean).join(" "))}
+                        title={service.name}
+                      />
+                    </span>
+                  )}
                   <div>
                     <strong>{service.name}</strong>
                     <span>

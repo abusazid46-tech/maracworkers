@@ -3,20 +3,30 @@ import type { Service, ServiceCategory } from "@the-wings/types";
 export const initialCategories: ServiceCategory[] = [
   { id: "electrician", name: "Electrician", slug: "electrician", sortOrder: 1, isActive: true },
   { id: "plumber", name: "Plumber", slug: "plumber", sortOrder: 2, isActive: true },
-  { id: "daily-worker", name: "Daily Workers & Helpers", slug: "daily-worker", sortOrder: 3, isActive: true },
+  { id: "daily-worker", name: "Daily Workers & Helpers", slug: "daily-worker", sortOrder: 3, imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop",
+    isActive: true },
   { id: "construction", name: "Construction Worker", slug: "construction", sortOrder: 4, isActive: true },
   { id: "carpenter", name: "Carpenter", slug: "carpenter", sortOrder: 5, isActive: true },
   { id: "mason", name: "Mason (Rajmistri)", slug: "mason", sortOrder: 6, isActive: true },
   { id: "painter", name: "Painter", slug: "painter", sortOrder: 7, isActive: true },
-  { id: "ac-repair", name: "AC & Appliances", slug: "ac-repair", sortOrder: 8, isActive: true },
-  { id: "deep-clean", name: "Deep Clean", slug: "deep-clean", sortOrder: 9, isActive: true },
-  { id: "tank-wash", name: "Tank Wash", slug: "tank-wash", sortOrder: 10, isActive: true },
-  { id: "toilet-bath", name: "Toilet & Bath", slug: "toilet-bath", sortOrder: 11, isActive: true },
-  { id: "sofa-clean", name: "Sofa Clean", slug: "sofa-clean", sortOrder: 12, isActive: true },
-  { id: "kitchen-appliances", name: "Kitchen & Appliances", slug: "kitchen-appliances", sortOrder: 13, isActive: true },
-  { id: "aya-housemaid", name: "Aya and Housemaid", slug: "aya-housemaid", sortOrder: 14, isActive: true },
-  { id: "pest-control", name: "Pest Control", slug: "pest-control", sortOrder: 15, isActive: true },
-  { id: "saloon-spa", name: "Saloon & Spa", slug: "saloon-spa", sortOrder: 16, isActive: true },
+  { id: "ac-repair", name: "AC & Appliances", slug: "ac-repair", sortOrder: 8, imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "deep-clean", name: "Deep Clean", slug: "deep-clean", sortOrder: 9, imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "tank-wash", name: "Tank Wash", slug: "tank-wash", sortOrder: 10, imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "toilet-bath", name: "Toilet & Bath", slug: "toilet-bath", sortOrder: 11, imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "sofa-clean", name: "Sofa Clean", slug: "sofa-clean", sortOrder: 12, imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "kitchen-appliances", name: "Kitchen & Appliances", slug: "kitchen-appliances", sortOrder: 13, imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "aya-housemaid", name: "Aya and Housemaid", slug: "aya-housemaid", sortOrder: 14, imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "pest-control", name: "Pest Control", slug: "pest-control", sortOrder: 15, imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop",
+    isActive: true },
+  { id: "saloon-spa", name: "Saloon & Spa", slug: "saloon-spa", sortOrder: 16, imageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&fit=crop",
+    isActive: true },
   { id: "security", name: "Security Guard", slug: "security", sortOrder: 17, isActive: true }
 ];
 
@@ -33,6 +43,7 @@ export const initialServices: Service[] = [
     originalPrice: 299,
     durationMin: 40,
     sortOrder: 1,
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -46,6 +57,7 @@ export const initialServices: Service[] = [
     originalPrice: 199,
     durationMin: 30,
     sortOrder: 2,
+    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -59,6 +71,7 @@ export const initialServices: Service[] = [
     originalPrice: 699,
     durationMin: 60,
     sortOrder: 3,
+    imageUrl: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -72,6 +85,7 @@ export const initialServices: Service[] = [
     originalPrice: 299,
     durationMin: 30,
     sortOrder: 4,
+    imageUrl: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -85,6 +99,7 @@ export const initialServices: Service[] = [
     originalPrice: 499,
     durationMin: 45,
     sortOrder: 5,
+    imageUrl: "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -100,6 +115,7 @@ export const initialServices: Service[] = [
     originalPrice: 299,
     durationMin: 30,
     sortOrder: 6,
+    imageUrl: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -113,6 +129,7 @@ export const initialServices: Service[] = [
     originalPrice: 349,
     durationMin: 40,
     sortOrder: 7,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -126,6 +143,7 @@ export const initialServices: Service[] = [
     originalPrice: 549,
     durationMin: 60,
     sortOrder: 8,
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -139,6 +157,7 @@ export const initialServices: Service[] = [
     originalPrice: 799,
     durationMin: 90,
     sortOrder: 9,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -152,6 +171,7 @@ export const initialServices: Service[] = [
     originalPrice: 499,
     durationMin: 40,
     sortOrder: 10,
+    imageUrl: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -167,6 +187,7 @@ export const initialServices: Service[] = [
     originalPrice: 550,
     durationMin: 240,
     sortOrder: 11,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -180,6 +201,7 @@ export const initialServices: Service[] = [
     originalPrice: 900,
     durationMin: 480,
     sortOrder: 12,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -193,6 +215,7 @@ export const initialServices: Service[] = [
     originalPrice: 799,
     durationMin: 180,
     sortOrder: 13,
+    imageUrl: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -206,6 +229,7 @@ export const initialServices: Service[] = [
     originalPrice: 650,
     durationMin: 240,
     sortOrder: 14,
+    imageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -221,6 +245,7 @@ export const initialServices: Service[] = [
     originalPrice: 950,
     durationMin: 480,
     sortOrder: 15,
+    imageUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -234,6 +259,7 @@ export const initialServices: Service[] = [
     originalPrice: 1000,
     durationMin: 480,
     sortOrder: 16,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -247,6 +273,7 @@ export const initialServices: Service[] = [
     originalPrice: 700,
     durationMin: 60,
     sortOrder: 17,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -260,6 +287,7 @@ export const initialServices: Service[] = [
     originalPrice: 1100,
     durationMin: 480,
     sortOrder: 18,
+    imageUrl: "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -275,6 +303,7 @@ export const initialServices: Service[] = [
     originalPrice: 399,
     durationMin: 45,
     sortOrder: 19,
+    imageUrl: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -288,6 +317,7 @@ export const initialServices: Service[] = [
     originalPrice: 349,
     durationMin: 45,
     sortOrder: 20,
+    imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -301,6 +331,7 @@ export const initialServices: Service[] = [
     originalPrice: 550,
     durationMin: 60,
     sortOrder: 21,
+    imageUrl: "https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -314,6 +345,7 @@ export const initialServices: Service[] = [
     originalPrice: 950,
     durationMin: 90,
     sortOrder: 22,
+    imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -327,6 +359,7 @@ export const initialServices: Service[] = [
     originalPrice: 1350,
     durationMin: 480,
     sortOrder: 23,
+    imageUrl: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -342,6 +375,7 @@ export const initialServices: Service[] = [
     originalPrice: 1300,
     durationMin: 480,
     sortOrder: 24,
+    imageUrl: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -355,6 +389,7 @@ export const initialServices: Service[] = [
     originalPrice: 1850,
     durationMin: 480,
     sortOrder: 25,
+    imageUrl: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -368,6 +403,7 @@ export const initialServices: Service[] = [
     originalPrice: 899,
     durationMin: 240,
     sortOrder: 26,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -381,6 +417,7 @@ export const initialServices: Service[] = [
     originalPrice: 1150,
     durationMin: 240,
     sortOrder: 27,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -396,6 +433,7 @@ export const initialServices: Service[] = [
     originalPrice: 1200,
     durationMin: 480,
     sortOrder: 28,
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -409,6 +447,7 @@ export const initialServices: Service[] = [
     originalPrice: 4200,
     durationMin: 480,
     sortOrder: 29,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -422,6 +461,7 @@ export const initialServices: Service[] = [
     originalPrice: 1600,
     durationMin: 480,
     sortOrder: 30,
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -435,6 +475,7 @@ export const initialServices: Service[] = [
     originalPrice: 1199,
     durationMin: 240,
     sortOrder: 31,
+    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -450,6 +491,7 @@ export const initialServices: Service[] = [
     originalPrice: 649,
     durationMin: 45,
     sortOrder: 32,
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -463,6 +505,7 @@ export const initialServices: Service[] = [
     originalPrice: 2500,
     durationMin: 60,
     sortOrder: 33,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -476,6 +519,7 @@ export const initialServices: Service[] = [
     originalPrice: 1699,
     durationMin: 90,
     sortOrder: 34,
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -491,6 +535,7 @@ export const initialServices: Service[] = [
     originalPrice: 699,
     durationMin: 60,
     sortOrder: 35,
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -504,6 +549,7 @@ export const initialServices: Service[] = [
     originalPrice: 3200,
     durationMin: 150,
     sortOrder: 36,
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -519,6 +565,7 @@ export const initialServices: Service[] = [
     originalPrice: 2899,
     durationMin: 210,
     sortOrder: 37,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -532,6 +579,7 @@ export const initialServices: Service[] = [
     originalPrice: 2299,
     durationMin: 180,
     sortOrder: 38,
+    imageUrl: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -547,6 +595,7 @@ export const initialServices: Service[] = [
     originalPrice: 399,
     durationMin: 60,
     sortOrder: 39,
+    imageUrl: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -560,6 +609,7 @@ export const initialServices: Service[] = [
     originalPrice: 499,
     durationMin: 45,
     sortOrder: 40,
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop",
     isActive: true
   },
   {
@@ -577,6 +627,7 @@ export const initialServices: Service[] = [
     discountLabel: "15% discount",
     durationMin: 90,
     sortOrder: 41,
+    imageUrl: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -592,6 +643,7 @@ export const initialServices: Service[] = [
     originalPrice: 799,
     durationMin: 60,
     sortOrder: 42,
+    imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -607,6 +659,7 @@ export const initialServices: Service[] = [
     originalPrice: 899,
     durationMin: 60,
     sortOrder: 43,
+    imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -622,6 +675,7 @@ export const initialServices: Service[] = [
     originalPrice: 699,
     durationMin: 60,
     sortOrder: 44,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -637,6 +691,7 @@ export const initialServices: Service[] = [
     originalPrice: 899,
     durationMin: 45,
     sortOrder: 45,
+    imageUrl: "https://images.unsplash.com/photo-1632759145351-1d592919f522?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -652,6 +707,7 @@ export const initialServices: Service[] = [
     originalPrice: 399,
     durationMin: 45,
     sortOrder: 46,
+    imageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&fit=crop",
     isActive: true
   },
 
@@ -667,6 +723,7 @@ export const initialServices: Service[] = [
     originalPrice: 1000,
     durationMin: 480,
     sortOrder: 47,
+    imageUrl: "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=600&q=80&fit=crop",
     isActive: true
   }
 ];
