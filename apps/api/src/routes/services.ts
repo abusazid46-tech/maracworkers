@@ -14,7 +14,7 @@ async function ensureDefaultCategories() {
   for (const cat of defaultCategories) {
     await prisma.serviceCategory.upsert({
       where: { slug: cat.slug },
-      update: { name: cat.name, description: cat.description, sortOrder: cat.sortOrder },
+      update: { name: cat.name, description: cat.description, sortOrder: cat.sortOrder, imageUrl: cat.imageUrl },
       create: cat
     }).catch(() => {});
   }
@@ -38,6 +38,7 @@ async function ensureDefaultServices() {
         name: svc.name,
         description: svc.description,
         icon: svc.icon,
+        imageUrl: svc.imageUrl,
         basePrice: svc.basePrice,
         originalPrice: svc.originalPrice,
         durationMin: svc.durationMin,
@@ -53,6 +54,7 @@ async function ensureDefaultServices() {
         slug: svc.slug,
         description: svc.description,
         icon: svc.icon,
+        imageUrl: svc.imageUrl,
         basePrice: svc.basePrice,
         originalPrice: svc.originalPrice,
         durationMin: svc.durationMin,

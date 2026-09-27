@@ -14,6 +14,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resolveServiceIconKey, ServiceIcon, type ServiceIconKey } from "./ServiceIcon";
 import { categoryLabels, searchTerms, services, type ServiceCategoryId, type ServiceItem } from "./site-data";
+import { getServiceImage } from "./service-images";
 import { signInWithFirebaseGoogle } from "../lib/firebaseAuth";
 import { broadcastRideState, setLastActiveBookingCode } from "../lib/trackingSync";
 
@@ -191,7 +192,7 @@ const tradeShowcase = [
     categoryLink: "electrician",
     rate: "₹199",
     rateUnit: "visit",
-    image: "/images/workers/electrician.jpg",
+    image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop",
     skills: ["Short Circuit", "MCB Trip", "Inverter Setup", "House Wiring"]
   },
   {
@@ -200,7 +201,7 @@ const tradeShowcase = [
     categoryLink: "plumber",
     rate: "₹199",
     rateUnit: "visit",
-    image: "/images/workers/plumber.jpg",
+    image: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=80&fit=crop",
     skills: ["Pipe Leakage", "Motor Pump", "Tap Fitting", "Drain Clear"]
   },
   {
@@ -209,7 +210,7 @@ const tradeShowcase = [
     categoryLink: "daily_worker",
     rate: "₹450",
     rateUnit: "half-day",
-    image: "/images/workers/daily_workers.jpg",
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop",
     skills: ["Heavy Lifting", "House Shifting", "Digging", "Yard Work"]
   },
   {
@@ -218,7 +219,7 @@ const tradeShowcase = [
     categoryLink: "carpenter",
     rate: "₹299",
     rateUnit: "visit",
-    image: "/images/workers/carpenter.jpg",
+    image: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&q=80&fit=crop",
     skills: ["Door Locks", "Wood Repair", "Wardrobes", "Chairs"]
   },
   {
@@ -227,7 +228,7 @@ const tradeShowcase = [
     categoryLink: "mason",
     rate: "₹1,100",
     rateUnit: "day",
-    image: "/images/workers/mason.jpg",
+    image: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=600&q=80&fit=crop",
     skills: ["Brick Wall", "Plastering", "Tile Fixing", "Concrete"]
   },
   {
@@ -236,7 +237,7 @@ const tradeShowcase = [
     categoryLink: "construction",
     rate: "₹800",
     rateUnit: "day",
-    image: "/images/workers/construction.jpg",
+    image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80&fit=crop",
     skills: ["Site Helper", "Shuttering", "Iron Rebar", "Cement Mix"]
   }
 ];
@@ -1069,11 +1070,13 @@ export function CustomerHome() {
               const originalPrice = service.originalPrice ?? Math.round(service.price * 1.25);
               const savePercent = Math.round(((originalPrice - service.price) / originalPrice) * 100);
 
+              const cardImage = service.imageUrl || getServiceImage(service);
+
               return (
                 <div className={`service-card ${isAdded ? "service-card-selected" : ""}`} key={service.id}>
-                  {service.imageUrl && (
+                  {cardImage && (
                     <div className="service-card-media">
-                      <img src={service.imageUrl} alt={service.name} className="service-card-img" loading="lazy" />
+                      <img src={cardImage} alt={service.name} className="service-card-img" loading="lazy" />
                       <span className="service-card-img-badge">
                         <i className="fas fa-check-circle" /> Verified Pro
                       </span>
@@ -1089,7 +1092,7 @@ export function CustomerHome() {
                     </div>
 
                     <div className="service-card-body">
-                      {!service.imageUrl && (
+                      {!cardImage && (
                         <div className="service-card-icon-box">
                           <ServiceIcon name={service.iconKey} title={service.name} style={{ width: 32, height: 32 }} />
                         </div>
@@ -2934,6 +2937,13 @@ function mapApiServiceToServiceItem(service: ApiService, categoryMap: Map<string
   const slug = categoryObject?.slug ?? service.categoryId ?? "";
   const mappedCategory = categorySlugMap[slug] ?? "toilet";
 
+  const resolvedImageUrl = getServiceImage({
+    slug: service.slug,
+    name: service.name,
+    category: mappedCategory,
+    imageUrl: service.imageUrl
+  });
+
   return {
     id: service.id,
     serviceId: service.id,
@@ -2944,7 +2954,7 @@ function mapApiServiceToServiceItem(service: ApiService, categoryMap: Map<string
     description: service.description ?? "",
     price: service.basePrice,
     priceLabel: service.priceLabel ?? String(service.basePrice),
-    imageUrl: service.imageUrl ?? undefined,
+    imageUrl: resolvedImageUrl,
     durationLabel: service.durationMin ? `${service.durationMin} mins` : undefined,
     bookedQuantity: service.bookedQuantity ?? service.bookingCount ?? 0
   };

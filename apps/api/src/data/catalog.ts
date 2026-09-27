@@ -3,6 +3,7 @@ export type DefaultCategorySeed = {
   slug: string;
   description: string;
   sortOrder: number;
+  imageUrl?: string;
 };
 
 export type DefaultServiceSeed = {
@@ -19,25 +20,36 @@ export type DefaultServiceSeed = {
   priceLabel?: string;
   originalPriceLabel?: string;
   discountLabel?: string;
+  imageUrl?: string;
 };
 
 export const defaultCategories: DefaultCategorySeed[] = [
   { name: "Electrician", slug: "electrician", description: "Wiring, short circuits, switchboards, MCB, inverter, and electrical installations.", sortOrder: 1 },
   { name: "Plumber", slug: "plumber", description: "Diagnostic visits, leaks, taps, commode, pump piping, and drain unclogging.", sortOrder: 2 },
-  { name: "Daily Workers & Helpers", slug: "daily-worker", description: "Half-day and full-day manual labor, loading, shifting, and ground clearing.", sortOrder: 3 },
+  { name: "Daily Workers & Helpers", slug: "daily-worker", description: "Half-day and full-day manual labor, loading, shifting, and ground clearing.", sortOrder: 3,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop" },
   { name: "Construction Worker", slug: "construction", description: "Site labor, concrete mixing, shuttering support, and debris removal.", sortOrder: 4 },
   { name: "Carpenter", slug: "carpenter", description: "Furniture repairs, lock installation, door alignment, and custom woodwork.", sortOrder: 5 },
   { name: "Mason (Rajmistri)", slug: "mason", description: "Brick masonry, wall construction, cement plastering, and tile laying.", sortOrder: 6 },
   { name: "Painter", slug: "painter", description: "Master house painters, full flat painting, putty, and damp waterproofing.", sortOrder: 7 },
-  { name: "AC & Appliances", slug: "ac-repair", description: "AC deep foam jet servicing, gas filling, and unit installation.", sortOrder: 8 },
-  { name: "Deep Clean", slug: "deep-clean", description: "Complete home, flat, and room deep cleaning packages.", sortOrder: 9 },
-  { name: "Tank Wash", slug: "tank-wash", description: "Overhead and underground water tank deep wash packages.", sortOrder: 10 },
-  { name: "Toilet & Bath", slug: "toilet-bath", description: "Toilet, bathroom, and hard water descaling packages.", sortOrder: 11 },
-  { name: "Sofa Clean", slug: "sofa-clean", description: "Sofa, couch, upholstery, and fabric cleaning.", sortOrder: 12 },
-  { name: "Kitchen & Appliances", slug: "kitchen-appliances", description: "Kitchen, chimney, and appliance cleaning services.", sortOrder: 13 },
-  { name: "Aya and Housemaid", slug: "aya-housemaid", description: "Maid, aya, baby care, and patient care services.", sortOrder: 14 },
-  { name: "Pest Control", slug: "pest-control", description: "Pest control packages for homes and commercial spaces.", sortOrder: 15 },
-  { name: "Saloon & Spa", slug: "saloon-spa", description: "Salon, spa, grooming, and massage services.", sortOrder: 16 },
+  { name: "AC & Appliances", slug: "ac-repair", description: "AC deep foam jet servicing, gas filling, and unit installation.", sortOrder: 8,
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop" },
+  { name: "Deep Clean", slug: "deep-clean", description: "Complete home, flat, and room deep cleaning packages.", sortOrder: 9,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop" },
+  { name: "Tank Wash", slug: "tank-wash", description: "Overhead and underground water tank deep wash packages.", sortOrder: 10,
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop" },
+  { name: "Toilet & Bath", slug: "toilet-bath", description: "Toilet, bathroom, and hard water descaling packages.", sortOrder: 11,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop" },
+  { name: "Sofa Clean", slug: "sofa-clean", description: "Sofa, couch, upholstery, and fabric cleaning.", sortOrder: 12,
+    imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80&fit=crop" },
+  { name: "Kitchen & Appliances", slug: "kitchen-appliances", description: "Kitchen, chimney, and appliance cleaning services.", sortOrder: 13,
+    imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600&q=80&fit=crop" },
+  { name: "Aya and Housemaid", slug: "aya-housemaid", description: "Maid, aya, baby care, and patient care services.", sortOrder: 14,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop" },
+  { name: "Pest Control", slug: "pest-control", description: "Pest control packages for homes and commercial spaces.", sortOrder: 15,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop" },
+  { name: "Saloon & Spa", slug: "saloon-spa", description: "Salon, spa, grooming, and massage services.", sortOrder: 16,
+    imageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&fit=crop" },
   { name: "Security Guard", slug: "security", description: "Uniformed security guard and facility management services.", sortOrder: 17 }
 ];
 
@@ -52,7 +64,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 199,
     originalPrice: 299,
     durationMin: 40,
-    sortOrder: 1
+    sortOrder: 1,
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "electrician",
@@ -63,7 +76,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 149,
     originalPrice: 199,
     durationMin: 30,
-    sortOrder: 2
+    sortOrder: 2,
+    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "electrician",
@@ -74,7 +88,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 699,
     durationMin: 60,
-    sortOrder: 3
+    sortOrder: 3,
+    imageUrl: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "electrician",
@@ -85,7 +100,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 199,
     originalPrice: 299,
     durationMin: 30,
-    sortOrder: 4
+    sortOrder: 4,
+    imageUrl: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "electrician",
@@ -96,7 +112,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 349,
     originalPrice: 499,
     durationMin: 45,
-    sortOrder: 5
+    sortOrder: 5,
+    imageUrl: "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600&q=80&fit=crop"
   },
 
   // --- PLUMBER ---
@@ -109,7 +126,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 199,
     originalPrice: 299,
     durationMin: 30,
-    sortOrder: 6
+    sortOrder: 6,
+    imageUrl: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "plumber",
@@ -120,7 +138,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 249,
     originalPrice: 349,
     durationMin: 40,
-    sortOrder: 7
+    sortOrder: 7,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "plumber",
@@ -131,7 +150,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 399,
     originalPrice: 549,
     durationMin: 60,
-    sortOrder: 8
+    sortOrder: 8,
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "plumber",
@@ -142,7 +162,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 599,
     originalPrice: 799,
     durationMin: 90,
-    sortOrder: 9
+    sortOrder: 9,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "plumber",
@@ -153,7 +174,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 349,
     originalPrice: 499,
     durationMin: 40,
-    sortOrder: 10
+    sortOrder: 10,
+    imageUrl: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=600&q=80&fit=crop"
   },
 
   // --- DAILY WORKERS & HELPERS ---
@@ -166,7 +188,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 450,
     originalPrice: 550,
     durationMin: 240,
-    sortOrder: 11
+    sortOrder: 11,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "daily-worker",
@@ -177,7 +200,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 750,
     originalPrice: 900,
     durationMin: 480,
-    sortOrder: 12
+    sortOrder: 12,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "daily-worker",
@@ -188,7 +212,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 599,
     originalPrice: 799,
     durationMin: 180,
-    sortOrder: 13
+    sortOrder: 13,
+    imageUrl: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "daily-worker",
@@ -199,7 +224,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 650,
     durationMin: 240,
-    sortOrder: 14
+    sortOrder: 14,
+    imageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600&q=80&fit=crop"
   },
 
   // --- CONSTRUCTION WORKER ---
@@ -212,7 +238,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 800,
     originalPrice: 950,
     durationMin: 480,
-    sortOrder: 15
+    sortOrder: 15,
+    imageUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "construction",
@@ -223,7 +250,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 850,
     originalPrice: 1000,
     durationMin: 480,
-    sortOrder: 16
+    sortOrder: 16,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "construction",
@@ -234,7 +262,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 700,
     durationMin: 60,
-    sortOrder: 17
+    sortOrder: 17,
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "construction",
@@ -245,7 +274,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 899,
     originalPrice: 1100,
     durationMin: 480,
-    sortOrder: 18
+    sortOrder: 18,
+    imageUrl: "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&q=80&fit=crop"
   },
 
   // --- CARPENTER ---
@@ -258,7 +288,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 299,
     originalPrice: 399,
     durationMin: 45,
-    sortOrder: 19
+    sortOrder: 19,
+    imageUrl: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "carpenter",
@@ -269,7 +300,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 249,
     originalPrice: 349,
     durationMin: 45,
-    sortOrder: 20
+    sortOrder: 20,
+    imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "carpenter",
@@ -280,7 +312,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 399,
     originalPrice: 550,
     durationMin: 60,
-    sortOrder: 21
+    sortOrder: 21,
+    imageUrl: "https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "carpenter",
@@ -291,7 +324,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 699,
     originalPrice: 950,
     durationMin: 90,
-    sortOrder: 22
+    sortOrder: 22,
+    imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "carpenter",
@@ -302,7 +336,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1100,
     originalPrice: 1350,
     durationMin: 480,
-    sortOrder: 23
+    sortOrder: 23,
+    imageUrl: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80&fit=crop"
   },
 
   // --- MASON (RAJMISTRI) ---
@@ -315,7 +350,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1100,
     originalPrice: 1300,
     durationMin: 480,
-    sortOrder: 24
+    sortOrder: 24,
+    imageUrl: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "mason",
@@ -326,7 +362,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1499,
     originalPrice: 1850,
     durationMin: 480,
-    sortOrder: 25
+    sortOrder: 25,
+    imageUrl: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "mason",
@@ -337,7 +374,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 699,
     originalPrice: 899,
     durationMin: 240,
-    sortOrder: 26
+    sortOrder: 26,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "mason",
@@ -348,7 +386,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 899,
     originalPrice: 1150,
     durationMin: 240,
-    sortOrder: 27
+    sortOrder: 27,
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop"
   },
 
   // --- PAINTER ---
@@ -361,7 +400,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 950,
     originalPrice: 1200,
     durationMin: 480,
-    sortOrder: 28
+    sortOrder: 28,
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "painter",
@@ -372,7 +412,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 3499,
     originalPrice: 4200,
     durationMin: 480,
-    sortOrder: 29
+    sortOrder: 29,
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "painter",
@@ -383,7 +424,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1299,
     originalPrice: 1600,
     durationMin: 480,
-    sortOrder: 30
+    sortOrder: 30,
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "painter",
@@ -394,7 +436,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 899,
     originalPrice: 1199,
     durationMin: 240,
-    sortOrder: 31
+    sortOrder: 31,
+    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&fit=crop"
   },
 
   // --- AC & APPLIANCES ---
@@ -407,7 +450,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 649,
     durationMin: 45,
-    sortOrder: 32
+    sortOrder: 32,
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "ac-repair",
@@ -418,7 +462,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 2099,
     originalPrice: 2500,
     durationMin: 60,
-    sortOrder: 33
+    sortOrder: 33,
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "ac-repair",
@@ -429,7 +474,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1399,
     originalPrice: 1699,
     durationMin: 90,
-    sortOrder: 34
+    sortOrder: 34,
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop"
   },
 
   // --- TANK WASH ---
@@ -442,7 +488,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 699,
     durationMin: 60,
-    sortOrder: 35
+    sortOrder: 35,
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "tank-wash",
@@ -453,7 +500,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 2500,
     originalPrice: 3200,
     durationMin: 150,
-    sortOrder: 36
+    sortOrder: 36,
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop"
   },
 
   // --- DEEP CLEAN ---
@@ -466,7 +514,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 2299,
     originalPrice: 2899,
     durationMin: 210,
-    sortOrder: 37
+    sortOrder: 37,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "deep-clean",
@@ -477,7 +526,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 1799,
     originalPrice: 2299,
     durationMin: 180,
-    sortOrder: 38
+    sortOrder: 38,
+    imageUrl: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&q=80&fit=crop"
   },
 
   // --- TOILET & BATH ---
@@ -490,7 +540,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 299,
     originalPrice: 399,
     durationMin: 60,
-    sortOrder: 39
+    sortOrder: 39,
+    imageUrl: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "toilet-bath",
@@ -501,7 +552,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 399,
     originalPrice: 499,
     durationMin: 45,
-    sortOrder: 40
+    sortOrder: 40,
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop"
   },
   {
     categorySlug: "toilet-bath",
@@ -516,7 +568,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     originalPriceLabel: "1398",
     discountLabel: "15% discount",
     durationMin: 90,
-    sortOrder: 41
+    sortOrder: 41,
+    imageUrl: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&q=80&fit=crop"
   },
 
   // --- SOFA CLEAN ---
@@ -529,7 +582,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 599,
     originalPrice: 799,
     durationMin: 60,
-    sortOrder: 42
+    sortOrder: 42,
+    imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80&fit=crop"
   },
 
   // --- KITCHEN & APPLIANCES ---
@@ -542,7 +596,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 699,
     originalPrice: 899,
     durationMin: 60,
-    sortOrder: 43
+    sortOrder: 43,
+    imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600&q=80&fit=crop"
   },
 
   // --- AYA & HOUSEMAID ---
@@ -555,7 +610,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 499,
     originalPrice: 699,
     durationMin: 60,
-    sortOrder: 44
+    sortOrder: 44,
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop"
   },
 
   // --- PEST CONTROL ---
@@ -568,7 +624,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 699,
     originalPrice: 899,
     durationMin: 45,
-    sortOrder: 45
+    sortOrder: 45,
+    imageUrl: "https://images.unsplash.com/photo-1632759145351-1d592919f522?w=600&q=80&fit=crop"
   },
 
   // --- SALOON & SPA ---
@@ -581,7 +638,8 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 299,
     originalPrice: 399,
     durationMin: 45,
-    sortOrder: 46
+    sortOrder: 46,
+    imageUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80&fit=crop"
   },
 
   // --- SECURITY ---
@@ -594,6 +652,7 @@ export const defaultServices: DefaultServiceSeed[] = [
     basePrice: 850,
     originalPrice: 1000,
     durationMin: 480,
-    sortOrder: 47
+    sortOrder: 47,
+    imageUrl: "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=600&q=80&fit=crop"
   }
 ];

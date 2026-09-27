@@ -70,7 +70,7 @@ export const services: ServiceItem[] = [
     price: 199,
     originalPrice: 299,
     durationLabel: "30-45 mins",
-    imageUrl: "/images/workers/electrician.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop"
   },
   {
     id: 102,
@@ -81,7 +81,7 @@ export const services: ServiceItem[] = [
     price: 149,
     originalPrice: 199,
     durationLabel: "25-30 mins",
-    imageUrl: "/images/workers/electrician.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80&fit=crop"
   },
   {
     id: 103,
@@ -92,7 +92,7 @@ export const services: ServiceItem[] = [
     price: 499,
     originalPrice: 699,
     durationLabel: "45-60 mins",
-    imageUrl: "/images/workers/electrician.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&q=80&fit=crop"
   },
   {
     id: 104,
@@ -103,7 +103,7 @@ export const services: ServiceItem[] = [
     price: 199,
     originalPrice: 299,
     durationLabel: "30 mins",
-    imageUrl: "/images/workers/electrician.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?w=600&q=80&fit=crop"
   },
   {
     id: 105,
@@ -114,7 +114,7 @@ export const services: ServiceItem[] = [
     price: 349,
     originalPrice: 499,
     durationLabel: "45 mins",
-    imageUrl: "/images/workers/electrician.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600&q=80&fit=crop"
   },
 
   // --- PLUMBER ---
@@ -127,7 +127,7 @@ export const services: ServiceItem[] = [
     price: 199,
     originalPrice: 299,
     durationLabel: "30 mins",
-    imageUrl: "/images/workers/plumber.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=80&fit=crop"
   },
   {
     id: 202,
@@ -138,7 +138,7 @@ export const services: ServiceItem[] = [
     price: 249,
     originalPrice: 349,
     durationLabel: "30-45 mins",
-    imageUrl: "/images/workers/plumber.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop"
   },
   {
     id: 203,
@@ -149,7 +149,7 @@ export const services: ServiceItem[] = [
     price: 399,
     originalPrice: 549,
     durationLabel: "45-60 mins",
-    imageUrl: "/images/workers/plumber.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop"
   },
   {
     id: 204,
@@ -160,7 +160,7 @@ export const services: ServiceItem[] = [
     price: 599,
     originalPrice: 799,
     durationLabel: "60-90 mins",
-    imageUrl: "/images/workers/plumber.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     id: 205,
@@ -171,7 +171,7 @@ export const services: ServiceItem[] = [
     price: 349,
     originalPrice: 499,
     durationLabel: "40 mins",
-    imageUrl: "/images/workers/plumber.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=600&q=80&fit=crop"
   },
 
   // --- DAILY WORKERS & HELPERS ---
@@ -184,7 +184,7 @@ export const services: ServiceItem[] = [
     price: 450,
     originalPrice: 550,
     durationLabel: "4 hours",
-    imageUrl: "/images/workers/daily_workers.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop"
   },
   {
     id: 302,
@@ -195,7 +195,7 @@ export const services: ServiceItem[] = [
     price: 750,
     originalPrice: 900,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/daily_workers.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     id: 303,
@@ -206,7 +206,7 @@ export const services: ServiceItem[] = [
     price: 599,
     originalPrice: 799,
     durationLabel: "Per worker",
-    imageUrl: "/images/workers/daily_workers.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=80&fit=crop"
   },
   {
     id: 304,
@@ -217,7 +217,7 @@ export const services: ServiceItem[] = [
     price: 499,
     originalPrice: 650,
     durationLabel: "Half day",
-    imageUrl: "/images/workers/daily_workers.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600&q=80&fit=crop"
   },
 
   // --- CONSTRUCTION WORKER ---
@@ -230,7 +230,7 @@ export const services: ServiceItem[] = [
     price: 800,
     originalPrice: 950,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/construction.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=600&q=80&fit=crop"
   },
   {
     id: 402,
@@ -241,7 +241,7 @@ export const services: ServiceItem[] = [
     price: 850,
     originalPrice: 1000,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/construction.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     id: 403,
@@ -252,7 +252,7 @@ export const services: ServiceItem[] = [
     price: 499,
     originalPrice: 700,
     durationLabel: "Site visit",
-    imageUrl: "/images/workers/construction.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&q=80&fit=crop"
   },
   {
     id: 404,
@@ -263,7 +263,7 @@ export const services: ServiceItem[] = [
     price: 899,
     originalPrice: 1100,
     durationLabel: "Full day",
-    imageUrl: "/images/workers/construction.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?w=600&q=80&fit=crop"
   },
 
   // --- CARPENTER ---
@@ -276,7 +276,7 @@ export const services: ServiceItem[] = [
     price: 299,
     originalPrice: 399,
     durationLabel: "45 mins",
-    imageUrl: "/images/workers/carpenter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&q=80&fit=crop"
   },
   {
     id: 502,
@@ -287,7 +287,7 @@ export const services: ServiceItem[] = [
     price: 249,
     originalPrice: 349,
     durationLabel: "30-45 mins",
-    imageUrl: "/images/workers/carpenter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?w=600&q=80&fit=crop"
   },
   {
     id: 503,
@@ -298,7 +298,7 @@ export const services: ServiceItem[] = [
     price: 399,
     originalPrice: 550,
     durationLabel: "60 mins",
-    imageUrl: "/images/workers/carpenter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1516962215378-7fa2e137ae93?w=600&q=80&fit=crop"
   },
   {
     id: 504,
@@ -309,7 +309,7 @@ export const services: ServiceItem[] = [
     price: 699,
     originalPrice: 950,
     durationLabel: "60-90 mins",
-    imageUrl: "/images/workers/carpenter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80&fit=crop"
   },
   {
     id: 505,
@@ -320,7 +320,7 @@ export const services: ServiceItem[] = [
     price: 1100,
     originalPrice: 1350,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/carpenter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80&fit=crop"
   },
 
   // --- MASON (RAJMISTRI) ---
@@ -333,7 +333,7 @@ export const services: ServiceItem[] = [
     price: 1100,
     originalPrice: 1300,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/mason.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?w=600&q=80&fit=crop"
   },
   {
     id: 602,
@@ -344,7 +344,7 @@ export const services: ServiceItem[] = [
     price: 1499,
     originalPrice: 1850,
     durationLabel: "1-2 days",
-    imageUrl: "/images/workers/mason.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=600&q=80&fit=crop"
   },
   {
     id: 603,
@@ -355,7 +355,7 @@ export const services: ServiceItem[] = [
     price: 699,
     originalPrice: 899,
     durationLabel: "Half day",
-    imageUrl: "/images/workers/mason.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     id: 604,
@@ -366,7 +366,7 @@ export const services: ServiceItem[] = [
     price: 899,
     originalPrice: 1150,
     durationLabel: "Per area",
-    imageUrl: "/images/workers/mason.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80&fit=crop"
   },
 
   // --- PAINTER ---
@@ -379,7 +379,7 @@ export const services: ServiceItem[] = [
     price: 950,
     originalPrice: 1200,
     durationLabel: "8 hours",
-    imageUrl: "/images/workers/painter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop"
   },
   {
     id: 702,
@@ -390,7 +390,7 @@ export const services: ServiceItem[] = [
     price: 3499,
     originalPrice: 4200,
     durationLabel: "1-2 days",
-    imageUrl: "/images/workers/painter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80&fit=crop"
   },
   {
     id: 703,
@@ -401,7 +401,7 @@ export const services: ServiceItem[] = [
     price: 1299,
     originalPrice: 1600,
     durationLabel: "1 day",
-    imageUrl: "/images/workers/painter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=80&fit=crop"
   },
   {
     id: 704,
@@ -412,7 +412,7 @@ export const services: ServiceItem[] = [
     price: 899,
     originalPrice: 1199,
     durationLabel: "Per wall",
-    imageUrl: "/images/workers/painter.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80&fit=crop"
   },
 
   // --- AC & APPLIANCES ---
@@ -424,7 +424,8 @@ export const services: ServiceItem[] = [
     description: "High-pressure foam jet coil wash, blower cleaning, drain tray flushing, and gas pressure test.",
     price: 499,
     originalPrice: 649,
-    durationLabel: "45 mins"
+    durationLabel: "45 mins",
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop"
   },
   {
     id: 10,
@@ -434,7 +435,8 @@ export const services: ServiceItem[] = [
     description: "Complete leak identification, vacuum purge, and 100% genuine R32/R410A gas filling.",
     price: 2099,
     originalPrice: 2500,
-    durationLabel: "60 mins"
+    durationLabel: "60 mins",
+    imageUrl: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&q=80&fit=crop"
   },
   {
     id: 11,
@@ -444,7 +446,8 @@ export const services: ServiceItem[] = [
     description: "Professional indoor & outdoor unit bracket mounting, copper pipe flare connection, and testing.",
     price: 1399,
     originalPrice: 1699,
-    durationLabel: "60-90 mins"
+    durationLabel: "60-90 mins",
+    imageUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=80&fit=crop"
   },
 
   // --- TANK WASH ---
@@ -456,7 +459,8 @@ export const services: ServiceItem[] = [
     description: "Mechanical sludge extraction, high-pressure rotary scrubbing, UV sanitization, and antibacterial spray.",
     price: 499,
     originalPrice: 699,
-    durationLabel: "45-60 mins"
+    durationLabel: "45-60 mins",
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop"
   },
   {
     id: 5,
@@ -466,7 +470,8 @@ export const services: ServiceItem[] = [
     description: "Submersible pump dewatering, heavy algae wall scrub, bleaching powder wash, and bacterial disinfection.",
     price: 2500,
     originalPrice: 3200,
-    durationLabel: "2-3 hours"
+    durationLabel: "2-3 hours",
+    imageUrl: "https://images.unsplash.com/photo-1584622781564-1d987f7333c1?w=600&q=80&fit=crop"
   },
 
   // --- DEEP CLEANING & TOILET ---
@@ -478,7 +483,8 @@ export const services: ServiceItem[] = [
     description: "Full flat sanitization: 2 bathrooms, kitchen chimney exterior, balcony, windows, doors, and mechanized floor buffing.",
     price: 2299,
     originalPrice: 2899,
-    durationLabel: "3-4 hours"
+    durationLabel: "3-4 hours",
+    imageUrl: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&q=80&fit=crop"
   },
   {
     id: 1,
@@ -488,7 +494,8 @@ export const services: ServiceItem[] = [
     description: "Deep chemical descaling of hard water stains from tiles, glass partitions, taps, and sanitaryware.",
     price: 399,
     originalPrice: 499,
-    durationLabel: "45 mins"
+    durationLabel: "45 mins",
+    imageUrl: "https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=600&q=80&fit=crop"
   }
 ];
 
@@ -529,7 +536,7 @@ export const toiletBathDetailServices: ServiceItem[] = [
     name: "One attached toilet and bathroom cleaning",
     description: "Complete cleaning for one attached toilet and bathroom.",
     price: 699,
-    imageUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500&q=85&fit=crop&crop=center"
+    imageUrl: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&q=80&fit=crop"
   },
   {
     id: "bath-combo-2",
