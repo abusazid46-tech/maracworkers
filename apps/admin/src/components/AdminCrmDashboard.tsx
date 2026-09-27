@@ -1530,27 +1530,22 @@ function AdminLoginScreen({
     }
   }
 
-  function handleInstantAdminLogin() {
+  async function handleInstantAdminLogin() {
     setBusy(true);
     setError("");
     setMessage("Signing in as Admin...");
-    const adminSession: AuthSession = {
-      token: "demo_admin_jwt_" + Date.now(),
-      user: {
-        id: "admin_user_" + Date.now(),
-        role: "ADMIN",
-        name: name.trim() || "Master Admin",
-        email: "admin@maracworkers.com",
-        phone: "9876543210"
-      }
-    };
-    setTimeout(() => {
+    try {
+      const response = await createApiClient().loginAdmin({
+        phone: phone.trim() || "9774887803",
+        name: name.trim() || "Master Admin"
+      });
+      onSuccess(response.data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sign in as Admin.");
+    } finally {
       setBusy(false);
-      onSuccess(adminSession);
-    }, 350);
+    }
   }
-
-
 
   async function requestOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1593,7 +1588,8 @@ function AdminLoginScreen({
       const response = await createApiClient().verifyOtp({
         phone: phone.trim(),
         code: code.trim(),
-        name: name.trim() || undefined
+        name: name.trim() || undefined,
+        role: "ADMIN"
       });
       onSuccess(response.data);
     } catch {

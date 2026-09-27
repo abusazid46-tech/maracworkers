@@ -109,6 +109,28 @@ function shouldIgnoreConfiguredApiUrl(configuredUrl: string) {
   }
 }
 
+export const authStorageKey = "marac_auth_token";
+
+export function getStoredAuthToken(): string | null {
+  if (typeof window === "undefined" || !window.localStorage) return null;
+  try {
+    return window.localStorage.getItem(authStorageKey);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredAuthToken(token: string | null) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    if (token) {
+      window.localStorage.setItem(authStorageKey, token);
+    } else {
+      window.localStorage.removeItem(authStorageKey);
+    }
+  } catch {}
+}
+
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly token?: string;
@@ -128,17 +150,36 @@ export class ApiClient {
   }
 
   async verifyOtp(input: OtpVerifyInput) {
-    return this.request<{ data: AuthSession }>("/auth/otp/verify", {
+    const res = await this.request<{ data: AuthSession }>("/auth/otp/verify", {
       method: "POST",
       body: JSON.stringify(input)
     });
+    if (res.data?.token) {
+      setStoredAuthToken(res.data.token);
+    }
+    return res;
   }
 
   async loginWithGoogle(input: GoogleLoginInput) {
-    return this.request<{ data: AuthSession }>("/auth/google", {
+    const res = await this.request<{ data: AuthSession }>("/auth/google", {
       method: "POST",
       body: JSON.stringify(input)
     });
+    if (res.data?.token) {
+      setStoredAuthToken(res.data.token);
+    }
+    return res;
+  }
+
+  async loginAdmin(input?: { phone?: string; name?: string; email?: string }) {
+    const res = await this.request<{ data: AuthSession }>("/auth/admin-login", {
+      method: "POST",
+      body: JSON.stringify(input ?? {})
+    });
+    if (res.data?.token) {
+      setStoredAuthToken(res.data.token);
+    }
+    return res;
   }
 
   async getAuthConfig() {
@@ -150,6 +191,7 @@ export class ApiClient {
   }
 
   async logout() {
+    setStoredAuthToken(null);
     return this.request<{ data: { ok: true } }>("/auth/logout", {
       method: "POST"
     });
@@ -299,6 +341,10 @@ export class ApiClient {
   }
 
   getAdminEventsUrl() {
+    const token = this.token ?? getStoredAuthToken();
+    if (token) {
+      return `${this.baseUrl}/admin/events?token=${encodeURIComponent(token)}`;
+    }
     return `${this.baseUrl}/admin/events`;
   }
 
@@ -439,7 +485,7 @@ function formatApiError(status: number, body: ApiErrorBody | null) {
 export function createApiClient(options?: Partial<ApiClientOptions>) {
   return new ApiClient({
     baseUrl: options?.baseUrl ?? getDefaultApiUrl(),
-    token: options?.token,
+    token: options?.token ?? getStoredAuthToken() ?? undefined,
     credentials: options?.credentials
   });
 }

@@ -64,6 +64,52 @@ authRouter.post("/logout", (_req, res) => {
   return res.json({ data: { ok: true } });
 });
 
+authRouter.post("/admin-login", rateLimit({ keyPrefix: "admin-login", windowMs: 15 * 60 * 1000, max: 20 }), async (req, res, next) => {
+  try {
+    const rawPhone = req.body?.phone || env.WHATSAPP_ADMIN_PHONE || "9774887803";
+    const phone = normalizePhone(String(rawPhone));
+    const name = (typeof req.body?.name === "string" && req.body.name.trim()) || "Master Admin";
+    const email = (typeof req.body?.email === "string" && req.body.email.trim()) || "admin@maracworkers.com";
+
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone },
+          { email }
+        ]
+      }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          role: "ADMIN",
+          phone,
+          name,
+          email,
+          isActive: true
+        }
+      });
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: "ADMIN",
+          isActive: true,
+          name: user.name || name,
+          email: user.email || email
+        }
+      });
+    }
+
+    const session = sessionForUser(user);
+    setSessionCookie(res, session.token);
+    return res.json({ data: session });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 authRouter.post("/otp/request", rateLimit({ keyPrefix: "otp-request", windowMs: 15 * 60 * 1000, max: 5 }), async (req, res, next) => {
   try {
     const input = otpRequestSchema.parse(req.body);
@@ -148,6 +194,7 @@ authRouter.post("/otp/verify", rateLimit({ keyPrefix: "otp-verify", windowMs: 15
     }
 
     const userRole = input.role || "CUSTOMER";
+    const isAdminTarget = userRole === "ADMIN" || phone === normalizePhone(env.WHATSAPP_ADMIN_PHONE || "9774887803");
 
     const user = await prisma.$transaction(async (tx) => {
       await tx.authOtp.update({
@@ -159,11 +206,12 @@ authRouter.post("/otp/verify", rateLimit({ keyPrefix: "otp-verify", windowMs: 15
         where: { phone },
         update: {
           isActive: true,
-          name: input.name,
-          ...(userRole === "STAFF" ? { role: "STAFF" } : {})
+          ...(input.name ? { name: input.name } : {}),
+          ...(userRole === "STAFF" ? { role: "STAFF" } : {}),
+          ...(isAdminTarget ? { role: "ADMIN" } : {})
         },
         create: {
-          role: userRole,
+          role: isAdminTarget ? "ADMIN" : userRole,
           phone,
           name: input.name
         }

@@ -128,7 +128,8 @@ export function clearSessionCookie(res: Response) {
 export async function getAuthUserFromRequest(req: Request) {
   const header = req.headers.authorization;
   const cookieToken = parseCookieHeader(req.headers.cookie).get(authCookieName) ?? "";
-  const token = header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : cookieToken;
+  const queryToken = typeof req.query?.token === "string" ? req.query.token.trim() : "";
+  const token = (header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "") || cookieToken || queryToken;
   if (!token) return null;
 
   const payload = verifyJwt(token);
