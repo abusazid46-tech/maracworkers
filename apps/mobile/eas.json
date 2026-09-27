@@ -6,17 +6,11 @@
   "build": {
     "preview": {
       "distribution": "internal",
-      "env": {
-        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
-      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
-      "env": {
-        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
-      },
       "android": {
         "buildType": "app-bundle"
       }
