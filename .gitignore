@@ -11,7 +11,5 @@ build
 *.tsbuildinfo
 coverage
 .expo
-android
-ios
 .vercel
 .env*
