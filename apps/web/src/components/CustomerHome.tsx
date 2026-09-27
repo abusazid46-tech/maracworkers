@@ -735,7 +735,7 @@ export function CustomerHome() {
               </Link>
             </li>
             <li><a href="#howitworks" onClick={() => setMobileMenuOpen(false)}>How It Works</a></li>
-            <li><a href="#become" onClick={(e) => { e.preventDefault(); setWorkerProfileModalOpen(true); setMobileMenuOpen(false); }}>Become a Worker</a></li>
+            <li><Link href="/worker/register" onClick={() => setMobileMenuOpen(false)} style={{ color: "var(--orange)", fontWeight: 700 }}>Become a Worker</Link></li>
             <li><a href="#about" onClick={() => setMobileMenuOpen(false)}>About Us</a></li>
             <li><a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a></li>
           </ul>
@@ -1336,15 +1336,13 @@ export function CustomerHome() {
           <p>
             Join Marac Workers, receive steady job opportunities, manage your daily availability, and grow your monthly earnings.
           </p>
-          <a
+          <Link
             className="btn-secondary"
-            href="https://wa.me/919365123456?text=Hi%20Marac%20Workers%2C%20I%20want%20to%20register%20as%20a%20skilled%20worker."
-            target="_blank"
-            rel="noreferrer"
+            href="/worker/register"
             style={{ display: "inline-flex" }}
           >
             <i className="fas fa-user-plus" /> Become a Worker →
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -3100,7 +3098,7 @@ export function SiteFooter({
             <Link href="/#home">Home</Link>
             <Link href="/#services">Services</Link>
             <Link href="/#howitworks">How It Works</Link>
-            <Link href="/#become">Become a Worker</Link>
+            <Link href="/worker/register">Become a Worker</Link>
             <Link href="/about">About Us</Link>
             <Link href="/#contact">Contact</Link>
           </div>

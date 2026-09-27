@@ -232,18 +232,33 @@ model Payment {
 }
 
 model Staff {
-  id              String    @id @db.VarChar(30) @default(cuid())
-  name            String    @db.VarChar(200)
-  phone           String    @unique @db.VarChar(20)
-  role            String?   @db.VarChar(100)
-  isActive        Boolean   @default(true)
-  currentLat      Decimal?  @db.Decimal(10, 7)
-  currentLng      Decimal?  @db.Decimal(10, 7)
-  lastHeading     Float?
-  lastLocationAt  DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  bookings        Booking[]
+  id                 String    @id @db.VarChar(30) @default(cuid())
+  name               String    @db.VarChar(200)
+  phone              String    @unique @db.VarChar(20)
+  role               String?   @db.VarChar(100)
+  isActive           Boolean   @default(true)
+  verificationStatus String    @default("APPROVED") @db.VarChar(30)
+  registrationCode   String?   @db.VarChar(50)
+  locality           String?   @db.VarChar(150)
+  experience         String?   @db.VarChar(50)
+  dailyRate          Int?
+  aadhaarNumber      String?   @db.VarChar(50)
+  address            String?   @db.VarChar(500)
+  alternatePhone     String?   @db.VarChar(20)
+  emergencyContact   String?   @db.VarChar(100)
+  skills             String?   @db.Text
+  verifiedAt         DateTime?
+  verificationNotes  String?   @db.Text
+  currentLat         Decimal?  @db.Decimal(10, 7)
+  currentLng         Decimal?  @db.Decimal(10, 7)
+  lastHeading        Float?
+  lastLocationAt     DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  bookings           Booking[]
+
+  @@index([verificationStatus])
+  @@index([registrationCode])
 }
 
 model Lead {

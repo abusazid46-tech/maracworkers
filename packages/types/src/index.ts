@@ -183,10 +183,38 @@ export type StaffSummary = {
   name: string;
   phone: string;
   role?: string | null;
+  isActive?: boolean;
+  verificationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  registrationCode?: string | null;
+  locality?: string | null;
+  experience?: string | null;
+  dailyRate?: number | null;
+  aadhaarNumber?: string | null;
+  address?: string | null;
+  alternatePhone?: string | null;
+  emergencyContact?: string | null;
+  skills?: string | null;
+  verifiedAt?: string | null;
+  verificationNotes?: string | null;
+  createdAt?: string;
   currentLat?: number | null;
   currentLng?: number | null;
   lastHeading?: number | null;
   lastLocationAt?: string | null;
+};
+
+export type WorkerRegistrationInput = {
+  name: string;
+  phone: string;
+  alternatePhone?: string;
+  trade: string;
+  locality?: string;
+  address?: string;
+  experience?: string;
+  dailyRate?: number | string;
+  aadhaarNumber?: string;
+  emergencyContact?: string;
+  skills?: string;
 };
 
 export type Booking = {

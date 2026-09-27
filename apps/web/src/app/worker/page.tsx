@@ -109,6 +109,12 @@ export default function WorkerPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              href="/worker/register"
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+            >
+              <span>✍️ Register as Worker</span>
+            </Link>
             {bookingCode && (
               <Link
                 href={`/track?code=${encodeURIComponent(bookingCode)}`}
@@ -122,6 +128,20 @@ export default function WorkerPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-8 pt-6 space-y-6">
+        {/* Onboarding Notice for New Workers */}
+        <div className="bg-gradient-to-r from-sky-50 to-emerald-50 rounded-2xl p-4 border border-sky-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-neutral-900">New Tradesperson or Helper?</h2>
+            <p className="text-xs text-neutral-600">Register your profile and trade documents to get verified and approved by Admin for daily bookings.</p>
+          </div>
+          <Link
+            href="/worker/register"
+            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl whitespace-nowrap transition"
+          >
+            Apply for Verification →
+          </Link>
+        </div>
+
         {/* Booking Code Dispatch Input */}
         <div className="bg-white rounded-3xl p-4 sm:p-6 border border-neutral-200/80 shadow-sm">
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">

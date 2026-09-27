@@ -405,15 +405,30 @@ export class ApiClient {
   async registerWorker(input: {
     name: string;
     phone: string;
+    alternatePhone?: string;
     trade: string;
     locality?: string;
+    address?: string;
     experience?: string;
     dailyRate?: string | number;
     aadhaarNumber?: string;
+    emergencyContact?: string;
+    skills?: string;
   }) {
-    return this.request<{ data: StaffSummary; message: string }>("/staff/register", {
+    return this.request<{ data: StaffSummary; message: string; registrationCode: string }>("/staff/register", {
       method: "POST",
       body: JSON.stringify(input)
+    });
+  }
+
+  async getWorkerRegistrationStatus(codeOrPhone: string) {
+    return this.request<{ data: StaffSummary }>(`/staff/registration-status/${encodeURIComponent(codeOrPhone)}`);
+  }
+
+  async verifyStaffWorker(id: string, action: "APPROVED" | "REJECTED", notes?: string) {
+    return this.request<{ data: StaffSummary; message: string }>(`/staff/${encodeURIComponent(id)}/verify`, {
+      method: "POST",
+      body: JSON.stringify({ action, notes })
     });
   }
 
@@ -424,7 +439,7 @@ export class ApiClient {
     });
   }
 
-  async updateStaff(id: string, input: { name?: string; phone?: string; role?: string; isActive?: boolean }) {
+  async updateStaff(id: string, input: { name?: string; phone?: string; role?: string; isActive?: boolean; verificationStatus?: "PENDING" | "APPROVED" | "REJECTED" }) {
     return this.request<{ data: StaffSummary }>(`/staff/${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(input)

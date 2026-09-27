@@ -969,6 +969,34 @@ export function AdminCrmDashboard() {
     }
   }
 
+  async function handleVerifyWorker(staffId: string, action: "APPROVED" | "REJECTED", notes?: string) {
+    try {
+      const res = await createApiClient().verifyStaffWorker(staffId, action, notes);
+      setStaffList((prev) =>
+        prev.map((s) =>
+          s.id === staffId
+            ? {
+                ...s,
+                verificationStatus: action,
+                isActive: action === "APPROVED",
+                verificationNotes: notes,
+                verifiedAt: action === "APPROVED" ? new Date().toISOString() : null
+              }
+            : s
+        )
+      );
+      setNotice(res.message || `Worker application marked as ${action}.`);
+      pushActivity({
+        title: action === "APPROVED" ? "Worker Verified & Approved" : "Worker Application Rejected",
+        detail: res.message,
+        tone: action === "APPROVED" ? "success" : "warning"
+      });
+    } catch (error) {
+      adminConsole("error", "Failed to verify worker", error);
+      setNotice("Failed to update worker verification status.");
+    }
+  }
+
   async function handleAddStaff(e: FormEvent) {
     e.preventDefault();
     if (!newStaffForm.name || !newStaffForm.phone) return;
@@ -1228,7 +1256,7 @@ export function AdminCrmDashboard() {
           {[
             ["dashboard", "Dashboard"],
             ["bookings", "Bookings"],
-            ["staff", "Trade Workers & Staff"],
+            ["staff", staffList.filter((s) => s.verificationStatus === "PENDING").length > 0 ? `Workers (${staffList.filter((s) => s.verificationStatus === "PENDING").length} New)` : "Trade Workers & Staff"],
             ["reports", "Reports"],
             ["services", "Services"],
             ["offers", "Offers"],
@@ -1331,12 +1359,13 @@ export function AdminCrmDashboard() {
         {activeTab === "staff" && (
           <section className="panel">
             <PanelHead
-              title="Trade Workers & Field Staff"
-              subtitle="Registered technicians, field specialists, GPS availability, and partner roster."
+              title="Trade Workers & Verification"
+              subtitle="Review incoming worker registrations, verify trade credentials, and manage active dispatch staff."
             />
             <StaffManagementPanel
               staffList={staffList}
               onToggleStatus={toggleStaffStatus}
+              onVerifyWorker={handleVerifyWorker}
               newStaffForm={newStaffForm}
               onNewStaffFormChange={(field, val) => setNewStaffForm((prev) => ({ ...prev, [field]: val }))}
               onAddStaff={handleAddStaff}
@@ -2562,6 +2591,7 @@ function LeadList({
 function StaffManagementPanel({
   staffList,
   onToggleStatus,
+  onVerifyWorker,
   newStaffForm,
   onNewStaffFormChange,
   onAddStaff,
@@ -2569,149 +2599,456 @@ function StaffManagementPanel({
 }: {
   staffList: StaffSummary[];
   onToggleStatus: (staff: StaffSummary) => void;
+  onVerifyWorker: (staffId: string, action: "APPROVED" | "REJECTED", notes?: string) => void;
   newStaffForm: { name: string; phone: string; role: string };
   onNewStaffFormChange: (field: string, val: string) => void;
   onAddStaff: (e: FormEvent) => void;
   onWhatsapp: (phone: string, message: string) => void;
 }) {
-  const activeCount = staffList.filter((s) => (s as any).isActive !== false).length;
+  const [filterMode, setFilterMode] = useState<"pending" | "approved" | "all">("pending");
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const pendingList = staffList.filter((s) => s.verificationStatus === "PENDING");
+  const approvedList = staffList.filter((s) => s.verificationStatus !== "PENDING" && (s as any).isActive !== false);
+  const activeCount = approvedList.length;
   const withLocationCount = staffList.filter((s) => s.currentLat && s.currentLng).length;
 
+  const publicRegUrl = "https://maracworkers.vercel.app/worker/register";
+
+  const copyRegLink = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(publicRegUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
+  const displayedList =
+    filterMode === "pending"
+      ? pendingList
+      : filterMode === "approved"
+      ? approvedList
+      : staffList;
+
   return (
-    <div className="split-grid">
-      <section className="panel">
-        <PanelHead title="Register Trade Worker" subtitle="Add skilled worker to the Marac Workers dispatch network." />
-        <form className="form-grid" onSubmit={onAddStaff}>
-          <label>
-            Full Name
-            <input
-              type="text"
-              required
-              value={newStaffForm.name}
-              onChange={(e) => onNewStaffFormChange("name", e.target.value)}
-              placeholder="e.g. Rahul Das"
-            />
-          </label>
-          <label>
-            Phone Number
-            <input
-              type="tel"
-              required
-              value={newStaffForm.phone}
-              onChange={(e) => onNewStaffFormChange("phone", e.target.value)}
-              placeholder="10-digit mobile number"
-            />
-          </label>
-          <label>
-            Trade / Specialization
-            <select
-              value={newStaffForm.role}
-              onChange={(e) => onNewStaffFormChange("role", e.target.value)}
-            >
-              <option value="Electrician">Electrician</option>
-              <option value="Plumber">Plumber</option>
-              <option value="Daily Worker & Helper">Daily Worker & Helper</option>
-              <option value="Carpenter">Carpenter</option>
-              <option value="Mason / Rajmistri">Mason / Rajmistri</option>
-              <option value="Painter">Painter</option>
-              <option value="Construction Labor">Construction Labor</option>
-              <option value="AC Technician">AC Technician</option>
-            </select>
-          </label>
-          <div className="form-actions">
-            <button className="primary-button" type="submit">
-              Register Worker
-            </button>
+    <div style={{ display: "grid", gap: "1.5rem" }}>
+      {/* Worker Registration Link Sharing Card */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)",
+          border: "1px solid #bae6fd",
+          borderRadius: "12px",
+          padding: "1rem 1.25rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem"
+        }}
+      >
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.25rem" }}>
+            <span style={{ fontSize: "1.1rem" }}>🔗</span>
+            <strong style={{ fontSize: "0.95rem", color: "#0369a1" }}>Public Worker Registration Link</strong>
+            <span style={{ background: "#0284c7", color: "#fff", fontSize: "0.7rem", fontWeight: 800, padding: "0.15rem 0.5rem", borderRadius: "10px" }}>
+              Active
+            </span>
           </div>
-        </form>
-
-        <div style={{ marginTop: "2rem", padding: "1.2rem", background: "rgba(15, 23, 42, 0.03)", borderRadius: "8px" }}>
-          <div style={{ fontWeight: 700, marginBottom: "0.5rem", color: "#1e293b" }}>Roster Statistics</div>
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <div>
-              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Total Workers</span>
-              <div style={{ fontSize: "1.3rem", fontWeight: 800 }}>{staffList.length}</div>
-            </div>
-            <div>
-              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Available</span>
-              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#16a34a" }}>{activeCount}</div>
-            </div>
-            <div>
-              <span style={{ fontSize: "0.8rem", color: "#64748b" }}>GPS Active</span>
-              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#2563eb" }}>{withLocationCount}</div>
-            </div>
-          </div>
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569" }}>
+            Share this link with skilled workers, technicians, and helpers to register their profile for admin verification:
+            <code style={{ marginLeft: "6px", background: "rgba(255,255,255,0.7)", padding: "2px 6px", borderRadius: "4px", fontWeight: 700, color: "#0f172a" }}>
+              {publicRegUrl}
+            </code>
+          </p>
         </div>
-      </section>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            type="button"
+            onClick={copyRegLink}
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "8px",
+              background: copiedLink ? "#16a34a" : "#0284c7",
+              color: "#fff",
+              border: "none",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              transition: "background 0.15s ease"
+            }}
+          >
+            {copiedLink ? "✓ Link Copied!" : "📋 Copy Link"}
+          </button>
+          <a
+            href={publicRegUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "8px",
+              background: "#ffffff",
+              color: "#0369a1",
+              border: "1px solid #cbd5e1",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              textDecoration: "none"
+            }}
+          >
+            ↗ Open Page
+          </a>
+        </div>
+      </div>
 
-      <section className="panel">
-        <PanelHead title="Verified Workers & Partners" subtitle="Active field specialists available for customer dispatch." />
-        {staffList.length === 0 ? (
-          <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b" }}>
-            <p style={{ fontWeight: 600, fontSize: "1.05rem", margin: 0 }}>No workers registered yet.</p>
-            <small>Workers registering on the website ('Join as Trade Pro') will automatically appear here.</small>
-          </div>
-        ) : (
-          <div className="data-table">
-            <div className="table-head">
-              <span>Worker</span>
-              <span>Trade</span>
-              <span>GPS Status</span>
-              <span>Availability</span>
-              <span>Action</span>
+      {/* Roster & Queue Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem" }}>
+        <div style={{ background: pendingList.length > 0 ? "#fef3c7" : "#f8fafc", border: pendingList.length > 0 ? "1px solid #fde68a" : "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem" }}>
+          <span style={{ fontSize: "0.8rem", color: pendingList.length > 0 ? "#b45309" : "#64748b", fontWeight: 700 }}>Awaiting Verification</span>
+          <div style={{ fontSize: "1.6rem", fontWeight: 900, color: pendingList.length > 0 ? "#b45309" : "#0f172a" }}>{pendingList.length}</div>
+        </div>
+        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "1rem" }}>
+          <span style={{ fontSize: "0.8rem", color: "#15803d", fontWeight: 700 }}>Active Verified Workers</span>
+          <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#16a34a" }}>{activeCount}</div>
+        </div>
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "1rem" }}>
+          <span style={{ fontSize: "0.8rem", color: "#1d4ed8", fontWeight: 700 }}>Live GPS Active</span>
+          <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#2563eb" }}>{withLocationCount}</div>
+        </div>
+        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "1rem" }}>
+          <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: 700 }}>Total Registered</span>
+          <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#334155" }}>{staffList.length}</div>
+        </div>
+      </div>
+
+      <div className="split-grid">
+        {/* Left: Quick Manual Add Worker */}
+        <section className="panel">
+          <PanelHead title="Manual Worker Enrollment" subtitle="Directly add a pre-verified technician to the dispatch network." />
+          <form className="form-grid" onSubmit={onAddStaff}>
+            <label>
+              Full Name
+              <input
+                type="text"
+                required
+                value={newStaffForm.name}
+                onChange={(e) => onNewStaffFormChange("name", e.target.value)}
+                placeholder="e.g. Rahul Das"
+              />
+            </label>
+            <label>
+              Phone Number
+              <input
+                type="tel"
+                required
+                value={newStaffForm.phone}
+                onChange={(e) => onNewStaffFormChange("phone", e.target.value)}
+                placeholder="10-digit mobile number"
+              />
+            </label>
+            <label>
+              Trade / Specialization
+              <select
+                value={newStaffForm.role}
+                onChange={(e) => onNewStaffFormChange("role", e.target.value)}
+              >
+                <option value="Licensed Electrician">Licensed Electrician</option>
+                <option value="Master Plumber">Master Plumber</option>
+                <option value="Daily Worker & Helper">Daily Worker & Helper</option>
+                <option value="Master Carpenter">Master Carpenter</option>
+                <option value="Head Mason / Rajmistri">Head Mason / Rajmistri</option>
+                <option value="Master House Painter">Master House Painter</option>
+                <option value="Construction Labor">Construction Labor</option>
+                <option value="AC Technician">AC Technician</option>
+                <option value="Security Guard">Security Guard</option>
+              </select>
+            </label>
+            <div className="form-actions">
+              <button className="primary-button" type="submit">
+                Register &amp; Activate
+              </button>
             </div>
-            {staffList.map((staff) => {
-              const isActive = (staff as any).isActive !== false;
-              const hasGps = staff.currentLat && staff.currentLng;
-              return (
-                <div className="table-row" key={staff.id}>
-                  <span>
-                    <strong>{staff.name}</strong>
-                    <small>{staff.phone}</small>
-                  </span>
-                  <span>{staff.role || "Trade Specialist"}</span>
-                  <span>
-                    {hasGps ? (
-                      <small style={{ color: "#16a34a", fontWeight: 600 }}>
-                        Live GPS: {Number(staff.currentLat).toFixed(3)}, {Number(staff.currentLng).toFixed(3)}
-                      </small>
-                    ) : (
-                      <small style={{ color: "#94a3b8" }}>Standby</small>
-                    )}
-                  </span>
-                  <span>
-                    <button
-                      type="button"
-                      style={{
-                        padding: "0.3rem 0.6rem",
-                        fontSize: "0.75rem",
-                        borderRadius: "20px",
-                        border: "none",
-                        background: isActive ? "#dcfce7" : "#f1f5f9",
-                        color: isActive ? "#15803d" : "#64748b",
-                        fontWeight: 700,
-                        cursor: "pointer"
-                      }}
-                      onClick={() => onToggleStatus(staff)}
-                      title="Click to toggle availability"
-                    >
-                      {isActive ? "● Active" : "○ Inactive"}
-                    </button>
-                  </span>
-                  <span>
-                    <button
-                      type="button"
-                      onClick={() => onWhatsapp(staff.phone, `Hi ${staff.name}, this is Marac Workers Dispatch team regarding service assignment.`)}
-                    >
-                      WhatsApp
-                    </button>
-                  </span>
-                </div>
-              );
-            })}
+          </form>
+        </section>
+
+        {/* Right: Worker Roster & Verification Review Queue */}
+        <section className="panel">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+            <div>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, margin: 0 }}>
+                {filterMode === "pending" ? "Worker Verification Review Queue" : "Partner Roster"}
+              </h3>
+              <small style={{ color: "#64748b" }}>
+                {filterMode === "pending"
+                  ? "Examine submitted documents & trade experience before accepting."
+                  : "Verified and active dispatch specialists."}
+              </small>
+            </div>
+            {/* Filter Pills */}
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <button
+                type="button"
+                onClick={() => setFilterMode("pending")}
+                style={{
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: filterMode === "pending" ? "#b45309" : "#fef3c7",
+                  color: filterMode === "pending" ? "#ffffff" : "#92400e"
+                }}
+              >
+                Pending ({pendingList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode("approved")}
+                style={{
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: filterMode === "approved" ? "#15803d" : "#dcfce7",
+                  color: filterMode === "approved" ? "#ffffff" : "#166534"
+                }}
+              >
+                Active ({approvedList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode("all")}
+                style={{
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  background: filterMode === "all" ? "#0f172a" : "#f1f5f9",
+                  color: filterMode === "all" ? "#ffffff" : "#475569"
+                }}
+              >
+                All ({staffList.length})
+              </button>
+            </div>
           </div>
-        )}
-      </section>
+
+          {displayedList.length === 0 ? (
+            <div style={{ padding: "3rem 1rem", textAlign: "center", color: "#64748b", background: "#f8fafc", borderRadius: "8px" }}>
+              <p style={{ fontWeight: 700, fontSize: "1rem", margin: "0 0 0.5rem 0" }}>
+                {filterMode === "pending" ? "🎉 No pending worker applications!" : "No workers found in this filter."}
+              </p>
+              <small>
+                {filterMode === "pending"
+                  ? "All registered trade workers have been processed."
+                  : "Use the registration link above to invite technicians to register."}
+              </small>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "0.85rem" }}>
+              {displayedList.map((staff) => {
+                const isPending = staff.verificationStatus === "PENDING";
+                const isApproved = staff.verificationStatus === "APPROVED" || (staff as any).isActive !== false;
+                const isRejected = staff.verificationStatus === "REJECTED";
+                const hasGps = staff.currentLat && staff.currentLng;
+
+                return (
+                  <div
+                    key={staff.id}
+                    style={{
+                      border: isPending ? "1.5px solid #fde68a" : "1px solid #e2e8f0",
+                      background: isPending ? "#fffbeb" : "#ffffff",
+                      borderRadius: "10px",
+                      padding: "1rem",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <strong style={{ fontSize: "1.05rem", color: "#0f172a" }}>{staff.name}</strong>
+                          {isPending && (
+                            <span style={{ background: "#fef3c7", color: "#b45309", fontSize: "0.75rem", fontWeight: 800, padding: "2px 8px", borderRadius: "12px" }}>
+                              ⏳ Pending Verification
+                            </span>
+                          )}
+                          {isApproved && (
+                            <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.75rem", fontWeight: 800, padding: "2px 8px", borderRadius: "12px" }}>
+                              ✓ Approved Partner
+                            </span>
+                          )}
+                          {isRejected && (
+                            <span style={{ background: "#fee2e2", color: "#b91c1c", fontSize: "0.75rem", fontWeight: 800, padding: "2px 8px", borderRadius: "12px" }}>
+                              ✕ Rejected
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "0.85rem", color: "#475569", marginTop: "2px" }}>
+                          <strong>{staff.role || "Trade Specialist"}</strong> • 📞 {staff.phone}
+                          {staff.locality && <span> • 📍 {staff.locality}</span>}
+                        </div>
+                      </div>
+
+                      {/* Top Action Pills */}
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onWhatsapp(
+                              staff.phone,
+                              isPending
+                                ? `Hi ${staff.name}, this is Marac Workers Admin. We received your partner registration (${staff.registrationCode || ""}) and are reviewing your application.`
+                                : `Hi ${staff.name}, your Marac Workers partner registration has been verified and approved! You are ready for job dispatches.`
+                            )
+                          }
+                          style={{
+                            padding: "0.35rem 0.75rem",
+                            borderRadius: "6px",
+                            background: "#22c55e",
+                            color: "#fff",
+                            border: "none",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                        >
+                          💬 WhatsApp
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Extended Details Grid */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem", fontSize: "0.8rem", color: "#475569", background: "rgba(255,255,255,0.6)", padding: "0.6rem 0.75rem", borderRadius: "6px", margin: "0.5rem 0" }}>
+                      {staff.registrationCode && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Ref Code:</span> <strong>{staff.registrationCode}</strong>
+                        </div>
+                      )}
+                      {staff.experience && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Experience:</span> <strong>{staff.experience}</strong>
+                        </div>
+                      )}
+                      {staff.dailyRate && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Expected Rate:</span> <strong>₹{staff.dailyRate}/day</strong>
+                        </div>
+                      )}
+                      {staff.aadhaarNumber && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Aadhaar/ID:</span> <strong>{staff.aadhaarNumber}</strong>
+                        </div>
+                      )}
+                      {staff.alternatePhone && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Alt Phone:</span> <strong>{staff.alternatePhone}</strong>
+                        </div>
+                      )}
+                      {staff.emergencyContact && (
+                        <div>
+                          <span style={{ color: "#64748b" }}>Emergency Contact:</span> <strong>{staff.emergencyContact}</strong>
+                        </div>
+                      )}
+                      {hasGps ? (
+                        <div style={{ color: "#16a34a", fontWeight: 700 }}>
+                          GPS: {Number(staff.currentLat).toFixed(3)}, {Number(staff.currentLng).toFixed(3)}
+                        </div>
+                      ) : (
+                        <div style={{ color: "#94a3b8" }}>GPS: Standby</div>
+                      )}
+                    </div>
+
+                    {staff.skills && (
+                      <div style={{ fontSize: "0.8rem", color: "#334155", margin: "0.35rem 0" }}>
+                        <span style={{ fontWeight: 700 }}>Skills:</span> {staff.skills}
+                      </div>
+                    )}
+                    {staff.address && (
+                      <div style={{ fontSize: "0.8rem", color: "#334155", margin: "0.35rem 0" }}>
+                        <span style={{ fontWeight: 700 }}>Address:</span> {staff.address}
+                      </div>
+                    )}
+
+                    {/* Verification Actions Bar */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: "0.6rem", marginTop: "0.6rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                        Registered: {staff.createdAt ? new Date(staff.createdAt).toLocaleDateString() : "Active"}
+                        {staff.verifiedAt && ` • Verified: ${new Date(staff.verifiedAt).toLocaleDateString()}`}
+                      </div>
+
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {isPending && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onVerifyWorker(staff.id, "APPROVED", "Verified by Admin")}
+                              style={{
+                                padding: "0.4rem 0.9rem",
+                                borderRadius: "6px",
+                                background: "#15803d",
+                                color: "#ffffff",
+                                border: "none",
+                                fontSize: "0.82rem",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                boxShadow: "0 1px 2px rgba(21,128,61,0.2)"
+                              }}
+                            >
+                              ✓ Accept &amp; Verify Worker
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const reason = prompt("Enter rejection reason / feedback for worker:", "Verification criteria not met");
+                                if (reason !== null) {
+                                  onVerifyWorker(staff.id, "REJECTED", reason);
+                                }
+                              }}
+                              style={{
+                                padding: "0.4rem 0.85rem",
+                                borderRadius: "6px",
+                                background: "#fee2e2",
+                                color: "#b91c1c",
+                                border: "1px solid #fca5a5",
+                                fontSize: "0.82rem",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              ✕ Reject
+                            </button>
+                          </>
+                        )}
+
+                        {!isPending && (
+                          <button
+                            type="button"
+                            onClick={() => onToggleStatus(staff)}
+                            style={{
+                              padding: "0.35rem 0.75rem",
+                              borderRadius: "6px",
+                              border: "1px solid #cbd5e1",
+                              background: (staff as any).isActive !== false ? "#dcfce7" : "#f1f5f9",
+                              color: (staff as any).isActive !== false ? "#15803d" : "#64748b",
+                              fontSize: "0.8rem",
+                              fontWeight: 700,
+                              cursor: "pointer"
+                            }}
+                          >
+                            {(staff as any).isActive !== false ? "● Active Available" : "○ On Leave / Standby"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
