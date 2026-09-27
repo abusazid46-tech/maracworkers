@@ -57,7 +57,7 @@ type ApiErrorBody = {
   };
 };
 
-const deployedApiUrl = "https://maracworkers.onrender.com";
+const deployedApiUrl = "https://api.skyrouteglobal.in";
 const localApiUrl = "http://localhost:4000";
 
 export class ApiClientError extends Error {

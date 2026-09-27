@@ -33,7 +33,8 @@ const requiredCorsOrigins = [
   "https://www.thewingsgroup.online",
   "https://thewingsgroup.online",
   "https://the-wings-group1.vercel.app",
-  "https://the-wings-group-admin.vercel.app"
+  "https://the-wings-group-admin.vercel.app",
+  "https://api.skyrouteglobal.in"
 ];
 
 function normalizeOrigin(origin: string) {
