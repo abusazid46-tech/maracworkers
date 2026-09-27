@@ -1,5 +1,28 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
+
+const __currentFile = fileURLToPath(import.meta.url);
+const __currentDir = path.dirname(__currentFile);
+
+const candidateEnvPaths = [
+  path.resolve(__currentDir, "../../.env"),
+  path.resolve(__currentDir, "../../../.env"),
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "apps/api/.env"),
+  path.resolve(process.cwd(), "public_html/.env"),
+  "/home/u967105144/domains/api.skyrouteglobal.in/public_html/.env",
+  "/home/u967105144/domains/api.skyrouteglobal.in/public_html/apps/api/.env"
+];
+
+for (const envPath of candidateEnvPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
+dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
