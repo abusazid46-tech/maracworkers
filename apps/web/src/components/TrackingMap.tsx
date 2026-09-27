@@ -7,7 +7,8 @@ import {
   TRACKING_BROADCAST_CHANNEL,
   getStoredRideState,
   calculateDistanceKm,
-  DEMO_RIDE_BOOKING
+  estimateEtaMinutes,
+  GUWAHATI_DEFAULT_COORDS
 } from "@/lib/trackingSync";
 
 export interface TrackingMapProps {
@@ -41,7 +42,7 @@ export default function TrackingMap({
   const workerMarkerRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
   const routeLineRef = useRef<any>(null);
-  const routeShadowLineRef = useRef<any>(null);
+  const routeShadowRef = useRef<any>(null);
 
   const [status, setStatus] = useState<BookingStatus>(initialStatus);
   const [staff, setStaff] = useState<StaffSummary | null>(initialStaff ?? null);
@@ -58,17 +59,16 @@ export default function TrackingMap({
           heading: initialStaff.lastHeading ?? 0
         };
       }
-      return DEMO_RIDE_BOOKING.workerLocation;
+      return null;
     }
   );
 
-  const [etaMinutes, setEtaMinutes] = useState<number | null>(6);
-  const [distanceKm, setDistanceKm] = useState<number | null>(2.1);
+  const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastPingTime, setLastPingTime] = useState<string | null>(null);
-  const [isDriving, setIsDriving] = useState(false);
 
-  // Update status internally & notify parent
+  // Sync internal status with parent
   const handleStatusUpdate = useCallback(
     (newStatus: BookingStatus, newStaff?: StaffSummary) => {
       setStatus(newStatus);
@@ -88,8 +88,11 @@ export default function TrackingMap({
       const L = await import("leaflet");
       if (!isMounted || !mapContainerRef.current) return;
 
+      const cLat = customerLocation.lat || GUWAHATI_DEFAULT_COORDS.lat;
+      const cLng = customerLocation.lng || GUWAHATI_DEFAULT_COORDS.lng;
+
       const map = L.map(mapContainerRef.current, {
-        center: [customerLocation.lat, customerLocation.lng],
+        center: [cLat, cLng],
         zoom: 14,
         zoomControl: true,
         attributionControl: false
@@ -97,12 +100,12 @@ export default function TrackingMap({
 
       mapInstanceRef.current = map;
 
-      // Crisp OpenStreetMap tiles with high contrast
+      // Clean OpenStreetMap tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19
       }).addTo(map);
 
-      // Customer Pin (Uber pickup/destination style with radar ripple)
+      // Customer Pin (Doorstep Destination)
       const customerIcon = L.divIcon({
         className: "custom-customer-icon",
         html: `
@@ -114,7 +117,7 @@ export default function TrackingMap({
               </svg>
             </div>
             <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:3;">
-              Your Location
+              Service Location
             </div>
           </div>
         `,
@@ -122,15 +125,16 @@ export default function TrackingMap({
         iconAnchor: [22, 22]
       });
 
-      const customerMarker = L.marker([customerLocation.lat, customerLocation.lng], { icon: customerIcon })
+      const customerMarker = L.marker([cLat, cLng], { icon: customerIcon })
         .addTo(map)
         .bindPopup(`<b>${customerName}</b><br/>${customerAddress}`);
 
       customerMarkerRef.current = customerMarker;
 
-      // Initial Worker Marker
-      const initialWorker = workerPos || DEMO_RIDE_BOOKING.workerLocation;
-      void updateWorkerMarker(L, map, initialWorker.lat, initialWorker.lng, initialWorker.heading, initialWorker.speed);
+      // If initial worker position exists, create marker
+      if (workerPos) {
+        void updateWorkerMarker(L, map, workerPos.lat, workerPos.lng, workerPos.heading || 0, workerPos.speed);
+      }
     }
 
     void initMap();
@@ -144,7 +148,7 @@ export default function TrackingMap({
     };
   }, []);
 
-  // Update Worker Marker position & rotation
+  // Update Worker Marker on Map
   const updateWorkerMarker = async (
     LModule: any,
     map: any,
@@ -156,18 +160,20 @@ export default function TrackingMap({
     const L = LModule || (await import("leaflet"));
     if (!map) return;
 
+    const workerName = staff?.name?.split(" ")[0] || "Partner";
+
     const workerIcon = L.divIcon({
       className: "custom-worker-vehicle-icon",
       html: `
         <div style="position:relative;display:flex;align-items:center;justify-content:center;width:48px;height:48px;">
-          <div style="position:absolute;inset:-4px;border-radius:50%;background:#10b981;opacity:0.2;animation:pulse 2s infinite;"></div>
+          <div style="position:absolute;inset:-4px;border-radius:50%;background:#10b981;opacity:0.25;animation:pulse 2s infinite;"></div>
           <div style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:#059669;color:white;box-shadow:0 4px 18px rgba(5,150,105,0.6);border:3px solid white;transform:rotate(${heading}deg);transition:transform 0.3s ease-out;z-index:2;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
             </svg>
           </div>
           <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#065f46;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:3;">
-            ${staff?.name?.split(" ")[0] || "Partner"}
+            ${workerName}
           </div>
         </div>
       `,
@@ -180,20 +186,20 @@ export default function TrackingMap({
       workerMarkerRef.current.setIcon(workerIcon);
     } else {
       const marker = L.marker([lat, lng], { icon: workerIcon }).addTo(map);
-      marker.bindPopup(`<b>${staff?.name || "Marac Partner"}</b><br/>En route to your location`);
+      marker.bindPopup(`<b>${staff?.name || "Assigned Partner"}</b><br/>En route to service address`);
       workerMarkerRef.current = marker;
     }
 
-    setIsDriving(speed !== undefined && speed > 5);
-
-    // Recalculate route polyline & road ETA
-    void fetchRoadRoute(L, map, lat, lng);
+    void fetchRoadRoute(L, map, lat, lng, speed);
   };
 
-  // Fetch driving route via OSRM
-  const fetchRoadRoute = async (L: any, map: any, wLat: number, wLng: number) => {
+  // Fetch real road route via OSRM with distance & ETA calculation
+  const fetchRoadRoute = async (L: any, map: any, wLat: number, wLng: number, speed?: number) => {
+    const cLat = customerLocation.lat || GUWAHATI_DEFAULT_COORDS.lat;
+    const cLng = customerLocation.lng || GUWAHATI_DEFAULT_COORDS.lng;
+
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${wLng},${wLat};${customerLocation.lng},${customerLocation.lat}?overview=full&geometries=geojson`;
+      const url = `https://router.project-osrm.org/route/v1/driving/${wLng},${wLat};${cLng},${cLat}?overview=full&geometries=geojson`;
       const res = await fetch(url);
       const data = await res.json();
 
@@ -207,11 +213,11 @@ export default function TrackingMap({
         setEtaMinutes(minutes);
         setDistanceKm(distance);
 
-        // Under-glow shadow polyline
-        if (routeShadowLineRef.current) {
-          routeShadowLineRef.current.setLatLngs(coordinates);
+        // Under-glow shadow
+        if (routeShadowRef.current) {
+          routeShadowRef.current.setLatLngs(coordinates);
         } else {
-          routeShadowLineRef.current = L.polyline(coordinates, {
+          routeShadowRef.current = L.polyline(coordinates, {
             color: "#0284c7",
             weight: 8,
             opacity: 0.25
@@ -230,110 +236,32 @@ export default function TrackingMap({
           }).addTo(map);
         }
 
-        // Soft fit bounds to show both customer and worker
+        // Fit bounds to keep both points in view
         if (map && !map._userPanned) {
-          const bounds = L.latLngBounds([[wLat, wLng], [customerLocation.lat, customerLocation.lng]]);
+          const bounds = L.latLngBounds([[wLat, wLng], [cLat, cLng]]);
           map.fitBounds(bounds, { padding: [70, 70], maxZoom: 16 });
         }
+        return;
       }
     } catch {
       // Fallback: Haversine distance
-      const dist = calculateDistanceKm(wLat, wLng, customerLocation.lat, customerLocation.lng);
-      setDistanceKm(dist);
-      setEtaMinutes(Math.max(1, Math.round(dist * 3)));
+    }
 
-      if (routeLineRef.current) {
-        routeLineRef.current.setLatLngs([
-          [wLat, wLng],
-          [customerLocation.lat, customerLocation.lng]
-        ]);
-      } else if (map) {
-        routeLineRef.current = L.polyline(
-          [
-            [wLat, wLng],
-            [customerLocation.lat, customerLocation.lng]
-          ],
-          {
-            color: "#0284c7",
-            weight: 4,
-            opacity: 0.8,
-            dashArray: "6, 6"
-          }
-        ).addTo(map);
-      }
+    const dist = calculateDistanceKm(wLat, wLng, cLat, cLng);
+    setDistanceKm(dist);
+    setEtaMinutes(estimateEtaMinutes(dist, speed || 25));
+
+    if (routeLineRef.current) {
+      routeLineRef.current.setLatLngs([[wLat, wLng], [cLat, cLng]]);
+    } else if (map) {
+      routeLineRef.current = L.polyline(
+        [[wLat, wLng], [cLat, cLng]],
+        { color: "#0284c7", weight: 4, opacity: 0.8, dashArray: "6, 6" }
+      ).addTo(map);
     }
   };
 
-  // Cross-Tab & Cross-Window Instant Sync via BroadcastChannel & LocalStorage
-  useEffect(() => {
-    let bc: BroadcastChannel | null = null;
-
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-      bc = new BroadcastChannel(TRACKING_BROADCAST_CHANNEL);
-      bc.onmessage = async (event) => {
-        if (event.data?.type === "RIDE_UPDATE") {
-          const payload = event.data.payload;
-          if (payload.bookingCode === bookingCode || bookingCode === "MW-DEMO-RIDE") {
-            setLastPingTime(new Date().toLocaleTimeString());
-            setIsConnected(true);
-
-            if (payload.status && payload.status !== status) {
-              handleStatusUpdate(payload.status);
-            }
-
-            if (payload.workerLocation) {
-              setWorkerPos(payload.workerLocation);
-              if (mapInstanceRef.current) {
-                const L = await import("leaflet");
-                void updateWorkerMarker(
-                  L,
-                  mapInstanceRef.current,
-                  payload.workerLocation.lat,
-                  payload.workerLocation.lng,
-                  payload.workerLocation.heading,
-                  payload.workerLocation.speed
-                );
-              }
-            }
-          }
-        }
-      };
-    }
-
-    const handleStorageEvent = async (e: StorageEvent) => {
-      if (e.key && e.key.includes(bookingCode) && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (parsed.workerLocation) {
-            setWorkerPos(parsed.workerLocation);
-            if (parsed.status) handleStatusUpdate(parsed.status);
-            if (mapInstanceRef.current) {
-              const L = await import("leaflet");
-              void updateWorkerMarker(
-                L,
-                mapInstanceRef.current,
-                parsed.workerLocation.lat,
-                parsed.workerLocation.lng,
-                parsed.workerLocation.heading,
-                parsed.workerLocation.speed
-              );
-            }
-          }
-        } catch {
-          // ignore
-        }
-      }
-    };
-
-    window.addEventListener("storage", handleStorageEvent);
-
-    return () => {
-      bc?.close();
-      window.removeEventListener("storage", handleStorageEvent);
-    };
-  }, [bookingCode, status, handleStatusUpdate]);
-
-  // Realtime Socket Connection
+  // Live WebSocket Connection
   useEffect(() => {
     let socket: Socket | null = null;
 
@@ -396,30 +324,76 @@ export default function TrackingMap({
     };
   }, [bookingCode, apiBaseUrl, handleStatusUpdate]);
 
+  // Cross-Tab BroadcastChannel listener for instant zero-latency updates
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      bc = new BroadcastChannel(TRACKING_BROADCAST_CHANNEL);
+      bc.onmessage = async (event) => {
+        if (event.data?.type === "RIDE_UPDATE") {
+          const payload = event.data.payload;
+          if (payload.bookingCode === bookingCode) {
+            setLastPingTime(new Date().toLocaleTimeString());
+            setIsConnected(true);
+
+            if (payload.status && payload.status !== status) {
+              handleStatusUpdate(payload.status);
+            }
+
+            if (payload.workerLocation) {
+              setWorkerPos(payload.workerLocation);
+              if (mapInstanceRef.current) {
+                const L = await import("leaflet");
+                void updateWorkerMarker(
+                  L,
+                  mapInstanceRef.current,
+                  payload.workerLocation.lat,
+                  payload.workerLocation.lng,
+                  payload.workerLocation.heading,
+                  payload.workerLocation.speed
+                );
+              }
+            }
+          }
+        }
+      };
+    }
+
+    return () => {
+      bc?.close();
+    };
+  }, [bookingCode, status, handleStatusUpdate]);
+
   const fitView = async () => {
     if (!mapInstanceRef.current) return;
     const L = await import("leaflet");
+    const cLat = customerLocation.lat || GUWAHATI_DEFAULT_COORDS.lat;
+    const cLng = customerLocation.lng || GUWAHATI_DEFAULT_COORDS.lng;
+
     if (workerPos) {
       const bounds = L.latLngBounds([
         [workerPos.lat, workerPos.lng],
-        [customerLocation.lat, customerLocation.lng]
+        [cLat, cLng]
       ]);
       mapInstanceRef.current.fitBounds(bounds, { padding: [60, 60] });
     } else {
-      mapInstanceRef.current.setView([customerLocation.lat, customerLocation.lng], 15);
+      mapInstanceRef.current.setView([cLat, cLng], 15);
     }
   };
 
   const getStatusBadge = () => {
     switch (status) {
+      case "CONFIRMED":
+        return { label: "Booking Confirmed", color: "bg-blue-50 text-blue-700 border-blue-200" };
       case "ASSIGNED":
-        return { label: "Partner Assigned", color: "bg-blue-50 text-blue-700 border-blue-200" };
+        return { label: "Partner Assigned", color: "bg-indigo-50 text-indigo-700 border-indigo-200" };
       case "EN_ROUTE":
-        return { label: "Heading to Doorstep", color: "bg-amber-50 text-amber-700 border-amber-200 animate-pulse" };
+        return { label: "Partner En Route", color: "bg-amber-50 text-amber-700 border-amber-200 animate-pulse" };
       case "IN_PROGRESS":
-        return { label: "Service In Progress", color: "bg-purple-50 text-purple-700 border-purple-200" };
+        return { label: "Work In Progress", color: "bg-purple-50 text-purple-700 border-purple-200" };
       case "COMPLETED":
-        return { label: "Completed", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+        return { label: "Service Completed", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
       default:
         return { label: status.replace(/_/g, " "), color: "bg-neutral-50 text-neutral-700 border-neutral-200" };
     }
@@ -429,13 +403,13 @@ export default function TrackingMap({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Car-Booking HUD Cards */}
+      {/* Real-time Status & Telemetry HUD */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Real-time Status Card */}
+        {/* Service Status */}
         <div className="bg-white rounded-2xl p-4 border border-neutral-200/80 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-wider text-neutral-400 font-bold">Ride & Service Status</p>
-            <div className="flex items-center gap-2 mt-1">
+            <p className="text-[11px] uppercase tracking-wider text-neutral-400 font-bold">Service Status</p>
+            <div className="mt-1">
               <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${badge.color}`}>
                 {badge.label}
               </span>
@@ -443,16 +417,16 @@ export default function TrackingMap({
           </div>
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-1.5">
-              <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? "bg-emerald-500 animate-ping" : "bg-emerald-500"}`} />
-              <span className="text-xs font-semibold text-emerald-600">
-                {isDriving ? "Moving (GPS Active)" : "Connected"}
+              <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"}`} />
+              <span className="text-xs font-semibold text-neutral-700">
+                {isConnected ? "Live GPS Connected" : "Connecting..."}
               </span>
             </div>
-            {lastPingTime && <span className="text-[10px] text-neutral-400 mt-1">Ping: {lastPingTime}</span>}
+            {lastPingTime && <span className="text-[10px] text-neutral-400 mt-1">Last ping: {lastPingTime}</span>}
           </div>
         </div>
 
-        {/* Live Arrival ETA Card (Uber style) */}
+        {/* Live Arrival ETA */}
         <div className="bg-white rounded-2xl p-4 border border-neutral-200/80 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-wider text-neutral-400 font-bold">Estimated Arrival</p>
@@ -460,10 +434,12 @@ export default function TrackingMap({
               <span className="text-2xl font-black text-neutral-900 tracking-tight">
                 {status === "COMPLETED" ? (
                   "Completed"
-                ) : etaMinutes !== null && etaMinutes > 0 ? (
+                ) : etaMinutes !== null ? (
                   `${etaMinutes} min${etaMinutes > 1 ? "s" : ""}`
+                ) : workerPos ? (
+                  "Calculating..."
                 ) : (
-                  "Arriving Now"
+                  "Awaiting departure"
                 )}
               </span>
               {distanceKm !== null && status !== "COMPLETED" && (
@@ -474,50 +450,52 @@ export default function TrackingMap({
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg">
-            🚗
+            📍
           </div>
         </div>
 
-        {/* Assigned Worker Partner Card */}
+        {/* Assigned Partner Profile */}
         <div className="bg-white rounded-2xl p-4 border border-neutral-200/80 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-neutral-900 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-neutral-900/10">
-              {staff?.name ? staff.name.charAt(0).toUpperCase() : "B"}
+            <div className="w-11 h-11 rounded-2xl bg-neutral-900 text-white flex items-center justify-center font-bold text-sm shadow-md">
+              {staff?.name ? staff.name.charAt(0).toUpperCase() : "P"}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <p className="text-sm font-bold text-neutral-900 leading-tight">
-                  {staff?.name || DEMO_RIDE_BOOKING.worker.name}
+                  {staff?.name || "Verified Service Partner"}
                 </p>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded border border-amber-200/60">
                   ★ 4.9
                 </span>
               </div>
               <p className="text-xs text-neutral-500">
-                {staff?.role || DEMO_RIDE_BOOKING.worker.trade}
+                {staff?.role || "Field Technician"}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <a
-              href={`tel:${staff?.phone || "9365123456"}`}
-              className="p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition"
-              title="Call partner"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-            </a>
+            {staff?.phone && (
+              <a
+                href={`tel:${staff.phone}`}
+                className="p-2.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition"
+                title="Call technician"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </a>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Interactive Map Canvas */}
+      {/* Production Interactive Map */}
       <div className="relative w-full h-[450px] md:h-[520px] rounded-3xl overflow-hidden border border-neutral-200/90 shadow-xl bg-neutral-100">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-        {/* Top-Left Floating Badge: Car-Booking Style Status */}
+        {/* Live GPS Telemetry Indicator */}
         <div className="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border border-neutral-200/90 flex items-center gap-2.5">
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -525,32 +503,29 @@ export default function TrackingMap({
           </span>
           <div className="flex flex-col">
             <span className="text-[11px] font-bold text-neutral-900 leading-none">
-              Car-Booking Live Tracking
+              Realtime GPS Map
             </span>
             <span className="text-[9px] text-neutral-500 font-medium">
-              Mutual real-time GPS stream
+              Live driver telemetry &amp; route
             </span>
           </div>
         </div>
 
-        {/* Top-Right Floating Switcher: Jump to Worker Seat */}
+        {/* Worker Mode Switcher Link (if applicable) */}
         {onSwitchToWorkerMode && (
           <div className="absolute top-4 right-4 z-[500]">
             <button
               type="button"
               onClick={onSwitchToWorkerMode}
               className="px-3.5 py-2 bg-neutral-900 text-white text-xs font-bold rounded-2xl shadow-xl hover:bg-neutral-800 transition flex items-center gap-2 border border-neutral-700"
-              title="Drive this trip as the worker"
+              title="Open Worker Partner Console"
             >
-              <span>🦺 Switch to Worker Seat</span>
-              <span className="px-1.5 py-0.5 rounded bg-amber-400 text-neutral-900 text-[10px] font-black">
-                Driver Mode
-              </span>
+              <span>🦺 Switch to Partner Mode</span>
             </button>
           </div>
         )}
 
-        {/* Bottom-Right Controls: Re-center & Map Legend */}
+        {/* Bottom-Right Controls: Legend & Re-center */}
         <div className="absolute bottom-4 right-4 z-[500] flex flex-col items-end gap-2">
           <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow border border-neutral-200 text-[11px] flex items-center gap-3">
             <div className="flex items-center gap-1.5 font-bold text-emerald-700">
@@ -559,7 +534,7 @@ export default function TrackingMap({
             </div>
             <div className="flex items-center gap-1.5 font-bold text-sky-700">
               <span className="w-2.5 h-2.5 rounded-full bg-sky-600" />
-              <span>You</span>
+              <span>Destination</span>
             </div>
           </div>
 

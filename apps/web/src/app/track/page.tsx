@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useEffect, useState, FormEvent } from "react";
 import { createApiClient, getDefaultApiUrl } from "@the-wings/api-client";
 import type { Booking, BookingStatus } from "@the-wings/types";
-import { DEMO_RIDE_BOOKING, setLastActiveBookingCode, getLastActiveBookingCode } from "@/lib/trackingSync";
+import {
+  setLastActiveBookingCode,
+  getLastActiveBookingCode,
+  GUWAHATI_DEFAULT_COORDS
+} from "@/lib/trackingSync";
 
 // Dynamic imports with ssr: false for Leaflet maps
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
@@ -14,7 +18,7 @@ const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
     <div className="w-full h-[450px] md:h-[500px] rounded-3xl bg-neutral-100 flex items-center justify-center animate-pulse border border-neutral-200">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-neutral-500 font-medium">Loading live map & satellite tiles...</p>
+        <p className="text-sm text-neutral-500 font-medium">Connecting to live map &amp; GPS satellite network...</p>
       </div>
     </div>
   )
@@ -26,7 +30,7 @@ const WorkerConsole = dynamic(() => import("@/components/WorkerConsole"), {
     <div className="w-full h-[450px] md:h-[500px] rounded-3xl bg-neutral-100 flex items-center justify-center animate-pulse border border-neutral-200">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-neutral-500 font-medium">Loading partner console...</p>
+        <p className="text-sm text-neutral-500 font-medium">Initializing partner navigation console...</p>
       </div>
     </div>
   )
@@ -41,23 +45,36 @@ const STATUS_STEPS: { status: BookingStatus; label: string; desc: string }[] = [
 ];
 
 export default function TrackingPage() {
-  const [viewMode, setViewMode] = useState<"customer" | "worker" | "split">("customer");
+  const [viewMode, setViewMode] = useState<"customer" | "worker">("customer");
   const [bookingCode, setBookingCode] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [booking, setBooking] = useState<Booking | null>(null);
+  const [recentBookings, setRecentBookings] = useState<Array<{ bookingCode: string; serviceSummary: string; status: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
-  // Read URL params or past storage on mount
+  // Read URL params or past customer bookings on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code") || "";
       const mode = params.get("mode");
 
-      if (mode === "worker" || mode === "split") {
-        setViewMode(mode);
+      if (mode === "worker") {
+        setViewMode("worker");
+      }
+
+      // Check customer local booking history
+      try {
+        const storedHistory = window.localStorage.getItem("marac_customer_bookings");
+        if (storedHistory) {
+          const parsed = JSON.parse(storedHistory);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRecentBookings(parsed.slice(0, 4));
+          }
+        }
+      } catch {
+        // ignore
       }
 
       if (code) {
@@ -68,59 +85,14 @@ export default function TrackingPage() {
         if (lastCode) {
           setBookingCode(lastCode);
           setSearchInput(lastCode);
-        } else {
-          // Default to interactive demo ride so user immediately sees the map
-          loadDemoRide();
         }
       }
     }
   }, []);
 
-  const loadDemoRide = () => {
-    setIsDemoMode(true);
-    setBookingCode(DEMO_RIDE_BOOKING.bookingCode);
-    setSearchInput(DEMO_RIDE_BOOKING.bookingCode);
-    setLastActiveBookingCode(DEMO_RIDE_BOOKING.bookingCode);
-    setBooking({
-      id: "demo-booking-id",
-      bookingCode: DEMO_RIDE_BOOKING.bookingCode,
-      customerName: DEMO_RIDE_BOOKING.customerName,
-      customerPhone: DEMO_RIDE_BOOKING.customerPhone,
-      addressLine: DEMO_RIDE_BOOKING.customerAddress,
-      city: "Guwahati",
-      latitude: DEMO_RIDE_BOOKING.customerLocation.lat,
-      longitude: DEMO_RIDE_BOOKING.customerLocation.lng,
-      status: DEMO_RIDE_BOOKING.status,
-      preferredDate: "Today",
-      preferredTimeSlot: "Immediate Express Dispatch",
-      paymentMode: "COD",
-      paymentStatus: "PENDING",
-      totalAmount: 350,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      items: [
-        {
-          id: "item-1",
-          bookingId: "demo-booking-id",
-          serviceName: "Emergency Switchboard Fix & MCB Inspection",
-          quantity: 1,
-          unitPrice: 350
-        }
-      ],
-      assignedStaff: {
-        id: DEMO_RIDE_BOOKING.worker.id,
-        name: DEMO_RIDE_BOOKING.worker.name,
-        phone: DEMO_RIDE_BOOKING.worker.phone,
-        role: DEMO_RIDE_BOOKING.worker.trade,
-        currentLat: DEMO_RIDE_BOOKING.workerLocation.lat,
-        currentLng: DEMO_RIDE_BOOKING.workerLocation.lng,
-        lastHeading: DEMO_RIDE_BOOKING.workerLocation.heading
-      }
-    } as any);
-  };
-
+  // Fetch real booking tracking from backend API
   useEffect(() => {
-    if (!bookingCode || isDemoMode) {
+    if (!bookingCode) {
       setLoading(false);
       return;
     }
@@ -136,9 +108,8 @@ export default function TrackingPage() {
         setLastActiveBookingCode(res.data.bookingCode);
       })
       .catch((err) => {
-        // If booking not found on remote server, fallback to demo ride
-        console.warn("Could not fetch remote tracking, loading demo context", err);
-        loadDemoRide();
+        setError(err instanceof Error ? err.message : "Booking code not found. Please verify your reference number.");
+        setBooking(null);
       })
       .finally(() => {
         setLoading(false);
@@ -148,12 +119,20 @@ export default function TrackingPage() {
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
-      setIsDemoMode(false);
       setBookingCode(searchInput.trim());
       if (typeof window !== "undefined") {
         const newUrl = `${window.location.pathname}?code=${encodeURIComponent(searchInput.trim())}`;
         window.history.replaceState(null, "", newUrl);
       }
+    }
+  };
+
+  const handleSelectRecent = (code: string) => {
+    setSearchInput(code);
+    setBookingCode(code);
+    if (typeof window !== "undefined") {
+      const newUrl = `${window.location.pathname}?code=${encodeURIComponent(code)}`;
+      window.history.replaceState(null, "", newUrl);
     }
   };
 
@@ -171,15 +150,15 @@ export default function TrackingPage() {
     return "upcoming";
   };
 
-  const customerLat = Number(booking?.latitude) || DEMO_RIDE_BOOKING.customerLocation.lat;
-  const customerLng = Number(booking?.longitude) || DEMO_RIDE_BOOKING.customerLocation.lng;
+  const customerLat = Number(booking?.latitude) || GUWAHATI_DEFAULT_COORDS.lat;
+  const customerLng = Number(booking?.longitude) || GUWAHATI_DEFAULT_COORDS.lng;
   const apiUrl = getDefaultApiUrl();
 
   return (
     <div className="min-h-screen bg-neutral-50/70 pb-20">
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 px-4 sm:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
@@ -195,21 +174,21 @@ export default function TrackingPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-black text-neutral-900 tracking-tight">
-                  Marac Workers Live Dispatch
+                  Live Service Dispatch Tracker
                 </h1>
-                {isDemoMode && (
-                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-md border border-emerald-200 uppercase">
-                    Interactive Demo
+                {booking && (
+                  <span className="px-2.5 py-0.5 bg-neutral-100 text-neutral-800 text-xs font-mono font-bold rounded-md border border-neutral-200">
+                    {booking.bookingCode}
                   </span>
                 )}
               </div>
               <p className="text-[11px] text-neutral-400 font-medium">
-                Mutual Car-Booking Realtime GPS Tracking
+                Mutual Realtime GPS Tracking on Marac Workers Web
               </p>
             </div>
           </div>
 
-          {/* Unified Platform Role Switcher */}
+          {/* Role Switcher */}
           <div className="flex items-center bg-neutral-100 p-1 rounded-2xl border border-neutral-200/70">
             <button
               type="button"
@@ -221,8 +200,7 @@ export default function TrackingPage() {
               }`}
             >
               <span>👤</span>
-              <span className="hidden sm:inline">Customer View</span>
-              <span className="sm:hidden">Customer</span>
+              <span>Customer View</span>
             </button>
 
             <button
@@ -235,79 +213,81 @@ export default function TrackingPage() {
               }`}
             >
               <span>🦺</span>
-              <span className="hidden sm:inline">Worker Console</span>
-              <span className="sm:hidden">Worker</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode("split")}
-              className={`hidden md:flex px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold transition items-center gap-1.5 ${
-                viewMode === "split"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-neutral-500 hover:text-neutral-900"
-              }`}
-              title="Dual Screen: Customer & Worker tracking simultaneously"
-            >
-              <span>📱</span>
-              <span>Side-by-Side</span>
+              <span>Partner Console</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-5 space-y-5">
-        {/* Booking Code Bar & Demo Launcher */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-neutral-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 pt-6 space-y-6">
+        {/* Booking Code Search Bar */}
+        <div className="bg-white rounded-3xl p-4 sm:p-6 border border-neutral-200/80 shadow-sm">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Enter Booking Code (e.g. MW-DEMO-RIDE)"
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-neutral-100 border border-transparent focus:border-neutral-400 focus:bg-white text-xs sm:text-sm outline-none transition font-mono uppercase font-bold"
+              placeholder="Enter Booking Code (e.g. MW-260926-XXXX)"
+              className="flex-1 px-4 py-3 rounded-2xl bg-neutral-100 border border-transparent focus:border-neutral-400 focus:bg-white text-sm outline-none transition font-mono uppercase font-bold"
             />
             <button
               type="submit"
-              className="px-5 py-2.5 bg-neutral-900 text-white font-bold rounded-2xl text-xs hover:bg-neutral-800 transition"
+              className="px-6 py-3 bg-neutral-900 text-white font-bold rounded-2xl text-sm hover:bg-neutral-800 transition shadow"
             >
-              Track
+              Track Booking
             </button>
           </form>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={loadDemoRide}
-              className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-2xl text-xs border border-emerald-200 transition flex items-center gap-1.5"
-            >
-              <span>⚡</span>
-              <span>Launch Live Ride Demo</span>
-            </button>
-          </div>
+          {/* Recent Bookings Quick Access */}
+          {recentBookings.length > 0 && !booking && (
+            <div className="mt-4 pt-4 border-t border-neutral-100">
+              <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">
+                Your Recent Orders
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recentBookings.map((item) => (
+                  <button
+                    key={item.bookingCode}
+                    type="button"
+                    onClick={() => handleSelectRecent(item.bookingCode)}
+                    className="px-3.5 py-1.5 bg-neutral-50 hover:bg-neutral-100 text-neutral-800 rounded-xl text-xs font-medium border border-neutral-200 transition flex items-center gap-2"
+                  >
+                    <span className="font-mono font-bold text-neutral-900">{item.bookingCode}</span>
+                    <span className="text-neutral-400">•</span>
+                    <span className="truncate max-w-[150px]">{item.serviceSummary}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {loading && (
           <div className="bg-white rounded-3xl p-12 border border-neutral-200 flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-neutral-600 font-semibold text-sm">Connecting to live tracking...</p>
+            <p className="text-neutral-600 font-semibold text-sm">Connecting to live tracking database...</p>
           </div>
         )}
 
-        {error && !loading && !booking && (
+        {error && !loading && (
           <div className="bg-white p-8 rounded-3xl border border-neutral-200 shadow-sm text-center">
             <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
               !
             </div>
-            <h2 className="text-lg font-bold text-neutral-900 mb-1">Tracking Info Unavailable</h2>
-            <p className="text-neutral-500 text-sm">{error}</p>
-            <button
-              type="button"
-              onClick={loadDemoRide}
-              className="mt-4 px-5 py-2.5 bg-emerald-600 text-white rounded-2xl text-xs font-bold"
-            >
-              Start Interactive Demo
-            </button>
+            <h2 className="text-lg font-bold text-neutral-900 mb-1">Booking Not Found</h2>
+            <p className="text-neutral-500 text-sm max-w-md mx-auto">{error}</p>
+          </div>
+        )}
+
+        {!booking && !loading && !error && (
+          <div className="bg-white p-12 rounded-3xl border border-neutral-200 shadow-sm text-center">
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+              📍
+            </div>
+            <h2 className="text-lg font-bold text-neutral-900 mb-1">Realtime Service Dispatch &amp; GPS Tracking</h2>
+            <p className="text-neutral-500 text-sm max-w-md mx-auto">
+              Enter your booking code above to watch your assigned professional move towards your location in real time.
+            </p>
           </div>
         )}
 
@@ -315,8 +295,8 @@ export default function TrackingPage() {
           <>
             {/* VIEW 1: CUSTOMER VIEW */}
             {viewMode === "customer" && (
-              <div className="space-y-5">
-                {/* Step Milestone Bar */}
+              <div className="space-y-6">
+                {/* Progress Step Bar */}
                 <div className="bg-white rounded-3xl p-5 sm:p-6 border border-neutral-200/80 shadow-sm">
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {STATUS_STEPS.map((step, idx) => {
@@ -348,7 +328,7 @@ export default function TrackingPage() {
                   </div>
                 </div>
 
-                {/* Customer Live Interactive Map */}
+                {/* Real Production Map */}
                 <TrackingMap
                   bookingCode={booking.bookingCode}
                   customerName={booking.customerName}
@@ -361,7 +341,7 @@ export default function TrackingPage() {
                   onSwitchToWorkerMode={() => setViewMode("worker")}
                 />
 
-                {/* Booking Summary Card */}
+                {/* Booking Details Card */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white rounded-3xl p-6 border border-neutral-200/80 shadow-sm">
                     <h2 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3">
@@ -375,7 +355,9 @@ export default function TrackingPage() {
                               <p className="text-sm font-bold text-neutral-900">{item.serviceName}</p>
                               <p className="text-xs text-neutral-500">Qty: {item.quantity}</p>
                             </div>
-                            <span className="text-sm font-black text-neutral-900">₹{item.unitPrice}</span>
+                            {item.unitPrice ? (
+                              <span className="text-sm font-black text-neutral-900">₹{item.unitPrice}</span>
+                            ) : null}
                           </div>
                         ))
                       ) : (
@@ -387,11 +369,11 @@ export default function TrackingPage() {
                   <div className="bg-white rounded-3xl p-6 border border-neutral-200/80 shadow-sm flex flex-col justify-between">
                     <div>
                       <h2 className="text-xs font-black uppercase tracking-wider text-neutral-400 mb-3">
-                        Service Destination & Dispatch
+                        Service Destination &amp; Schedule
                       </h2>
                       <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2 text-neutral-700">
-                          <span className="font-bold">Slot:</span>
+                          <span className="font-bold">Scheduled Slot:</span>
                           <span className="text-neutral-900">{booking.preferredTimeSlot}</span>
                         </div>
                         <div className="flex items-center gap-2 text-neutral-700">
@@ -402,7 +384,7 @@ export default function TrackingPage() {
                     </div>
 
                     <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between">
-                      <span className="text-xs text-neutral-400">Need help?</span>
+                      <span className="text-xs text-neutral-400">Need support?</span>
                       <a
                         href={`https://wa.me/919365123456?text=${encodeURIComponent(
                           `Hi, I have a question regarding my booking ${booking.bookingCode}`
@@ -420,7 +402,7 @@ export default function TrackingPage() {
               </div>
             )}
 
-            {/* VIEW 2: WORKER DRIVER CONSOLE */}
+            {/* VIEW 2: WORKER PARTNER CONSOLE */}
             {viewMode === "worker" && (
               <WorkerConsole
                 bookingCode={booking.bookingCode}
@@ -428,93 +410,12 @@ export default function TrackingPage() {
                 customerAddress={booking.addressLine}
                 customerLocation={{ lat: customerLat, lng: customerLng }}
                 customerPhone={booking.customerPhone}
-                serviceTitle={booking.items?.[0]?.serviceName || "Electrical Service Inspection"}
+                serviceTitle={booking.items?.[0]?.serviceName || "Service Dispatch"}
                 fareAmount={booking.totalAmount || 350}
+                initialStatus={booking.status}
                 apiBaseUrl={apiUrl}
                 onSwitchToCustomerView={() => setViewMode("customer")}
-                onSwitchToSplitView={() => setViewMode("split")}
               />
-            )}
-
-            {/* VIEW 3: SPLIT SCREEN (SIDE-BY-SIDE DUAL VIEW) */}
-            {viewMode === "split" && (
-              <div className="space-y-4">
-                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-3xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">✨</span>
-                    <div>
-                      <span className="font-black text-emerald-950 block">
-                        Dual Real-Time Car-Booking Experience
-                      </span>
-                      <span className="text-emerald-700">
-                        Left: Customer watching live arrival. Right: Worker driving along the road.
-                        Click &ldquo;1. Start Trip&rdquo; on the right to watch both screens sync!
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("customer")}
-                    className="px-3 py-1.5 bg-white text-emerald-800 font-bold rounded-xl shadow-sm border border-emerald-200"
-                  >
-                    Close Split
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                  {/* Left Column: Customer Screen */}
-                  <div className="bg-neutral-100/70 p-4 rounded-3xl border border-neutral-200/90 shadow-sm flex flex-col gap-4">
-                    <div className="flex items-center justify-between px-2">
-                      <span className="text-xs font-black text-neutral-800 uppercase tracking-wider flex items-center gap-2">
-                        <span>👤 Customer Screen</span>
-                        <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 text-[10px] font-bold">
-                          Passenger View
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-neutral-500 font-mono">
-                        #{booking.bookingCode}
-                      </span>
-                    </div>
-
-                    <TrackingMap
-                      bookingCode={booking.bookingCode}
-                      customerName={booking.customerName}
-                      customerAddress={booking.addressLine}
-                      customerLocation={{ lat: customerLat, lng: customerLng }}
-                      initialStatus={booking.status}
-                      initialStaff={booking.assignedStaff}
-                      apiBaseUrl={apiUrl}
-                      onStatusChange={handleStatusChange}
-                    />
-                  </div>
-
-                  {/* Right Column: Worker Console */}
-                  <div className="bg-neutral-100/70 p-4 rounded-3xl border border-neutral-200/90 shadow-sm flex flex-col gap-4">
-                    <div className="flex items-center justify-between px-2">
-                      <span className="text-xs font-black text-neutral-800 uppercase tracking-wider flex items-center gap-2">
-                        <span>🦺 Worker Driver Seat</span>
-                        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          Driver View
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-emerald-600 font-bold">
-                        Live Telemetry
-                      </span>
-                    </div>
-
-                    <WorkerConsole
-                      bookingCode={booking.bookingCode}
-                      customerName={booking.customerName}
-                      customerAddress={booking.addressLine}
-                      customerLocation={{ lat: customerLat, lng: customerLng }}
-                      customerPhone={booking.customerPhone}
-                      serviceTitle={booking.items?.[0]?.serviceName || "Electrical Service Inspection"}
-                      fareAmount={booking.totalAmount || 350}
-                      apiBaseUrl={apiUrl}
-                    />
-                  </div>
-                </div>
-              </div>
             )}
           </>
         )}

@@ -3,67 +3,38 @@ import type { BookingStatus } from "@the-wings/types";
 export const TRACKING_BROADCAST_CHANNEL = "marac_ride_tracking_channel";
 export const TRACKING_STORAGE_KEY_PREFIX = "marac_tracking_state_";
 
+export const GUWAHATI_DEFAULT_COORDS = {
+  lat: 26.1445,
+  lng: 91.7362
+};
+
 export interface LiveRideState {
   bookingCode: string;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
   customerAddress: string;
   customerLocation: { lat: number; lng: number };
-  worker: {
+  worker?: {
     id: string;
     name: string;
     phone: string;
-    trade: string;
-    rating: number;
-    completedJobs: number;
-    avatar: string;
-  };
+    trade?: string;
+    rating?: number;
+    avatar?: string;
+  } | null;
   status: BookingStatus;
-  workerLocation: {
+  workerLocation?: {
     lat: number;
     lng: number;
     heading: number;
     speed?: number;
-  };
+  } | null;
   etaMinutes: number | null;
   distanceKm: number | null;
   lastUpdated: string;
-  isSimulating?: boolean;
 }
 
-// Default realistic demo booking in Guwahati (Ganeshguri to Zoo Road)
-export const DEMO_RIDE_BOOKING: LiveRideState = {
-  bookingCode: "MW-DEMO-RIDE",
-  customerName: "Rahul Sharma",
-  customerPhone: "+91 98765 43210",
-  customerAddress: "Zoo Road Tiniali, Near Central Mall, Guwahati",
-  customerLocation: {
-    lat: 26.1667,
-    lng: 91.7770
-  },
-  worker: {
-    id: "staff-worker-1",
-    name: "Biswajit Saikia",
-    phone: "+91 93651 23456",
-    trade: "Licensed Electrician Pro",
-    rating: 4.9,
-    completedJobs: 142,
-    avatar: "/images/workers/electrician.jpg"
-  },
-  status: "ASSIGNED",
-  workerLocation: {
-    lat: 26.1520,
-    lng: 91.7850,
-    heading: 330,
-    speed: 28
-  },
-  etaMinutes: 6,
-  distanceKm: 2.1,
-  lastUpdated: new Date().toISOString(),
-  isSimulating: false
-};
-
-// Calculate heading/bearing in degrees between two GPS coordinates
+// Calculate compass heading (bearing in degrees 0-360) between two real GPS coordinates
 export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const toDeg = (rad: number) => (rad * 180) / Math.PI;
@@ -79,7 +50,7 @@ export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2:
   return (toDeg(θ) + 360) % 360;
 }
 
-// Calculate straight-line distance in km (Haversine)
+// Calculate real-world surface distance in kilometers (Haversine formula)
 export function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -91,22 +62,36 @@ export function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lo
   return +(R * c).toFixed(2);
 }
 
-// Broadcast ride state across tabs and local storage
+// Estimate arrival time in minutes based on distance and city driving speed
+export function estimateEtaMinutes(distanceKm: number, averageSpeedKmh: number = 25): number {
+  if (distanceKm <= 0.05) return 0;
+  const hours = distanceKm / Math.max(10, averageSpeedKmh);
+  return Math.max(1, Math.ceil(hours * 60));
+}
+
+// Broadcast live ride updates across tabs and local storage for zero latency
 export function broadcastRideState(state: Partial<LiveRideState> & { bookingCode: string }) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !state.bookingCode) return;
 
   try {
-    // 1. Update localStorage
     const key = `${TRACKING_STORAGE_KEY_PREFIX}${state.bookingCode}`;
     const existing = getStoredRideState(state.bookingCode);
-    const updated = {
-      ...(existing || DEMO_RIDE_BOOKING),
-      ...state,
+    const updated: LiveRideState = {
+      bookingCode: state.bookingCode,
+      customerName: state.customerName || existing?.customerName || "Customer",
+      customerPhone: state.customerPhone || existing?.customerPhone,
+      customerAddress: state.customerAddress || existing?.customerAddress || "Guwahati",
+      customerLocation: state.customerLocation || existing?.customerLocation || GUWAHATI_DEFAULT_COORDS,
+      worker: state.worker !== undefined ? state.worker : existing?.worker,
+      status: state.status || existing?.status || "CONFIRMED",
+      workerLocation: state.workerLocation !== undefined ? state.workerLocation : existing?.workerLocation,
+      etaMinutes: state.etaMinutes !== undefined ? state.etaMinutes : existing?.etaMinutes || null,
+      distanceKm: state.distanceKm !== undefined ? state.distanceKm : existing?.distanceKm || null,
       lastUpdated: new Date().toISOString()
     };
+
     window.localStorage.setItem(key, JSON.stringify(updated));
 
-    // 2. Broadcast via BroadcastChannel
     if ("BroadcastChannel" in window) {
       const channel = new BroadcastChannel(TRACKING_BROADCAST_CHANNEL);
       channel.postMessage({
@@ -123,7 +108,7 @@ export function broadcastRideState(state: Partial<LiveRideState> & { bookingCode
 
 // Retrieve stored state from localStorage
 export function getStoredRideState(bookingCode: string): LiveRideState | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || !bookingCode) return null;
 
   try {
     const key = `${TRACKING_STORAGE_KEY_PREFIX}${bookingCode}`;
@@ -135,7 +120,7 @@ export function getStoredRideState(bookingCode: string): LiveRideState | null {
   }
 }
 
-// Save last active booking code
+// Save & retrieve active booking reference
 export function setLastActiveBookingCode(code: string) {
   if (typeof window === "undefined") return;
   try {
