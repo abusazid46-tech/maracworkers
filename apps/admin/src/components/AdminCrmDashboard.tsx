@@ -2661,7 +2661,7 @@ function StaffManagementPanel({
             </code>
           </p>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
             type="button"
             onClick={copyRegLink}
@@ -2783,7 +2783,7 @@ function StaffManagementPanel({
               </small>
             </div>
             {/* Filter Pills */}
-            <div style={{ display: "flex", gap: "0.35rem" }}>
+            <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={() => setFilterMode("pending")}
